@@ -141,7 +141,7 @@ create or replace function public.password_in_use(password text, exclude_id uuid
 returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = public, extensions, pg_temp
 as $$
 declare
   clean text := btrim(password);
@@ -169,7 +169,7 @@ create or replace function public.set_my_password(password text)
 returns void
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = public, extensions, pg_temp
 as $$
 declare
   uid   uuid := auth.uid();
@@ -220,7 +220,7 @@ create or replace function public.resolve_login(
 returns table (status text, email text)
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = public, extensions, pg_temp
 as $$
 declare
   clean_name text := lower(regexp_replace(btrim(p_name), '\s+', ' ', 'g'));
@@ -279,7 +279,7 @@ create or replace function public.admin_set_student_password(p_student uuid, p_p
 returns void
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = public, extensions, pg_temp
 as $$
 declare
   clean text := btrim(p_password);
@@ -312,7 +312,7 @@ create or replace function public.admin_set_coach_password(p_coach uuid, p_passw
 returns void
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = public, extensions, pg_temp
 as $$
 declare
   clean text := btrim(p_password);
