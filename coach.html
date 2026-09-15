@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coach dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="css/site.css" />
+</head>
+<body>
+<div class="page page--wide">
+  <header class="appbar">
+    <div class="appbar__brand">
+      <div class="brand__mark" aria-hidden="true">♞</div>
+      <div class="appbar__names">
+        <h1>Club dashboard</h1>
+        <p class="appbar__meta" id="roleLine">Loading…</p>
+      </div>
+    </div>
+    <div class="appbar__actions">
+      <label class="visually-hidden" for="schoolSelect">School</label>
+      <select id="schoolSelect" aria-label="School"></select>
+      <button type="button" class="btn btn--secondary" id="signOutButton">Sign out</button>
+    </div>
+  </header>
+
+  <div id="status" class="form-message" role="status" aria-live="polite"></div>
+
+  <div class="tabs" role="tablist" aria-label="Dashboard sections">
+    <button type="button" class="tab" id="tabToday" role="tab" aria-selected="true" aria-controls="panelToday">Today</button>
+    <button type="button" class="tab" id="tabProgress" role="tab" aria-selected="false" aria-controls="panelProgress">Progress</button>
+  </div>
+
+  <section id="panelToday" class="tabpanel">
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat__label">Active students</div>
+        <div class="stat__value" id="statCount">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Present today</div>
+        <div class="stat__value" id="statPresent">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Awaiting first sign-in</div>
+        <div class="stat__value" id="statPending">—</div>
+      </div>
+    </div>
+    <h2 class="section-title">Today's session — attendance</h2>
+    <ul class="roster-list" id="attendanceList"></ul>
+  </section>
+
+  <section id="panelProgress" class="tabpanel" hidden>
+    <h2 class="section-title">Mark progress</h2>
+    <p class="field__hint" style="margin: -8px 0 16px;">
+      Every coach at this school can open any student here, not only their own class — filters just narrow the list.
+    </p>
+    <div class="toolbar">
+      <label class="visually-hidden" for="groupFilter">Group</label>
+      <select id="groupFilter" aria-label="Filter by group"><option value="">All groups</option></select>
+      <label class="visually-hidden" for="categoryFilter">Category</label>
+      <select id="categoryFilter" aria-label="Filter by category">
+        <option value="">All categories</option>
+        <option>Beginner</option>
+        <option>Intermediate</option>
+        <option>Advanced</option>
+      </select>
+      <label class="visually-hidden" for="searchFilter">Search</label>
+      <input type="search" id="searchFilter" placeholder="Search name or student ID" />
+    </div>
+    <div class="picker" id="studentPicker"></div>
+    <div id="checklistWrap"></div>
+  </section>
+</div>
+
+<script type="module" src="js/coach.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My progress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="css/site.css" />
+</head>
+<body>
+<div class="page page--wide">
+  <header class="appbar">
+    <div class="appbar__brand">
+      <div class="brand__mark" aria-hidden="true">♞</div>
+      <div class="appbar__names">
+        <h1 id="studentName">Loading…</h1>
+        <p class="appbar__meta" id="studentMeta"></p>
+      </div>
+    </div>
+    <div class="appbar__actions">
+      <button type="button" class="btn btn--secondary" id="signOutButton">Sign out</button>
+    </div>
+  </header>
+
+  <div id="status" class="form-message" role="status" aria-live="polite"></div>
+
+  <section class="ring-card" id="ringCard" hidden></section>
+
+  <div class="badges" id="badgeRow"></div>
+
+  <div class="next-up" id="nextUp"></div>
+
+  <h2 class="section-title">From your coach</h2>
+  <div id="feedbackList"></div>
+
+  <h2 class="section-title">Where you are</h2>
+  <div class="unit-list" id="unitList"></div>
+</div>
+
+<script type="module" src="js/portal.js"></script>
+</body>
+</html>

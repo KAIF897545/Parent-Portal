@@ -29,11 +29,16 @@ create policy schools_update_admin on public.schools
   for update to authenticated using (public.is_admin()) with check (public.is_admin());
 
 -- ---------------------------------------------------------------------
--- school_groups — coach/admin read within school, admin writes
+-- school_groups — coach/admin read within school, student reads her own
+-- school's groups (needed to show her own group name), admin writes
 -- ---------------------------------------------------------------------
 create policy school_groups_select on public.school_groups
   for select to authenticated
-  using (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()));
+  using (
+    public.is_admin()
+    or (public.is_coach() and school_id = public.my_coach_school())
+    or (public.is_active_student() and school_id = public.my_student_school())
+  );
 
 create policy school_groups_write_admin on public.school_groups
   for insert to authenticated with check (public.is_admin());

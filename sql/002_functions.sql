@@ -48,6 +48,16 @@ as $$
   select school_id from public.coaches where id = auth.uid() and active;
 $$;
 
+create or replace function public.my_student_school()
+returns uuid
+language sql
+security definer
+stable
+set search_path = public, pg_temp
+as $$
+  select school_id from public.students where id = auth.uid() and active;
+$$;
+
 create or replace function public.is_active_student()
 returns boolean
 language sql
@@ -95,6 +105,7 @@ $$;
 grant execute on function public.is_admin() to authenticated;
 grant execute on function public.is_coach() to authenticated;
 grant execute on function public.my_coach_school() to authenticated;
+grant execute on function public.my_student_school() to authenticated;
 grant execute on function public.is_active_student() to authenticated;
 grant execute on function public.can_manage_student(uuid) to authenticated;
 grant execute on function public.can_see_student(uuid) to authenticated;

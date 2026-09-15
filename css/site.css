@@ -348,6 +348,692 @@ a {
   padding: 40px 0;
 }
 
+/* ===================== Logged-in dashboards (coach.html, portal.html) === */
+
+.appbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.appbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.appbar__brand .brand__mark {
+  font-size: 1.6rem;
+}
+
+.appbar__names h1 {
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.appbar__meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+.appbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.appbar__actions select {
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.appbar .btn {
+  width: auto;
+}
+
+/* Section titles */
+.section-title {
+  font-size: 1.05rem;
+  margin: 28px 0 12px;
+}
+
+.section-title:first-child {
+  margin-top: 0;
+}
+
+/* Stat cards */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.stat {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.stat__label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.stat__value {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Roster / attendance list */
+.roster-list {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.roster-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+
+.roster-row__name {
+  font-weight: 600;
+  flex: 1;
+}
+
+.roster-row__sub {
+  display: block;
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.attend-btn {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--cream);
+  color: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.attend-btn[aria-pressed="true"] {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--white);
+}
+
+.attend-btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.attend-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Filter toolbar */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.toolbar select,
+.toolbar input[type="search"] {
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.toolbar input[type="search"] {
+  flex: 1;
+  min-width: 160px;
+}
+
+/* Student picker */
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.picker__item {
+  border: 1px solid var(--border);
+  background: var(--white);
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.picker__item small {
+  display: block;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.picker__item[aria-pressed="true"] {
+  border-color: var(--crimson);
+  background: rgba(176, 15, 46, 0.06);
+}
+
+.picker__item:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.picker__due {
+  color: var(--crimson);
+}
+
+/* Thin progress tracks, reused across coach + student views */
+.track {
+  display: inline-block;
+  flex: 1;
+  height: 7px;
+  border-radius: 4px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.track__bar {
+  display: block;
+  height: 100%;
+  background: var(--crimson);
+  border-radius: 4px;
+}
+
+.track--mini {
+  height: 5px;
+}
+
+/* Checklist header for the selected student */
+.checklist-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.checklist-head__name {
+  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+}
+
+.checklist-head__pct {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Module tab strip */
+.module-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+}
+
+.module-tab {
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: var(--white);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.module-tab[aria-selected="true"] {
+  background: var(--crimson);
+  border-color: var(--crimson);
+  color: var(--cream);
+}
+
+/* Curriculum unit accordion */
+.unit {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  overflow: hidden;
+  background: var(--white);
+}
+
+.unit__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: left;
+  color: var(--text);
+}
+
+.unit__name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.unit__count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.unit__body {
+  border-top: 1px solid var(--border);
+  padding: 4px 14px 14px;
+}
+
+.unit__body[hidden] {
+  display: none;
+}
+
+/* Curriculum item row */
+.curriculum-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.curriculum-item:last-of-type {
+  border-bottom: none;
+}
+
+.curriculum-item__check {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--cream);
+  color: transparent;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 1px;
+}
+
+.curriculum-item.is-done .curriculum-item__check {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--white);
+}
+
+.curriculum-item__check:disabled {
+  cursor: default;
+}
+
+.curriculum-item__text {
+  flex: 1;
+  font-size: 0.88rem;
+}
+
+.curriculum-item__pass {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.curriculum-item__meta {
+  flex-shrink: 0;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  text-align: right;
+  max-width: 110px;
+}
+
+/* Checkpoint box */
+.checkpoint {
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px dashed var(--gold-dark);
+  border-radius: 8px;
+  background: rgba(201, 169, 97, 0.08);
+}
+
+.checkpoint.is-passed {
+  border-style: solid;
+  border-color: var(--success);
+  background: rgba(47, 107, 58, 0.07);
+}
+
+.checkpoint h4 {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+}
+
+.checkpoint p {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.checkpoint__form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.checkpoint__form input {
+  flex: 1;
+  min-width: 180px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  background: var(--white);
+}
+
+.checkpoint__done {
+  font-size: 0.85rem;
+  color: var(--success);
+}
+
+/* Notes / feedback pane */
+.notes {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.notes textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  resize: vertical;
+  background: var(--cream);
+  margin-top: 12px;
+}
+
+.notes__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.notes__row input[type="month"] {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+}
+
+.notes__hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.btn--xs {
+  width: auto;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
+.notes__history {
+  margin-top: 14px;
+  max-height: 280px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.entry {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.entry:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.entry__meta {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.entry__body {
+  font-size: 0.88rem;
+  white-space: pre-wrap;
+}
+
+.picker__due,
+.due-flag {
+  color: var(--crimson);
+  font-weight: 600;
+}
+
+/* Student dashboard: progress ring + badges */
+.ring-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  background: var(--near-black);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+  color: var(--cream);
+}
+
+.ring-card__text .mod {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+}
+
+.ring-card__text .sub {
+  font-size: 0.82rem;
+  color: rgba(247, 241, 232, 0.7);
+  margin-bottom: 10px;
+}
+
+.ring-card__counts {
+  display: flex;
+  gap: 22px;
+}
+
+.ring-card__counts div span {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(247, 241, 232, 0.6);
+}
+
+.ring-card__counts div b {
+  font-size: 1.1rem;
+  font-family: var(--font-heading);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px 6px 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--white);
+}
+
+.badge__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--near-black);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.badge.is-locked {
+  opacity: 0.55;
+}
+
+.badge.is-locked .badge__mark {
+  background: var(--border);
+  color: var(--text-muted);
+}
+
+.next-up {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 24px;
+}
+
+.next-up h3 {
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.next-up ol {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 0.9rem;
+}
+
+.next-up li {
+  margin-bottom: 4px;
+}
+
+.feedback-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.feedback-card__month {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.feedback-card__text {
+  white-space: pre-wrap;
+}
+
+.feedback-card__when {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+.unit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.unit-lite {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.86rem;
+}
+
+.unit-lite__name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.unit-lite.is-full {
+  border-color: var(--success);
+}
+
+.unit-lite__count {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 @media (max-width: 480px) {
   .page {
     padding: 28px 16px 48px;
@@ -355,5 +1041,34 @@ a {
 
   .card {
     padding: 22px 18px;
+  }
+
+  .appbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .appbar__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .ring-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .ring-card__counts {
+    justify-content: center;
+  }
+
+  .curriculum-item {
+    flex-wrap: wrap;
+  }
+
+  .curriculum-item__meta {
+    max-width: none;
+    text-align: left;
+    margin-left: 36px;
   }
 }
