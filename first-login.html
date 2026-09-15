@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Set your password</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="css/site.css" />
+</head>
+<body>
+<div class="page">
+  <header class="brand">
+    <div class="brand__mark" aria-hidden="true">♞</div>
+    <h1 class="brand__name">Welcome</h1>
+  </header>
+
+  <main class="card">
+    <div id="loadingMessage" class="form-message" role="status" aria-live="polite">Loading…</div>
+
+    <section id="screenConfirm" hidden>
+      <p class="step-indicator">Step 1 of 2</p>
+      <h2>Is this you?</h2>
+      <ul class="identity-list">
+        <li>
+          <span class="identity-label">Name</span>
+          <span class="identity-value" id="identityName"></span>
+        </li>
+        <li>
+          <span class="identity-label">Student ID</span>
+          <span class="identity-value" id="identityCode"></span>
+        </li>
+        <li>
+          <span class="identity-label">Category</span>
+          <span class="identity-value" id="identityCategory"></span>
+        </li>
+        <li>
+          <span class="identity-label">School</span>
+          <span class="identity-value" id="identitySchool"></span>
+        </li>
+      </ul>
+      <button type="button" class="btn btn--primary" id="confirmContinue">Yes, continue</button>
+      <p style="text-align: center; margin-top: 16px;">
+        <button type="button" class="btn--link" id="notMeButton">Not you? Sign out</button>
+      </p>
+    </section>
+
+    <section id="screenPassword" hidden>
+      <p class="step-indicator">Step 2 of 2</p>
+      <h2>Set your password</h2>
+      <form id="passwordForm" novalidate>
+        <div class="field">
+          <label for="newPassword">New password</label>
+          <input type="password" id="newPassword" name="password" autocomplete="new-password" required />
+        </div>
+        <div class="field">
+          <label for="confirmPassword">Confirm password</label>
+          <input type="password" id="confirmPassword" name="confirm" autocomplete="new-password" required />
+        </div>
+
+        <ul class="checklist" id="checklist" aria-label="Password requirements">
+          <li id="ruleLength" data-met="false">At least 8 characters</li>
+          <li id="ruleName" data-met="false">Not your name</li>
+          <li id="ruleCode" data-met="false">Not your student ID</li>
+          <li id="ruleMatch" data-met="false">Both entries match</li>
+        </ul>
+
+        <div id="passwordMessage" class="form-message" role="alert" aria-live="assertive"></div>
+
+        <button type="submit" class="btn btn--primary" id="passwordSubmit" disabled>Set password</button>
+      </form>
+    </section>
+  </main>
+</div>
+
+<script type="module" src="js/first-login.js"></script>
+</body>
+</html>

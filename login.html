@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="css/site.css" />
+</head>
+<body>
+<div class="page">
+  <header class="brand">
+    <div class="brand__mark" aria-hidden="true">♞</div>
+    <h1 class="brand__name">Sign in</h1>
+    <p class="brand__sub" id="schoolBanner"></p>
+  </header>
+
+  <main class="card">
+    <div role="tablist" class="tabs" aria-label="Sign in as">
+      <button
+        type="button"
+        role="tab"
+        id="tab-student"
+        aria-controls="panel-student"
+        aria-selected="true"
+        class="tab"
+      >
+        Student
+      </button>
+      <button
+        type="button"
+        role="tab"
+        id="tab-coach"
+        aria-controls="panel-coach"
+        aria-selected="false"
+        tabindex="-1"
+        class="tab"
+      >
+        Coach
+      </button>
+    </div>
+
+    <section
+      id="panel-student"
+      role="tabpanel"
+      aria-labelledby="tab-student"
+      class="tabpanel"
+    >
+      <form id="studentForm" novalidate>
+        <div class="field">
+          <label for="studentName">Full name</label>
+          <input
+            type="text"
+            id="studentName"
+            name="name"
+            autocomplete="name"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="studentPassword">Password</label>
+          <input
+            type="password"
+            id="studentPassword"
+            name="password"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+        <div class="field" id="studentCodeField" hidden>
+          <label for="studentCode">Student ID</label>
+          <input type="text" id="studentCode" name="student_code" autocomplete="off" />
+          <p class="field__hint">Two students share this name. Enter your ID from your slip.</p>
+        </div>
+        <div
+          id="studentMessage"
+          class="form-message"
+          role="status"
+          aria-live="polite"
+        ></div>
+        <button type="submit" class="btn btn--primary" id="studentSubmit">Sign in</button>
+      </form>
+    </section>
+
+    <section
+      id="panel-coach"
+      role="tabpanel"
+      aria-labelledby="tab-coach"
+      class="tabpanel"
+      hidden
+    >
+      <form id="coachForm" novalidate>
+        <div class="field">
+          <label for="coachEmail">Email</label>
+          <input
+            type="email"
+            id="coachEmail"
+            name="email"
+            autocomplete="username"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="coachPassword">Password</label>
+          <input
+            type="password"
+            id="coachPassword"
+            name="password"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+        <div
+          id="coachMessage"
+          class="form-message"
+          role="status"
+          aria-live="polite"
+        ></div>
+        <button type="submit" class="btn btn--primary" id="coachSubmit">Sign in</button>
+      </form>
+    </section>
+  </main>
+
+  <p style="text-align: center; margin-top: 20px;">
+    <a href="portals.html">Choose a different portal</a>
+  </p>
+</div>
+
+<script type="module" src="js/login.js"></script>
+</body>
+</html>
