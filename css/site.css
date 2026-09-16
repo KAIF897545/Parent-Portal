@@ -477,6 +477,8 @@ body.portal-landing {
   --border: rgba(244, 241, 232, 0.16);
   --crimson: #e2374f;
   --crimson-dark: #c92943;
+  --mint: #3ecf8e;
+  --mint-dark: #29a86e;
   --shadow: 0 20px 44px rgba(0, 0, 0, 0.55);
   position: relative;
   background:
@@ -521,6 +523,10 @@ body.portal-landing .brand__sub {
   margin-bottom: 8px;
 }
 
+.eyebrow--mint {
+  color: var(--mint);
+}
+
 .portal-info,
 .portal-about {
   margin-top: 56px;
@@ -533,45 +539,78 @@ body.portal-landing .brand__sub {
   margin-bottom: 24px;
 }
 
-.step-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+.step-timeline {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
 }
 
-.step-card {
+.step {
   position: relative;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 22px 20px;
+  flex: 1;
   animation: fadeInUp 0.5s ease both;
 }
 
-.step-card__num {
+.step__num-wrap {
+  position: relative;
+  width: 36px;
+  margin-bottom: 16px;
+}
+
+.step__num {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-  color: #1a0c0e;
+  border: 2px solid var(--mint);
+  background: rgba(62, 207, 142, 0.1);
+  color: var(--mint);
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 0.95rem;
-  margin-bottom: 14px;
+  font-size: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
-.step-card h3 {
+.step:not(:last-child) .step__num-wrap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(62, 207, 142, 0.55), rgba(62, 207, 142, 0.1));
+}
+
+.step h3 {
   font-size: 1.02rem;
   margin-bottom: 6px;
 }
 
-.step-card p {
+.step p {
   font-size: 0.88rem;
   color: var(--text-muted);
   margin: 0;
+  padding-right: 8px;
+}
+
+@media (max-width: 640px) {
+  .step-timeline {
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .step:not(:last-child) .step__num-wrap::after {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 22px;
+    background: linear-gradient(180deg, rgba(62, 207, 142, 0.55), rgba(62, 207, 142, 0.1));
+  }
 }
 
 .portal-about p {
