@@ -20,8 +20,7 @@ const state = {
   rosterTicks: new Map(), // student_id -> Map(item_id -> {on, coachName})
   rosterCps: new Map(), // student_id -> Map(item_id -> {on, evidence, coachName})
   rosterFeedbackMonths: new Map(), // student_id -> [month, ...]
-  sessionId: null,
-  attendance: new Map(), // student_id -> boolean
+  attendance: new Set(), // student_id present today
 };
 
 function setStatus(text, kind) {
@@ -34,9 +33,11 @@ function thisMonthKey() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
+// Maldives is UTC+5 with no daylight saving; "today" for attendance always
+// means the current calendar day there, regardless of the coach's own
+// device timezone. en-CA formats as YYYY-MM-DD, matching Postgres `date`.
 function todayKey() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Indian/Maldives" });
 }
 
 // --- Boot ---------------------------------------------------------------
@@ -219,58 +220,43 @@ async function loadRosterFeedbackMonths(studentIds) {
 }
 
 // --- Today tab: attendance -------------------------------------------------
-
-async function ensureTodaySession(schoolId) {
-  const today = todayKey();
-  const { data: rows, error: selErr } = await supabase
-    .from("class_sessions")
-    .select("id")
-    .eq("school_id", schoolId)
-    .is("group_id", null)
-    .eq("session_date", today)
-    .order("id")
-    .limit(1);
-  if (selErr) throw selErr;
-  if (rows && rows.length) return rows[0].id;
-
-  const { data: created, error: insErr } = await supabase
-    .from("class_sessions")
-    .insert({ school_id: schoolId, group_id: null, session_date: today, coach_id: state.coach.id })
-    .select("id")
-    .single();
-  if (insErr) throw insErr;
-  return created.id;
-}
+//
+// A row in `attendance` for (student_id, today) means present; no row means
+// absent. "Today" is always the current Maldives calendar day (see
+// todayKey() above), independent of any coach's own device timezone, so the
+// list is guaranteed to look empty again the moment a new Maldives day
+// starts, while every past day's rows stay in the database untouched.
 
 async function loadTodayTab() {
   el("statCount").textContent = state.students.length;
   el("statPending").textContent = state.students.filter((s) => s.must_change_password).length;
 
-  try {
-    state.sessionId = await ensureTodaySession(state.schoolId);
-  } catch {
+  const { data: attRows, error } = await supabase
+    .from("attendance")
+    .select("student_id")
+    .eq("school_id", state.schoolId)
+    .eq("session_date", todayKey());
+
+  if (error) {
     setStatus("Couldn't load today's attendance. Refresh to try again.", "error");
+    state.attendance = new Set();
     el("attendanceList").innerHTML = "";
     el("statPresent").textContent = "—";
     return;
   }
 
-  const { data: attRows } = await supabase
-    .from("attendance")
-    .select("student_id, present")
-    .eq("session_id", state.sessionId);
-  state.attendance = new Map((attRows || []).map((r) => [r.student_id, r.present]));
+  state.attendance = new Set((attRows || []).map((r) => r.student_id));
   renderAttendance();
 }
 
 function renderAttendance() {
-  const present = state.students.filter((s) => state.attendance.get(s.id)).length;
+  const present = state.students.filter((s) => state.attendance.has(s.id)).length;
   el("statPresent").textContent = `${present} / ${state.students.length}`;
 
   el("attendanceList").innerHTML = state.students.length
     ? state.students
         .map((s) => {
-          const isPresent = !!state.attendance.get(s.id);
+          const isPresent = state.attendance.has(s.id);
           return `<li class="roster-row">
             <button type="button" class="attend-btn" data-att="${s.id}" aria-pressed="${isPresent}"
               aria-label="Mark ${escapeHtml(s.full_name)} present">✓</button>
@@ -285,22 +271,31 @@ function renderAttendance() {
 
 el("attendanceList").addEventListener("click", async (e) => {
   const btn = e.target.closest("[data-att]");
-  if (!btn || !state.sessionId) return;
+  if (!btn) return;
   const studentId = btn.getAttribute("data-att");
-  const next = !state.attendance.get(studentId);
+  const wasPresent = state.attendance.has(studentId);
+  const today = todayKey();
 
-  btn.disabled = true;
-  const { error } = await supabase
-    .from("attendance")
-    .upsert({ session_id: state.sessionId, student_id: studentId, present: next }, { onConflict: "session_id,student_id" });
-  btn.disabled = false;
+  // Optimistic update, rolled back below if the write fails.
+  if (wasPresent) state.attendance.delete(studentId);
+  else state.attendance.add(studentId);
+  renderAttendance();
+
+  const { error } = wasPresent
+    ? await supabase.from("attendance").delete().eq("student_id", studentId).eq("session_date", today)
+    : await supabase
+        .from("attendance")
+        .upsert(
+          { student_id: studentId, school_id: state.schoolId, session_date: today, marked_by: state.coach.id },
+          { onConflict: "student_id,session_date" }
+        );
 
   if (error) {
+    if (wasPresent) state.attendance.add(studentId);
+    else state.attendance.delete(studentId);
+    renderAttendance();
     setStatus("Couldn't save attendance. Try again.", "error");
-    return;
   }
-  state.attendance.set(studentId, next);
-  renderAttendance();
 });
 
 // --- Progress tab: filters + picker ---------------------------------------

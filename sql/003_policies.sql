@@ -13,7 +13,6 @@ alter table public.item_ticks        enable row level security;
 alter table public.checkpoint_passes enable row level security;
 alter table public.feedback          enable row level security;
 alter table public.coach_notes       enable row level security;
-alter table public.class_sessions    enable row level security;
 alter table public.attendance        enable row level security;
 
 -- ---------------------------------------------------------------------
@@ -140,49 +139,30 @@ create policy coach_notes_update on public.coach_notes
   with check (coach_id = auth.uid() and public.can_manage_student(student_id));
 
 -- ---------------------------------------------------------------------
--- class_sessions
--- ---------------------------------------------------------------------
-create policy class_sessions_select on public.class_sessions
-  for select to authenticated
-  using (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()));
-
-create policy class_sessions_insert on public.class_sessions
-  for insert to authenticated
-  with check (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()));
-
-create policy class_sessions_update on public.class_sessions
-  for update to authenticated
-  using (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()))
-  with check (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()));
-
--- ---------------------------------------------------------------------
--- attendance — scoped through its class_session's school
+-- attendance — a coach reads/writes only her own school's rows; admin
+-- reads/writes everywhere. marked_by must always be the caller, so one
+-- coach can't attribute a mark to another. There is no delete-by-anyone-
+-- else path: RLS restricts every action to the caller's own school.
 -- ---------------------------------------------------------------------
 create policy attendance_select on public.attendance
   for select to authenticated
-  using (exists (
-    select 1 from public.class_sessions cs
-    where cs.id = session_id
-      and (public.is_admin() or (public.is_coach() and cs.school_id = public.my_coach_school()))
-  ));
+  using (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()));
 
 create policy attendance_insert on public.attendance
   for insert to authenticated
-  with check (exists (
-    select 1 from public.class_sessions cs
-    where cs.id = session_id
-      and (public.is_admin() or (public.is_coach() and cs.school_id = public.my_coach_school()))
-  ));
+  with check (
+    marked_by = auth.uid()
+    and (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()))
+  );
 
 create policy attendance_update on public.attendance
   for update to authenticated
-  using (exists (
-    select 1 from public.class_sessions cs
-    where cs.id = session_id
-      and (public.is_admin() or (public.is_coach() and cs.school_id = public.my_coach_school()))
-  ))
-  with check (exists (
-    select 1 from public.class_sessions cs
-    where cs.id = session_id
-      and (public.is_admin() or (public.is_coach() and cs.school_id = public.my_coach_school()))
-  ));
+  using (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()))
+  with check (
+    marked_by = auth.uid()
+    and (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()))
+  );
+
+create policy attendance_delete on public.attendance
+  for delete to authenticated
+  using (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()));

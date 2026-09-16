@@ -227,21 +227,38 @@ create table public.coach_notes (
 create index coach_notes_student on public.coach_notes (student_id, created_at desc);
 
 -- ---------------------------------------------------------------------
--- class_sessions / attendance
+-- attendance — one row per student per calendar day they were present.
+-- No row = absent; there is no explicit "absent" record. session_date is
+-- always computed in Maldives time (UTC+5) by the client, never the
+-- server's own timezone.
 -- ---------------------------------------------------------------------
-create table public.class_sessions (
+create table public.attendance (
   id           uuid primary key default gen_random_uuid(),
+  student_id   uuid not null references public.students(id) on delete cascade,
   school_id    uuid not null references public.schools(id),
-  group_id     uuid references public.school_groups(id),
-  session_date date not null default current_date,
-  coach_id     uuid not null references public.coaches(id),
-  unique (school_id, group_id, session_date)
+  session_date date not null,
+  marked_by    uuid not null references public.coaches(id),
+  marked_at    timestamptz not null default now(),
+  unique (student_id, session_date)
 );
 
-create table public.attendance (
-  id         uuid primary key default gen_random_uuid(),
-  session_id uuid not null references public.class_sessions(id),
-  student_id uuid not null references public.students(id),
-  present    boolean not null,
-  unique (session_id, student_id)
-);
+create index attendance_school_date on public.attendance (school_id, session_date);
+
+-- Belt-and-braces: school_id must always match the student's actual school,
+-- so RLS (which trusts attendance.school_id) can't be fooled by a client
+-- sending a mismatched school_id.
+create or replace function public.attendance_check_school()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.school_id <> (select school_id from public.students where id = new.student_id) then
+    raise exception 'Attendance school_id must match the student''s school.' using errcode = 'PW014';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger trg_attendance_school_match
+before insert or update on public.attendance
+for each row execute function public.attendance_check_school();
