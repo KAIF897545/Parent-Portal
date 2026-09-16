@@ -1142,6 +1142,49 @@ a {
   color: var(--text-muted);
 }
 
+/* Edit/delete actions on entity cards and roster rows */
+.entity-card__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.roster-row__buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.roster-row--edit {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.edit-grid input,
+.edit-grid select {
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.btn--secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 @media (max-width: 480px) {
   .page {
     padding: 28px 16px 48px;

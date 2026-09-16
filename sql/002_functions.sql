@@ -620,3 +620,70 @@ $$;
 
 revoke all on function public.admin_create_school(text, text, text, text[]) from public;
 grant execute on function public.admin_create_school(text, text, text, text[]) to service_role;
+
+-- ---------------------------------------------------------------------
+-- admin_delete_student(...) — service role only. Permanent: wipes the
+-- student's ticks, checkpoint evidence, feedback and coach notes (none
+-- of those have ON DELETE CASCADE, by design — they're an audit trail
+-- that shouldn't vanish silently on an ordinary update), then deletes
+-- the auth user, which cascades to the students row and to attendance
+-- (attendance does cascade). There is no undo. Editing/deactivating a
+-- student uses a plain authenticated update instead (students_update_admin
+-- RLS policy already allows it) and never touches this function.
+-- ---------------------------------------------------------------------
+create or replace function public.admin_delete_student(p_student_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not exists (select 1 from public.students s where s.id = p_student_id) then
+    raise exception 'Unknown student.' using errcode = 'PW007';
+  end if;
+
+  delete from public.item_ticks where student_id = p_student_id;
+  delete from public.checkpoint_passes where student_id = p_student_id;
+  delete from public.feedback where student_id = p_student_id;
+  delete from public.coach_notes where student_id = p_student_id;
+
+  delete from auth.users where id = p_student_id;
+end;
+$$;
+
+revoke all on function public.admin_delete_student(uuid) from public;
+grant execute on function public.admin_delete_student(uuid) to service_role;
+
+-- ---------------------------------------------------------------------
+-- admin_delete_school(...) — service role only. Refuses to touch a
+-- school that still has any student or coach, rather than cascading
+-- through and silently destroying their records.
+-- ---------------------------------------------------------------------
+create or replace function public.admin_delete_school(p_school_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  student_count int;
+  coach_count   int;
+begin
+  if not exists (select 1 from public.schools sc where sc.id = p_school_id) then
+    raise exception 'Unknown school.' using errcode = 'PW009';
+  end if;
+
+  select count(*) into student_count from public.students where school_id = p_school_id;
+  select count(*) into coach_count from public.coaches where school_id = p_school_id;
+
+  if student_count > 0 or coach_count > 0 then
+    raise exception 'Remove every student and coach from this school before deleting it.' using errcode = 'PW026';
+  end if;
+
+  delete from public.school_groups where school_id = p_school_id;
+  delete from public.schools where id = p_school_id;
+end;
+$$;
+
+revoke all on function public.admin_delete_school(uuid) from public;
+grant execute on function public.admin_delete_school(uuid) to service_role;

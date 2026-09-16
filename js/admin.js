@@ -6,10 +6,13 @@ const el = (id) => document.getElementById(id);
 const state = {
   accessToken: null,
   schools: [],
+  schoolCounts: new Map(), // school_id -> {students, coaches}
   modules: [],
   groupsBySchool: new Map(), // school_id -> [{id,name}]
   students: [],
   coaches: [],
+  editingSchoolId: null,
+  editingStudentId: null,
 };
 
 function setStatus(text, kind) {
@@ -80,6 +83,7 @@ async function init() {
   el("roleLine").textContent = `${coachRow.name} · Admin · all schools`;
 
   await Promise.all([loadSchools(), loadModules()]);
+  await loadSchoolCounts();
   renderSchoolList();
   populateSchoolSelects();
 
@@ -143,24 +147,41 @@ function selectTab(name) {
   }
 }
 
-el("tabSchools").addEventListener("click", () => selectTab("schools"));
+el("tabSchools").addEventListener("click", async () => {
+  selectTab("schools");
+  await loadSchoolCounts();
+  renderSchoolList();
+});
 el("tabStudents").addEventListener("click", () => selectTab("students"));
 el("tabCoaches").addEventListener("click", () => selectTab("coaches"));
 
 // --- Schools --------------------------------------------------------------
 
+async function loadSchoolCounts() {
+  const [{ data: students }, { data: coaches }] = await Promise.all([
+    supabase.from("students").select("school_id"),
+    supabase.from("coaches").select("school_id"),
+  ]);
+  const counts = new Map();
+  for (const s of state.schools) counts.set(s.id, { students: 0, coaches: 0 });
+  for (const row of students || []) {
+    const c = counts.get(row.school_id);
+    if (c) c.students++;
+  }
+  for (const row of coaches || []) {
+    if (!row.school_id) continue; // admin accounts have no school
+    const c = counts.get(row.school_id);
+    if (c) c.coaches++;
+  }
+  state.schoolCounts = counts;
+}
+
 function renderSchoolList() {
   el("schoolList").innerHTML = state.schools.length
-    ? state.schools
-        .map(
-          (s) => `<div class="entity-card">
-            <h3>${escapeHtml(s.name)}</h3>
-            <p>${escapeHtml(s.location || "—")} · ID prefix <strong>${escapeHtml(s.prefix)}</strong></p>
-            <p class="entity-card__groups" data-groups-for="${s.id}">Loading groups…</p>
-          </div>`
-        )
-        .join("")
+    ? state.schools.map((s) => renderSchoolCard(s)).join("")
     : `<p class="empty-state">No schools yet — add the first one below.</p>`;
+
+  if (state.editingSchoolId) return; // don't clobber groups text mid-edit; not shown there anyway
 
   state.schools.forEach(async (s) => {
     const groups = await loadGroupsForSchool(s.id);
@@ -170,6 +191,114 @@ function renderSchoolList() {
     }
   });
 }
+
+function renderSchoolCard(s) {
+  const counts = state.schoolCounts.get(s.id) || { students: 0, coaches: 0 };
+  const empty = counts.students === 0 && counts.coaches === 0;
+
+  if (state.editingSchoolId === s.id) {
+    return `<div class="entity-card">
+      <div class="field">
+        <label for="editSchName">Name</label>
+        <input type="text" id="editSchName" value="${escapeHtml(s.name)}">
+      </div>
+      <div class="field">
+        <label for="editSchLocation">Location</label>
+        <input type="text" id="editSchLocation" value="${escapeHtml(s.location || "")}">
+      </div>
+      <p class="field__hint">ID prefix <strong>${escapeHtml(s.prefix)}</strong> can't be changed here.</p>
+      <div class="entity-card__actions">
+        <button type="button" class="btn btn--primary btn--xs" data-save-school="${s.id}">Save</button>
+        <button type="button" class="btn btn--secondary btn--xs" data-cancel-school-edit="1">Cancel</button>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="entity-card">
+    <h3>${escapeHtml(s.name)}</h3>
+    <p>${escapeHtml(s.location || "—")} · ID prefix <strong>${escapeHtml(s.prefix)}</strong></p>
+    <p class="entity-card__groups" data-groups-for="${s.id}">Loading groups…</p>
+    <p class="field__hint">${counts.students} student${counts.students === 1 ? "" : "s"} · ${counts.coaches} coach${
+    counts.coaches === 1 ? "" : "es"
+  }</p>
+    <div class="entity-card__actions">
+      <button type="button" class="btn btn--secondary btn--xs" data-edit-school="${s.id}">Edit</button>
+      <button type="button" class="btn btn--secondary btn--xs" data-delete-school="${s.id}" ${empty ? "" : "disabled"}
+        title="${empty ? "Delete this school" : "Remove every student and coach from it first"}">Delete</button>
+    </div>
+  </div>`;
+}
+
+el("schoolList").addEventListener("click", async (e) => {
+  const editBtn = e.target.closest("[data-edit-school]");
+  if (editBtn) {
+    state.editingSchoolId = editBtn.getAttribute("data-edit-school");
+    renderSchoolList();
+    return;
+  }
+
+  const cancelBtn = e.target.closest("[data-cancel-school-edit]");
+  if (cancelBtn) {
+    state.editingSchoolId = null;
+    renderSchoolList();
+    return;
+  }
+
+  const saveBtn = e.target.closest("[data-save-school]");
+  if (saveBtn) {
+    const schoolId = saveBtn.getAttribute("data-save-school");
+    const name = el("editSchName").value.trim();
+    const location = el("editSchLocation").value.trim();
+
+    if (!name) {
+      setStatus("School name is required.", "error");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    const { error } = await supabase
+      .from("schools")
+      .update({ name, location: location || null })
+      .eq("id", schoolId);
+    saveBtn.disabled = false;
+
+    if (error) {
+      setStatus("Couldn't save that school. Try again.", "error");
+      return;
+    }
+
+    state.editingSchoolId = null;
+    await loadSchools();
+    populateSchoolSelects();
+    renderSchoolList();
+    setStatus("School updated.", "success");
+    return;
+  }
+
+  const deleteBtn = e.target.closest("[data-delete-school]");
+  if (deleteBtn && !deleteBtn.disabled) {
+    const schoolId = deleteBtn.getAttribute("data-delete-school");
+    const school = state.schools.find((s) => s.id === schoolId);
+    if (!school) return;
+
+    const sure = window.confirm(`Permanently delete ${school.name}? This can't be undone.`);
+    if (!sure) return;
+
+    deleteBtn.disabled = true;
+    try {
+      await callApi("delete-school", { schoolId });
+      await loadSchools();
+      populateSchoolSelects();
+      await loadSchoolCounts();
+      renderSchoolList();
+      await onStudentsSchoolChange();
+      setStatus(`${school.name} deleted.`, "success");
+    } catch (err) {
+      setStatus(err.message, "error");
+      deleteBtn.disabled = false;
+    }
+  }
+});
 
 el("schoolForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -194,6 +323,7 @@ el("schoolForm").addEventListener("submit", async (e) => {
     el("schoolForm").reset();
     setFormMessage("schoolMessage", "School created.", "success");
     await loadSchools();
+    await loadSchoolCounts();
     renderSchoolList();
     populateSchoolSelects();
     await onStudentsSchoolChange();
@@ -211,6 +341,7 @@ async function onStudentsSchoolChange() {
   if (!schoolId) return;
   el("stuSchoolFilter").value = schoolId;
   el("stuSchool").value = schoolId;
+  state.editingStudentId = null;
 
   const groups = await loadGroupsForSchool(schoolId);
   const groupOptions = groups.map((g) => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join("");
@@ -261,21 +392,61 @@ function renderStudentList() {
   const list = filteredStudents();
 
   el("studentList").innerHTML = list.length
-    ? list
-        .map(
-          (s) => `<li class="roster-row">
-            <span class="roster-row__name">${escapeHtml(s.full_name)}
-              <span class="roster-row__sub">${escapeHtml(s.student_code)} · ${escapeHtml(
-            groupLabel(schoolId, s.group_id)
-          )} · ${escapeHtml(moduleLabel(s.current_module_id))} · ${escapeHtml(s.category || "—")}${
-            s.must_change_password ? " · <span class=\"due-flag\">first sign-in pending</span>" : ""
-          }${s.active ? "" : " · inactive"}</span>
-            </span>
-            <button type="button" class="btn btn--secondary btn--xs" data-reset-student="${s.id}">Reset password</button>
-          </li>`
-        )
-        .join("")
+    ? list.map((s) => renderStudentRow(s, schoolId)).join("")
     : `<p class="empty-state">No students match those filters.</p>`;
+}
+
+function renderStudentRow(s, schoolId) {
+  if (state.editingStudentId === s.id) {
+    const groups = state.groupsBySchool.get(schoolId) || [];
+    const groupOptions =
+      '<option value="">No group</option>' +
+      groups
+        .map((g) => `<option value="${g.id}" ${g.id === s.group_id ? "selected" : ""}>${escapeHtml(g.name)}</option>`)
+        .join("");
+    const moduleOptions = state.modules
+      .map(
+        (m) =>
+          `<option value="${m.id}" ${m.id === s.current_module_id ? "selected" : ""}>Module ${m.number} · ${escapeHtml(
+            m.name
+          )}</option>`
+      )
+      .join("");
+    const categoryOptions = ["Beginner", "Intermediate", "Advanced"]
+      .map((c) => `<option ${c === s.category ? "selected" : ""}>${c}</option>`)
+      .join("");
+
+    return `<li class="roster-row roster-row--edit">
+      <div class="edit-grid">
+        <input type="text" id="editStuName_${s.id}" value="${escapeHtml(s.full_name)}" placeholder="Full name">
+        <select id="editStuCategory_${s.id}">${categoryOptions}</select>
+        <select id="editStuGroup_${s.id}">${groupOptions}</select>
+        <select id="editStuModule_${s.id}">${moduleOptions}</select>
+      </div>
+      <div class="entity-card__actions">
+        <button type="button" class="btn btn--primary btn--xs" data-save-student="${s.id}">Save</button>
+        <button type="button" class="btn btn--secondary btn--xs" data-cancel-student-edit="1">Cancel</button>
+      </div>
+    </li>`;
+  }
+
+  return `<li class="roster-row">
+    <span class="roster-row__name">${escapeHtml(s.full_name)}
+      <span class="roster-row__sub">${escapeHtml(s.student_code)} · ${escapeHtml(
+    groupLabel(schoolId, s.group_id)
+  )} · ${escapeHtml(moduleLabel(s.current_module_id))} · ${escapeHtml(s.category || "—")}${
+    s.must_change_password ? ' · <span class="due-flag">first sign-in pending</span>' : ""
+  }${s.active ? "" : ' · <span class="due-flag">inactive</span>'}</span>
+    </span>
+    <span class="roster-row__buttons">
+      <button type="button" class="btn btn--secondary btn--xs" data-edit-student="${s.id}">Edit</button>
+      <button type="button" class="btn btn--secondary btn--xs" data-reset-student="${s.id}">Reset password</button>
+      <button type="button" class="btn btn--secondary btn--xs" data-toggle-student="${s.id}">${
+    s.active ? "Deactivate" : "Reactivate"
+  }</button>
+      <button type="button" class="btn btn--secondary btn--xs" data-delete-student="${s.id}">Delete</button>
+    </span>
+  </li>`;
 }
 
 ["stuGroupFilter", "stuSearch"].forEach((id) => {
@@ -290,29 +461,131 @@ el("stuSchool").addEventListener("change", async (e) => {
 });
 
 el("studentList").addEventListener("click", async (e) => {
-  const btn = e.target.closest("[data-reset-student]");
-  if (!btn) return;
-  const studentId = btn.getAttribute("data-reset-student");
-  const student = state.students.find((s) => s.id === studentId);
-  if (!student) return;
+  const resetBtn = e.target.closest("[data-reset-student]");
+  if (resetBtn) {
+    const studentId = resetBtn.getAttribute("data-reset-student");
+    const student = state.students.find((s) => s.id === studentId);
+    if (!student) return;
 
-  btn.disabled = true;
-  try {
-    const result = await callApi("reset-student-password", { studentId });
-    el("studentResult").innerHTML = passwordBanner({
-      title: `New password for ${student.full_name}`,
-      lines: [
-        { label: "Student ID", value: student.student_code },
-        { label: "Password", value: result.password },
-      ],
-    });
-    el("studentResult").scrollIntoView({ behavior: "smooth", block: "center" });
+    resetBtn.disabled = true;
+    try {
+      const result = await callApi("reset-student-password", { studentId });
+      el("studentResult").innerHTML = passwordBanner({
+        title: `New password for ${student.full_name}`,
+        lines: [
+          { label: "Student ID", value: student.student_code },
+          { label: "Password", value: result.password },
+        ],
+      });
+      el("studentResult").scrollIntoView({ behavior: "smooth", block: "center" });
+      await loadStudents(el("stuSchoolFilter").value);
+      renderStudentList();
+    } catch (err) {
+      setStatus(err.message, "error");
+    } finally {
+      resetBtn.disabled = false;
+    }
+    return;
+  }
+
+  const editBtn = e.target.closest("[data-edit-student]");
+  if (editBtn) {
+    state.editingStudentId = editBtn.getAttribute("data-edit-student");
+    renderStudentList();
+    return;
+  }
+
+  const cancelBtn = e.target.closest("[data-cancel-student-edit]");
+  if (cancelBtn) {
+    state.editingStudentId = null;
+    renderStudentList();
+    return;
+  }
+
+  const saveBtn = e.target.closest("[data-save-student]");
+  if (saveBtn) {
+    const studentId = saveBtn.getAttribute("data-save-student");
+    const fullName = el(`editStuName_${studentId}`).value.trim();
+    const category = el(`editStuCategory_${studentId}`).value;
+    const groupId = el(`editStuGroup_${studentId}`).value || null;
+    const moduleId = el(`editStuModule_${studentId}`).value;
+
+    if (!fullName) {
+      setStatus("Full name is required.", "error");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    const { error } = await supabase
+      .from("students")
+      .update({ full_name: fullName, category, group_id: groupId, current_module_id: moduleId })
+      .eq("id", studentId);
+    saveBtn.disabled = false;
+
+    if (error) {
+      setStatus("Couldn't save that student. Try again.", "error");
+      return;
+    }
+
+    state.editingStudentId = null;
     await loadStudents(el("stuSchoolFilter").value);
     renderStudentList();
-  } catch (err) {
-    setStatus(err.message, "error");
-  } finally {
-    btn.disabled = false;
+    setStatus("Student updated.", "success");
+    return;
+  }
+
+  const toggleBtn = e.target.closest("[data-toggle-student]");
+  if (toggleBtn) {
+    const studentId = toggleBtn.getAttribute("data-toggle-student");
+    const student = state.students.find((s) => s.id === studentId);
+    if (!student) return;
+
+    const next = !student.active;
+    if (!next) {
+      const sure = window.confirm(
+        `Deactivate ${student.full_name}? They won't be able to sign in, but every record they have stays in the database. You can reactivate them any time.`
+      );
+      if (!sure) return;
+    }
+
+    toggleBtn.disabled = true;
+    const { error } = await supabase.from("students").update({ active: next }).eq("id", studentId);
+    toggleBtn.disabled = false;
+
+    if (error) {
+      setStatus("Couldn't update that student. Try again.", "error");
+      return;
+    }
+
+    await loadStudents(el("stuSchoolFilter").value);
+    renderStudentList();
+    return;
+  }
+
+  const deleteBtn = e.target.closest("[data-delete-student]");
+  if (deleteBtn) {
+    const studentId = deleteBtn.getAttribute("data-delete-student");
+    const student = state.students.find((s) => s.id === studentId);
+    if (!student) return;
+
+    const sure = window.confirm(
+      `Permanently delete ${student.full_name} (${student.student_code})?\n\n` +
+        "This erases ALL of their history — every ticked item, checkpoint, feedback note, and attendance record — forever. This cannot be undone.\n\n" +
+        "If you just want to remove them without losing their history, use Deactivate instead."
+    );
+    if (!sure) return;
+
+    deleteBtn.disabled = true;
+    try {
+      await callApi("delete-student", { studentId });
+      await loadStudents(el("stuSchoolFilter").value);
+      renderStudentList();
+      await loadSchoolCounts();
+      setStatus(`${student.full_name} deleted.`, "success");
+    } catch (err) {
+      setStatus(err.message, "error");
+      deleteBtn.disabled = false;
+    }
   }
 });
 
@@ -351,6 +624,7 @@ el("studentForm").addEventListener("submit", async (e) => {
       await loadStudents(payload.schoolId);
       renderStudentList();
     }
+    await loadSchoolCounts();
   } catch (err) {
     setFormMessage("studentMessage", err.message, "error");
   } finally {
@@ -409,6 +683,7 @@ el("bulkForm").addEventListener("submit", async (e) => {
       await loadStudents(el("stuSchoolFilter").value);
       renderStudentList();
     }
+    await loadSchoolCounts();
   } catch (err) {
     setFormMessage("bulkMessage", err.message, "error");
   } finally {
