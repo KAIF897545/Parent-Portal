@@ -34,11 +34,20 @@ async function load() {
 
   status.textContent = "";
   grid.innerHTML = schools
-    .map((school) => {
+    .map((school, i) => {
+      const initials = school.name
+        .split(/\s+/)
+        .map((w) => w[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join("")
+        .toUpperCase();
       return `
-        <a class="school-card" href="login.html?school=${encodeURIComponent(school.id)}">
+        <a class="school-card" href="login.html?school=${encodeURIComponent(school.id)}" style="animation-delay:${i * 60}ms">
+          <span class="school-card__avatar" aria-hidden="true">${escapeHtml(initials)}</span>
           <h2>${escapeHtml(school.name)}</h2>
           ${school.location ? `<p>${escapeHtml(school.location)}</p>` : ""}
+          <span class="school-card__enter">Enter portal <span aria-hidden="true">&rarr;</span></span>
         </a>
       `;
     })

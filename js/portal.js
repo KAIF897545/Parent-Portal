@@ -50,10 +50,10 @@ function renderRing(student, unitList, tickSet, cpSet) {
 
 function renderBadges(unitList, cpSet) {
   document.getElementById("badgeRow").innerHTML = unitList
-    .map((u) => {
+    .map((u, i) => {
       const got = u.checkpoint && cpSet.has(u.checkpoint.id);
       const shortLabel = (u.number.split(".")[1] || "?").trim();
-      return `<span class="badge${got ? "" : " is-locked"}">
+      return `<span class="badge${got ? "" : " is-locked"}" style="animation-delay:${i * 40}ms">
         <span class="badge__mark">${got ? "✓" : escapeHtml(shortLabel)}</span>
         ${escapeHtml(u.name)}
       </span>`;
@@ -80,7 +80,7 @@ function renderFeedback(rows) {
   box.innerHTML = rows.length
     ? rows
         .map(
-          (f) => `<div class="feedback-card">
+          (f, i) => `<div class="feedback-card" style="animation-delay:${i * 60}ms">
             <div class="feedback-card__month">${formatMonth(f.month)}</div>
             <div class="feedback-card__text">${escapeHtml(f.body)}</div>
             <div class="feedback-card__when">Written ${formatDate(f.created_at)}</div>
@@ -92,12 +92,12 @@ function renderFeedback(rows) {
 
 function renderUnits(unitList, tickSet) {
   document.getElementById("unitList").innerHTML = unitList
-    .map((u) => {
+    .map((u, i) => {
       const total = u.items.length;
       const done = u.items.filter((it) => tickSet.has(it.id)).length;
       const full = total > 0 && done === total;
       const pct = total ? Math.round((done / total) * 100) : 0;
-      return `<div class="unit-lite${full ? " is-full" : ""}">
+      return `<div class="unit-lite${full ? " is-full" : ""}" style="animation-delay:${i * 40}ms">
         <span class="unit-lite__name">${escapeHtml(u.name)}${full ? " ✓" : ""}</span>
         <span class="track track--mini"><span class="track__bar" style="width:${pct}%"></span></span>
         <span class="unit-lite__count">${done}/${total}</span>
@@ -135,6 +135,16 @@ async function init() {
     window.location.href = "first-login.html";
     return;
   }
+
+  const initials = student.full_name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  const avatar = document.getElementById("studentAvatar");
+  if (avatar) avatar.textContent = initials;
 
   document.getElementById("studentName").textContent = student.full_name;
   document.getElementById("studentMeta").textContent = [
