@@ -31,6 +31,30 @@ export function formatMonth(value) {
   return d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 }
 
+// `value` here is a real instant (a timestamptz column, e.g. attendance's
+// marked_at), not a date-only string, so it's rendered directly in
+// Maldives time (UTC+5, no DST) rather than going through parseDateOnly.
+export function maldivesDateParts(value) {
+  if (!value) return { date: "", time: "" };
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return { date: "", time: "" };
+  const date = d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Indian/Maldives",
+  });
+  const time = d
+    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "Indian/Maldives" })
+    .toLowerCase();
+  return { date, time };
+}
+
+export function formatDateTime(value) {
+  const { date, time } = maldivesDateParts(value);
+  return date ? `${date}, ${time}` : "";
+}
+
 // Adds a Show/Hide button to every password input on the page, so typed
 // passwords don't have to stay hidden behind dots to be checked.
 export function enablePasswordToggles() {

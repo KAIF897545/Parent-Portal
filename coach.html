@@ -32,7 +32,7 @@
   <div id="status" class="form-message" role="status" aria-live="polite"></div>
 
   <div class="tabs" role="tablist" aria-label="Dashboard sections">
-    <button type="button" class="tab" id="tabToday" role="tab" aria-selected="true" aria-controls="panelToday">Today</button>
+    <button type="button" class="tab" id="tabToday" role="tab" aria-selected="true" aria-controls="panelToday">Attendance</button>
     <button type="button" class="tab" id="tabProgress" role="tab" aria-selected="false" aria-controls="panelProgress">Progress</button>
   </div>
 
@@ -43,7 +43,7 @@
         <div class="stat__value" id="statCount">—</div>
       </div>
       <div class="stat">
-        <div class="stat__label">Present today</div>
+        <div class="stat__label">Present</div>
         <div class="stat__value" id="statPresent">—</div>
       </div>
       <div class="stat">
@@ -51,8 +51,54 @@
         <div class="stat__value" id="statPending">—</div>
       </div>
     </div>
-    <h2 class="section-title">Today's session — attendance</h2>
-    <ul class="roster-list" id="attendanceList"></ul>
+
+    <div class="attendance-layout">
+      <aside class="card cal-card" aria-label="Choose a session date">
+        <div class="cal-head">
+          <span class="cal-title" id="calTitle"></span>
+          <div>
+            <button type="button" class="icon-btn" id="calPrev" aria-label="Previous month">&lsaquo;</button>
+            <button type="button" class="icon-btn" id="calNext" aria-label="Next month">&rsaquo;</button>
+          </div>
+        </div>
+        <div class="cal-dow" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+        <div class="cal-days" id="calDays"></div>
+        <div class="cal-legend">
+          <span><b class="cal-legend__mark">&check;5</b> present count</span>
+          <span><i class="cal-legend__dot"></i> unsaved changes</span>
+        </div>
+        <button type="button" class="btn btn--secondary btn--xs" id="calToday" style="margin-top: 12px; width: 100%">
+          Jump to today
+        </button>
+      </aside>
+
+      <div class="attendance-main">
+        <div class="session-head">
+          <p class="session-date" id="sessionDate"></p>
+          <p class="status-line" id="attStatus"></p>
+        </div>
+
+        <div class="toolbar">
+          <span class="hint">Tick students, then save.</span>
+          <button type="button" class="btn btn--secondary btn--xs" id="markAllPresent">Mark everyone present</button>
+        </div>
+
+        <ul class="roster-list" id="attendanceList"></ul>
+
+        <div class="savebar">
+          <p class="field__hint" id="saveNote">No changes to save</p>
+          <div class="savebar__actions">
+            <button type="button" class="btn btn--secondary btn--xs" id="discardAttendance" hidden>Discard</button>
+            <button type="button" class="btn btn--primary btn--xs" id="saveAttendance" disabled>Save attendance</button>
+          </div>
+        </div>
+
+        <div id="attendanceLogWrap" hidden>
+          <h3 class="section-title" style="margin-top: 28px">History for this date</h3>
+          <div id="attendanceLogList"></div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section id="panelProgress" class="tabpanel" hidden>

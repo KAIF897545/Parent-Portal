@@ -262,3 +262,20 @@ $$;
 create trigger trg_attendance_school_match
 before insert or update on public.attendance
 for each row execute function public.attendance_check_school();
+
+-- ---------------------------------------------------------------------
+-- attendance_log — append-only audit trail. A row in `attendance` is
+-- deleted the moment a student is un-marked, so this is the only place
+-- a removal is still visible afterwards; rows here are never deleted.
+-- ---------------------------------------------------------------------
+create table public.attendance_log (
+  id           uuid primary key default gen_random_uuid(),
+  school_id    uuid not null references public.schools(id),
+  session_date date not null,
+  student_id   uuid not null references public.students(id),
+  action       text not null check (action in ('added', 'removed')),
+  coach_id     uuid not null references public.coaches(id),
+  created_at   timestamptz not null default now()
+);
+
+create index attendance_log_school_date on public.attendance_log (school_id, session_date, created_at desc);

@@ -1,5 +1,5 @@
 import { supabase } from "./supabase.js";
-import { escapeHtml, formatDate, formatMonth } from "./utils.js";
+import { escapeHtml, formatDate, formatMonth, formatDateTime, maldivesDateParts } from "./utils.js";
 
 const el = (id) => document.getElementById(id);
 
@@ -20,7 +20,13 @@ const state = {
   rosterTicks: new Map(), // student_id -> Map(item_id -> {on, coachName})
   rosterCps: new Map(), // student_id -> Map(item_id -> {on, evidence, coachName})
   rosterFeedbackMonths: new Map(), // student_id -> [month, ...]
-  attendance: new Set(), // student_id present today
+
+  attCalendarMonth: null, // Date, first-of-month, local
+  attSelectedDate: null, // "YYYY-MM-DD"
+  attMonthCounts: new Map(), // "YYYY-MM-DD" -> present count, for the visible month
+  attSavedByDate: new Map(), // "YYYY-MM-DD" -> Map(student_id -> {coachName, markedAt}), lazily filled per date visited
+  attDrafts: new Map(), // "YYYY-MM-DD" -> Set(student_id), only for dates with unsaved edits
+  attLog: [], // attendance_log rows for the selected date, newest first
 };
 
 function setStatus(text, kind) {
@@ -143,7 +149,7 @@ async function onSchoolChange() {
   await Promise.all([loadRosterProgress(ids), loadRosterFeedbackMonths(ids)]);
 
   renderPicker();
-  await loadTodayTab();
+  await initAttendanceTab();
 }
 
 async function loadGroups() {
@@ -219,82 +225,322 @@ async function loadRosterFeedbackMonths(studentIds) {
   state.rosterFeedbackMonths = map;
 }
 
-// --- Today tab: attendance -------------------------------------------------
+// --- Attendance tab ---------------------------------------------------------
 //
-// A row in `attendance` for (student_id, today) means present; no row means
-// absent. "Today" is always the current Maldives calendar day (see
-// todayKey() above), independent of any coach's own device timezone, so the
-// list is guaranteed to look empty again the moment a new Maldives day
-// starts, while every past day's rows stay in the database untouched.
+// A row in `attendance` for (student_id, session_date) means present; no row
+// means absent. There's no immediate-save here: ticking a student only edits
+// an in-memory draft for the selected date, and "Save attendance" applies the
+// whole batch (and writes the matching attendance_log rows) in one RPC call.
+// "Today" is always the current Maldives calendar day (see todayKey()
+// above), independent of the coach's own device timezone.
 
-async function loadTodayTab() {
+function ymd(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function parseKey(key) {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function attSavedIds(dateKey) {
+  const map = state.attSavedByDate.get(dateKey);
+  return map ? new Set(map.keys()) : new Set();
+}
+
+// A date only ever gets a draft after its saved set has been fetched (you
+// have to select a date, which loads it, before you can tick anyone in it),
+// so every dirty date is also a cached one — dirty-checking never needs to
+// fetch a date that isn't currently on screen.
+function attDraftFor(dateKey) {
+  return state.attDrafts.get(dateKey) || attSavedIds(dateKey);
+}
+
+function attIsDirty(dateKey) {
+  const draft = state.attDrafts.get(dateKey);
+  if (!draft) return false;
+  const saved = attSavedIds(dateKey);
+  if (draft.size !== saved.size) return true;
+  for (const id of draft) if (!saved.has(id)) return true;
+  return false;
+}
+
+async function initAttendanceTab() {
+  const t = todayKey();
+  state.attCalendarMonth = new Date(parseKey(t).getFullYear(), parseKey(t).getMonth(), 1);
+  state.attSelectedDate = t;
+  state.attMonthCounts = new Map();
+  state.attSavedByDate = new Map();
+  state.attDrafts = new Map();
+  state.attLog = [];
+
   el("statCount").textContent = state.students.length;
   el("statPending").textContent = state.students.filter((s) => s.must_change_password).length;
 
-  const { data: attRows, error } = await supabase
-    .from("attendance")
-    .select("student_id")
-    .eq("school_id", state.schoolId)
-    .eq("session_date", todayKey());
+  await Promise.all([loadAttendanceMonth(), loadAttendanceDate(t)]);
+  renderAttendanceTab();
+}
+
+async function loadAttendanceMonth() {
+  const start = new Date(state.attCalendarMonth.getFullYear(), state.attCalendarMonth.getMonth(), 1);
+  const end = new Date(state.attCalendarMonth.getFullYear(), state.attCalendarMonth.getMonth() + 1, 0);
+  const { data, error } = await supabase.rpc("attendance_month_counts", {
+    p_school_id: state.schoolId,
+    p_start: ymd(start),
+    p_end: ymd(end),
+  });
 
   if (error) {
-    setStatus("Couldn't load today's attendance. Refresh to try again.", "error");
-    state.attendance = new Set();
-    el("attendanceList").innerHTML = "";
-    el("statPresent").textContent = "—";
+    setStatus("Couldn't load the calendar. Refresh to try again.", "error");
+    return;
+  }
+  state.attMonthCounts = new Map((data || []).map((r) => [r.session_date, Number(r.present_count)]));
+}
+
+async function loadAttendanceDate(dateKey) {
+  const [{ data: attRows, error: attErr }, { data: logRows, error: logErr }] = await Promise.all([
+    supabase
+      .from("attendance")
+      .select("student_id, marked_at, coach:coaches(name)")
+      .eq("school_id", state.schoolId)
+      .eq("session_date", dateKey),
+    supabase
+      .from("attendance_log")
+      .select("action, created_at, coach:coaches(name), student:students(full_name, student_code)")
+      .eq("school_id", state.schoolId)
+      .eq("session_date", dateKey)
+      .order("created_at", { ascending: false }),
+  ]);
+
+  if (attErr || logErr) {
+    setStatus("Couldn't load that date's attendance. Try again.", "error");
     return;
   }
 
-  state.attendance = new Set((attRows || []).map((r) => r.student_id));
-  renderAttendance();
+  const map = new Map();
+  for (const r of attRows || []) {
+    map.set(r.student_id, { coachName: r.coach?.name || "—", markedAt: r.marked_at });
+  }
+  state.attSavedByDate.set(dateKey, map);
+  state.attLog = logRows || [];
 }
 
-function renderAttendance() {
-  const present = state.students.filter((s) => state.attendance.has(s.id)).length;
-  el("statPresent").textContent = `${present} / ${state.students.length}`;
+function renderAttendanceTab() {
+  renderCalendar();
+  renderSession();
+}
+
+function renderCalendar() {
+  const month = state.attCalendarMonth;
+  el("calTitle").textContent = month.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+
+  const firstOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
+  const offset = (firstOfMonth.getDay() + 6) % 7; // grid starts on Monday
+  const start = new Date(firstOfMonth);
+  start.setDate(1 - offset);
+
+  const today = todayKey();
+  let html = "";
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const key = ymd(d);
+    const isFuture = key > today;
+    const count = state.attMonthCounts.get(key) || 0;
+    const classes = ["cal-day"];
+    if (d.getMonth() !== month.getMonth()) classes.push("is-other");
+    if (key === today) classes.push("is-today");
+    if (attIsDirty(key)) classes.push("is-draft");
+
+    const label =
+      d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }) +
+      (count ? `, ${count} present` : "");
+
+    html += `<button type="button" class="${classes.join(" ")}" data-cal-day="${key}" ${isFuture ? "disabled" : ""}
+      aria-pressed="${key === state.attSelectedDate}" aria-label="${label}">
+      <span>${d.getDate()}</span><span class="cal-day__mark">${count ? `✓${count}` : ""}</span>
+    </button>`;
+  }
+  el("calDays").innerHTML = html;
+
+  const nextMonth = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+  el("calNext").disabled = ymd(nextMonth) > today;
+}
+
+function renderSession() {
+  const dateKey = state.attSelectedDate;
+  const savedMap = state.attSavedByDate.get(dateKey) || new Map();
+  const savedIds = new Set(savedMap.keys());
+  const draftSet = attDraftFor(dateKey);
+  const isDirty = attIsDirty(dateKey);
+  const isToday = dateKey === todayKey();
+
+  const dateLabel = parseKey(dateKey).toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  el("sessionDate").textContent = (isToday ? "Today, " : "") + dateLabel;
+
+  const statusEl = el("attStatus");
+  if (isDirty) {
+    statusEl.textContent = "Unsaved changes";
+    statusEl.className = "status-line status-line--dirty";
+  } else if (state.attLog.length) {
+    const last = state.attLog[0];
+    const { date, time } = maldivesDateParts(last.created_at);
+    statusEl.textContent = `Last change by ${last.coach?.name || "—"}, ${date} at ${time}`;
+    statusEl.className = "status-line";
+  } else {
+    statusEl.textContent = "Not recorded yet";
+    statusEl.className = "status-line";
+  }
 
   el("attendanceList").innerHTML = state.students.length
     ? state.students
         .map((s) => {
-          const isPresent = state.attendance.has(s.id);
+          const on = draftSet.has(s.id);
+          const was = savedIds.has(s.id);
+          const info = savedMap.get(s.id);
+          const changeTag =
+            on !== was ? `<span class="roster-row__changetag">${on ? "Adding" : "Removing"}</span>` : "";
+          const markedLine =
+            on && was && info
+              ? `<span class="roster-row__marked">Marked by ${escapeHtml(info.coachName)}, ${formatDateTime(
+                  info.markedAt
+                )}</span>`
+              : "";
           return `<li class="roster-row">
-            <button type="button" class="attend-btn" data-att="${s.id}" aria-pressed="${isPresent}"
+            <button type="button" class="attend-btn" data-att="${s.id}" aria-pressed="${on}"
               aria-label="Mark ${escapeHtml(s.full_name)} present">✓</button>
             <span class="roster-row__name">${escapeHtml(s.full_name)}
               <span class="roster-row__sub">${escapeHtml(s.student_code)}</span>
-            </span>
+              ${markedLine}
+            </span>${changeTag}
           </li>`;
         })
         .join("")
     : `<p class="empty-state">No active students at this school yet.</p>`;
+
+  const presentShown = state.students.filter((s) => draftSet.has(s.id)).length;
+  el("statPresent").textContent = `${presentShown} / ${state.students.length}`;
+  el("markAllPresent").hidden = state.students.length > 0 && presentShown === state.students.length;
+
+  const added = [...draftSet].filter((id) => !savedIds.has(id));
+  const removed = [...savedIds].filter((id) => !draftSet.has(id));
+  el("saveNote").textContent = isDirty
+    ? [added.length && `${added.length} to add`, removed.length && `${removed.length} to remove`]
+        .filter(Boolean)
+        .join(", ")
+    : "No changes to save";
+  el("saveAttendance").disabled = !isDirty;
+  el("discardAttendance").hidden = !isDirty;
+
+  el("attendanceLogWrap").hidden = state.attLog.length === 0;
+  el("attendanceLogList").innerHTML = state.attLog
+    .map((l) => {
+      const name = l.student?.full_name || "—";
+      const code = l.student?.student_code;
+      const verb = l.action === "added" ? "marked" : "removed";
+      return `<div class="entry"><div class="entry__body">${escapeHtml(l.coach?.name || "—")} ${verb} ${escapeHtml(
+        name
+      )}${code ? ` (${escapeHtml(code)})` : ""} · ${formatDateTime(l.created_at)}</div></div>`;
+    })
+    .join("");
 }
 
-el("attendanceList").addEventListener("click", async (e) => {
+el("calDays").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-cal-day]");
+  if (!btn || btn.disabled) return;
+  state.attSelectedDate = btn.getAttribute("data-cal-day");
+  await loadAttendanceDate(state.attSelectedDate);
+  renderAttendanceTab();
+});
+
+el("calPrev").addEventListener("click", async () => {
+  state.attCalendarMonth.setMonth(state.attCalendarMonth.getMonth() - 1);
+  await loadAttendanceMonth();
+  renderCalendar();
+});
+
+el("calNext").addEventListener("click", async () => {
+  state.attCalendarMonth.setMonth(state.attCalendarMonth.getMonth() + 1);
+  await loadAttendanceMonth();
+  renderCalendar();
+});
+
+el("calToday").addEventListener("click", async () => {
+  const t = todayKey();
+  state.attCalendarMonth = new Date(parseKey(t).getFullYear(), parseKey(t).getMonth(), 1);
+  state.attSelectedDate = t;
+  await Promise.all([loadAttendanceMonth(), loadAttendanceDate(t)]);
+  renderAttendanceTab();
+});
+
+el("attendanceList").addEventListener("click", (e) => {
   const btn = e.target.closest("[data-att]");
   if (!btn) return;
-  const studentId = btn.getAttribute("data-att");
-  const wasPresent = state.attendance.has(studentId);
-  const today = todayKey();
+  const dateKey = state.attSelectedDate;
+  const draft = new Set(attDraftFor(dateKey));
+  const id = btn.getAttribute("data-att");
+  if (draft.has(id)) draft.delete(id);
+  else draft.add(id);
+  state.attDrafts.set(dateKey, draft);
+  renderAttendanceTab();
+});
 
-  // Optimistic update, rolled back below if the write fails.
-  if (wasPresent) state.attendance.delete(studentId);
-  else state.attendance.add(studentId);
-  renderAttendance();
+el("markAllPresent").addEventListener("click", () => {
+  const dateKey = state.attSelectedDate;
+  const draft = new Set(attDraftFor(dateKey));
+  state.students.forEach((s) => draft.add(s.id));
+  state.attDrafts.set(dateKey, draft);
+  renderAttendanceTab();
+});
 
-  const { error } = wasPresent
-    ? await supabase.from("attendance").delete().eq("student_id", studentId).eq("session_date", today)
-    : await supabase
-        .from("attendance")
-        .upsert(
-          { student_id: studentId, school_id: state.schoolId, session_date: today, marked_by: state.coach.id },
-          { onConflict: "student_id,session_date" }
-        );
+el("discardAttendance").addEventListener("click", () => {
+  state.attDrafts.delete(state.attSelectedDate);
+  renderAttendanceTab();
+});
+
+el("saveAttendance").addEventListener("click", async () => {
+  const dateKey = state.attSelectedDate;
+  const draft = attDraftFor(dateKey);
+  const saved = attSavedIds(dateKey);
+  const added = [...draft].filter((id) => !saved.has(id));
+  const removed = [...saved].filter((id) => !draft.has(id));
+  if (!added.length && !removed.length) return;
+
+  const btn = el("saveAttendance");
+  btn.disabled = true;
+  const { error } = await supabase.rpc("save_attendance", {
+    p_school_id: state.schoolId,
+    p_session_date: dateKey,
+    p_added: added,
+    p_removed: removed,
+  });
 
   if (error) {
-    if (wasPresent) state.attendance.add(studentId);
-    else state.attendance.delete(studentId);
-    renderAttendance();
+    btn.disabled = false;
     setStatus("Couldn't save attendance. Try again.", "error");
+    return;
+  }
+
+  state.attDrafts.delete(dateKey);
+  await Promise.all([loadAttendanceDate(dateKey), loadAttendanceMonth()]);
+  renderAttendanceTab();
+  setStatus("Attendance saved.", "success");
+});
+
+window.addEventListener("beforeunload", (e) => {
+  for (const key of state.attDrafts.keys()) {
+    if (attIsDirty(key)) {
+      e.preventDefault();
+      e.returnValue = "";
+      return;
+    }
   }
 });
 

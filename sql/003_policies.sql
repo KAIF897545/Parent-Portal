@@ -169,3 +169,20 @@ create policy attendance_update on public.attendance
 create policy attendance_delete on public.attendance
   for delete to authenticated
   using (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()));
+
+-- ---------------------------------------------------------------------
+-- attendance_log — append-only audit trail, same school scoping as
+-- attendance itself. No update/delete policy: log rows are permanent.
+-- ---------------------------------------------------------------------
+alter table public.attendance_log enable row level security;
+
+create policy attendance_log_select on public.attendance_log
+  for select to authenticated
+  using (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()));
+
+create policy attendance_log_insert on public.attendance_log
+  for insert to authenticated
+  with check (
+    coach_id = auth.uid()
+    and (public.is_admin() or (public.is_coach() and school_id = public.my_coach_school()))
+  );
