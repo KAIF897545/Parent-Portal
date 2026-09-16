@@ -1,4 +1,7 @@
 import { supabase } from "./supabase.js";
+import { enablePasswordToggles } from "./utils.js";
+
+enablePasswordToggles();
 
 const loadingMessage = document.getElementById("loadingMessage");
 const screenConfirm = document.getElementById("screenConfirm");

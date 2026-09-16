@@ -30,3 +30,31 @@ export function formatMonth(value) {
   if (Number.isNaN(d.getTime())) return String(value);
   return d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 }
+
+// Adds a Show/Hide button to every password input on the page, so typed
+// passwords don't have to stay hidden behind dots to be checked.
+export function enablePasswordToggles() {
+  document.querySelectorAll('input[type="password"]').forEach((input) => {
+    if (input.dataset.toggleWired) return;
+    input.dataset.toggleWired = "true";
+
+    const wrap = document.createElement("div");
+    wrap.className = "field__password-wrap";
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "field__toggle-visibility";
+    toggle.textContent = "Show";
+    toggle.setAttribute("aria-label", "Show password");
+    wrap.appendChild(toggle);
+
+    toggle.addEventListener("click", () => {
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      toggle.textContent = showing ? "Show" : "Hide";
+      toggle.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+    });
+  });
+}

@@ -175,6 +175,32 @@ a {
   border-color: var(--gold-dark);
 }
 
+.field__password-wrap {
+  position: relative;
+}
+
+.field__password-wrap input {
+  padding-right: 58px;
+}
+
+.field__toggle-visibility {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--crimson);
+  cursor: pointer;
+}
+
+.field__toggle-visibility:hover {
+  text-decoration: underline;
+}
+
 .field__hint {
   font-size: 0.8rem;
   color: var(--text-muted);

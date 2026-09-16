@@ -1,4 +1,7 @@
 import { supabase } from "./supabase.js";
+import { enablePasswordToggles } from "./utils.js";
+
+enablePasswordToggles();
 
 const params = new URLSearchParams(window.location.search);
 const schoolId = params.get("school");
