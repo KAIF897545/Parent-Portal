@@ -87,6 +87,7 @@ export const PW_MESSAGES = {
   PW024: "Prefix must be 2 to 6 letters.",
   PW025: "That prefix is already in use.",
   PW026: "Remove every student and coach from this school before deleting it.",
+  PW027: "This coach has recorded activity. Deactivate them instead of deleting.",
 };
 
 // Chess/Maldives-themed word + 4 digits, matching the passwords already

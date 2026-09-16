@@ -13,6 +13,7 @@ const state = {
   coaches: [],
   editingSchoolId: null,
   editingStudentId: null,
+  selfId: null,
 };
 
 function setStatus(text, kind) {
@@ -64,6 +65,7 @@ async function init() {
   state.accessToken = sessionData.session.access_token;
 
   const uid = sessionData.session.user.id;
+  state.selfId = uid;
   const { data: coachRow, error } = await supabase
     .from("coaches")
     .select("id, name, role, active")
@@ -715,39 +717,102 @@ function schoolLabel(schoolId) {
 function renderCoachList() {
   el("coachList").innerHTML = state.coaches.length
     ? state.coaches
-        .map(
-          (c) => `<li class="roster-row">
+        .map((c) => {
+          const isSelf = c.id === state.selfId;
+          const selfTitle = isSelf ? ' title="You can\'t do this to your own account"' : "";
+          return `<li class="roster-row">
             <span class="roster-row__name">${escapeHtml(c.name)}
               <span class="roster-row__sub">${
                 c.role === "admin" ? "Admin · all schools" : escapeHtml(schoolLabel(c.school_id))
               }${c.active ? "" : " · inactive"}</span>
             </span>
-            <button type="button" class="btn btn--secondary btn--xs" data-reset-coach="${c.id}">Set new password</button>
-          </li>`
-        )
+            <span class="roster-row__buttons">
+              <button type="button" class="btn btn--secondary btn--xs" data-reset-coach="${c.id}">Set new password</button>
+              <button type="button" class="btn btn--secondary btn--xs" data-toggle-coach="${c.id}" ${
+            isSelf ? "disabled" : ""
+          }${selfTitle}>${c.active ? "Deactivate" : "Reactivate"}</button>
+              <button type="button" class="btn btn--secondary btn--xs" data-delete-coach="${c.id}" ${
+            isSelf ? "disabled" : ""
+          }${selfTitle}>Delete</button>
+            </span>
+          </li>`;
+        })
         .join("")
     : `<p class="empty-state">No coach accounts yet.</p>`;
 }
 
 el("coachList").addEventListener("click", async (e) => {
-  const btn = e.target.closest("[data-reset-coach]");
-  if (!btn) return;
-  const coachId = btn.getAttribute("data-reset-coach");
-  const coach = state.coaches.find((c) => c.id === coachId);
-  if (!coach) return;
+  const resetBtn = e.target.closest("[data-reset-coach]");
+  if (resetBtn) {
+    const coachId = resetBtn.getAttribute("data-reset-coach");
+    const coach = state.coaches.find((c) => c.id === coachId);
+    if (!coach) return;
 
-  btn.disabled = true;
-  try {
-    const result = await callApi("set-coach-password", { coachId });
-    el("coachResult").innerHTML = passwordBanner({
-      title: `New password for ${coach.name}`,
-      lines: [{ label: "Password", value: result.password }],
-    });
-    el("coachResult").scrollIntoView({ behavior: "smooth", block: "center" });
-  } catch (err) {
-    setStatus(err.message, "error");
-  } finally {
-    btn.disabled = false;
+    resetBtn.disabled = true;
+    try {
+      const result = await callApi("set-coach-password", { coachId });
+      el("coachResult").innerHTML = passwordBanner({
+        title: `New password for ${coach.name}`,
+        lines: [{ label: "Password", value: result.password }],
+      });
+      el("coachResult").scrollIntoView({ behavior: "smooth", block: "center" });
+    } catch (err) {
+      setStatus(err.message, "error");
+    } finally {
+      resetBtn.disabled = false;
+    }
+    return;
+  }
+
+  const toggleBtn = e.target.closest("[data-toggle-coach]");
+  if (toggleBtn && !toggleBtn.disabled) {
+    const coachId = toggleBtn.getAttribute("data-toggle-coach");
+    const coach = state.coaches.find((c) => c.id === coachId);
+    if (!coach) return;
+
+    const next = !coach.active;
+    if (!next) {
+      const sure = window.confirm(
+        `Deactivate ${coach.name}? They won't be able to sign in. You can reactivate them any time.`
+      );
+      if (!sure) return;
+    }
+
+    toggleBtn.disabled = true;
+    const { error } = await supabase.from("coaches").update({ active: next }).eq("id", coachId);
+    toggleBtn.disabled = false;
+
+    if (error) {
+      setStatus("Couldn't update that coach. Try again.", "error");
+      return;
+    }
+
+    await loadCoaches();
+    return;
+  }
+
+  const deleteBtn = e.target.closest("[data-delete-coach]");
+  if (deleteBtn && !deleteBtn.disabled) {
+    const coachId = deleteBtn.getAttribute("data-delete-coach");
+    const coach = state.coaches.find((c) => c.id === coachId);
+    if (!coach) return;
+
+    const sure = window.confirm(
+      `Permanently delete ${coach.name}'s coach account?\n\n` +
+        "This cannot be undone. Deleting is only allowed for coaches with no recorded activity — " +
+        "if they've ever marked attendance, ticks, checkpoints, feedback, or notes, deactivate them instead."
+    );
+    if (!sure) return;
+
+    deleteBtn.disabled = true;
+    try {
+      await callApi("delete-coach", { coachId });
+      await loadCoaches();
+      setStatus(`${coach.name} deleted.`, "success");
+    } catch (err) {
+      setStatus(err.message, "error");
+      deleteBtn.disabled = false;
+    }
   }
 });
 
