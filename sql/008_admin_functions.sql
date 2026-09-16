@@ -27,7 +27,10 @@ declare
   new_id   uuid := gen_random_uuid();
   email    text;
 begin
-  if p_school_id is null or not exists (select 1 from public.schools where id = p_school_id) then
+  -- returns table (id uuid, ...) makes "id" a PL/pgSQL variable in scope
+  -- for the rest of this function, so every lookup below must qualify
+  -- the column with a table alias — a bare "id" is ambiguous here.
+  if p_school_id is null or not exists (select 1 from public.schools s where s.id = p_school_id) then
     raise exception 'Unknown school.' using errcode = 'PW009';
   end if;
 
@@ -35,12 +38,12 @@ begin
     raise exception 'Full name is required.' using errcode = 'PW015';
   end if;
 
-  if p_module_id is null or not exists (select 1 from public.modules where id = p_module_id) then
+  if p_module_id is null or not exists (select 1 from public.modules m where m.id = p_module_id) then
     raise exception 'Unknown module.' using errcode = 'PW016';
   end if;
 
   if p_group_id is not null and not exists (
-    select 1 from public.school_groups where id = p_group_id and school_id = p_school_id
+    select 1 from public.school_groups g where g.id = p_group_id and g.school_id = p_school_id
   ) then
     raise exception 'Unknown group for that school.' using errcode = 'PW017';
   end if;
@@ -140,7 +143,9 @@ begin
     raise exception 'Admins don''t belong to a school.' using errcode = 'PW022';
   end if;
 
-  if p_school_id is not null and not exists (select 1 from public.schools where id = p_school_id) then
+  -- returns table (id uuid) makes "id" a PL/pgSQL variable in scope for
+  -- the rest of this function, so this lookup must qualify the column.
+  if p_school_id is not null and not exists (select 1 from public.schools s where s.id = p_school_id) then
     raise exception 'Unknown school.' using errcode = 'PW009';
   end if;
 
