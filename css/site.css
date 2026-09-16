@@ -405,7 +405,7 @@ a {
   border-radius: 50%;
   margin-bottom: 14px;
   background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-  color: var(--near-black);
+  color: #1a0c0e;
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 0.95rem;
@@ -445,6 +445,155 @@ a {
   text-align: center;
   color: var(--text-muted);
   padding: 40px 0;
+}
+
+/* Portal landing page — themed to match maldiveschessclub.com's dark palette.
+   Overriding the shared custom properties here (instead of writing new rules)
+   re-themes every component on this page for free: cards, borders, text. */
+body.portal-landing {
+  --cream: #070403;
+  --white: rgba(244, 241, 232, 0.035);
+  --near-black: #f4f1e8;
+  --text: var(--near-black);
+  --text-muted: rgba(244, 241, 232, 0.62);
+  --border: rgba(244, 241, 232, 0.16);
+  --crimson: #e2374f;
+  --crimson-dark: #c92943;
+  --shadow: 0 20px 44px rgba(0, 0, 0, 0.55);
+  position: relative;
+  background:
+    radial-gradient(ellipse 800px 480px at 50% -10%, rgba(226, 55, 79, 0.3), transparent 60%),
+    radial-gradient(ellipse 620px 520px at 100% 100%, rgba(176, 15, 46, 0.16), transparent 65%),
+    repeating-linear-gradient(45deg, rgba(244, 241, 232, 0.025) 0px, rgba(244, 241, 232, 0.025) 1px, transparent 1px, transparent 26px),
+    repeating-linear-gradient(-45deg, rgba(244, 241, 232, 0.025) 0px, rgba(244, 241, 232, 0.025) 1px, transparent 1px, transparent 26px),
+    var(--cream);
+  overflow-x: hidden;
+}
+
+body.portal-landing::before {
+  content: "♞";
+  position: fixed;
+  top: -80px;
+  right: -60px;
+  font-size: 32rem;
+  line-height: 1;
+  font-family: var(--font-heading);
+  color: rgba(244, 241, 232, 0.03);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body.portal-landing .page {
+  position: relative;
+  z-index: 1;
+}
+
+body.portal-landing .brand__sub {
+  color: var(--crimson);
+  font-weight: 600;
+}
+
+.eyebrow {
+  display: block;
+  color: var(--crimson);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.portal-info,
+.portal-about {
+  margin-top: 56px;
+  padding-top: 40px;
+  border-top: 1px solid var(--border);
+}
+
+.portal-info__title {
+  font-size: 1.5rem;
+  margin-bottom: 24px;
+}
+
+.step-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.step-card {
+  position: relative;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 20px;
+  animation: fadeInUp 0.5s ease both;
+}
+
+.step-card__num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #1a0c0e;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 14px;
+}
+
+.step-card h3 {
+  font-size: 1.02rem;
+  margin-bottom: 6px;
+}
+
+.step-card p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.portal-about p {
+  max-width: 640px;
+  color: var(--text-muted);
+}
+
+.portal-about__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--crimson);
+  text-decoration: none;
+}
+
+.portal-about__link:hover {
+  text-decoration: underline;
+}
+
+.portal-about__link span {
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.portal-about__link:hover span {
+  transform: translateX(4px);
+}
+
+@media (max-width: 480px) {
+  body.portal-landing::before {
+    font-size: 16rem;
+  }
+
+  .portal-info,
+  .portal-about {
+    margin-top: 40px;
+    padding-top: 28px;
+  }
 }
 
 @keyframes fadeInUp {
