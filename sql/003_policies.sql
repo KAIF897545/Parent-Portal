@@ -45,6 +45,9 @@ create policy school_groups_write_admin on public.school_groups
 create policy school_groups_update_admin on public.school_groups
   for update to authenticated using (public.is_admin()) with check (public.is_admin());
 
+create policy school_groups_delete_admin on public.school_groups
+  for delete to authenticated using (public.is_admin());
+
 -- ---------------------------------------------------------------------
 -- curriculum — readable by any signed-in role, writes reserved to service_role
 -- ---------------------------------------------------------------------

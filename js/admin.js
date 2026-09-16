@@ -183,20 +183,51 @@ function renderSchoolList() {
     ? state.schools.map((s) => renderSchoolCard(s)).join("")
     : `<p class="empty-state">No schools yet — add the first one below.</p>`;
 
-  if (state.editingSchoolId) return; // don't clobber groups text mid-edit; not shown there anyway
-
   state.schools.forEach(async (s) => {
     const groups = await loadGroupsForSchool(s.id);
     const target = document.querySelector(`[data-groups-for="${s.id}"]`);
-    if (target) {
-      target.textContent = groups.length ? `Groups: ${groups.map((g) => g.name).join(", ")}` : "No groups yet";
-    }
+    if (target) target.innerHTML = renderGroupsBlock(s.id, groups);
   });
+}
+
+function renderGroupsBlock(schoolId, groups) {
+  const chips = groups.length
+    ? groups
+        .map(
+          (g) => `<span class="group-chip">${escapeHtml(g.name)}
+        <button type="button" class="group-chip__remove" data-remove-group="${g.id}" data-remove-group-school="${schoolId}" aria-label="Remove ${escapeHtml(
+            g.name
+          )}">&times;</button>
+      </span>`
+        )
+        .join("")
+    : `<span class="field__hint">No groups yet</span>`;
+
+  return `<div class="group-chips">${chips}</div>
+    <form class="group-add-form" data-add-group-school="${schoolId}">
+      <input type="text" class="group-add-input" placeholder="New group name" required>
+      <button type="submit" class="btn btn--secondary btn--xs">Add group</button>
+    </form>`;
+}
+
+async function refreshGroupsForSchool(schoolId) {
+  state.groupsBySchool.delete(schoolId);
+  const groups = await loadGroupsForSchool(schoolId);
+  const target = document.querySelector(`[data-groups-for="${schoolId}"]`);
+  if (target) target.innerHTML = renderGroupsBlock(schoolId, groups);
+
+  if (el("stuSchoolFilter").value === schoolId) {
+    const groupOptions = groups.map((g) => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join("");
+    el("stuGroupFilter").innerHTML = '<option value="">All groups</option>' + groupOptions;
+    el("stuGroup").innerHTML = '<option value="">No group</option>' + groupOptions;
+  }
+  return groups;
 }
 
 function renderSchoolCard(s) {
   const counts = state.schoolCounts.get(s.id) || { students: 0, coaches: 0 };
   const empty = counts.students === 0 && counts.coaches === 0;
+  const groupsSection = `<div class="entity-card__groups" data-groups-for="${s.id}">Loading groups…</div>`;
 
   if (state.editingSchoolId === s.id) {
     return `<div class="entity-card">
@@ -213,16 +244,14 @@ function renderSchoolCard(s) {
         <button type="button" class="btn btn--primary btn--xs" data-save-school="${s.id}">Save</button>
         <button type="button" class="btn btn--secondary btn--xs" data-cancel-school-edit="1">Cancel</button>
       </div>
+      ${groupsSection}
     </div>`;
   }
 
   return `<div class="entity-card">
     <h3>${escapeHtml(s.name)}</h3>
     <p>${escapeHtml(s.location || "—")} · ID prefix <strong>${escapeHtml(s.prefix)}</strong></p>
-    <p class="entity-card__groups" data-groups-for="${s.id}">Loading groups…</p>
-    <p class="field__hint">${counts.students} student${counts.students === 1 ? "" : "s"} · ${counts.coaches} coach${
-    counts.coaches === 1 ? "" : "es"
-  }</p>
+    ${groupsSection}
     <div class="entity-card__actions">
       <button type="button" class="btn btn--secondary btn--xs" data-edit-school="${s.id}">Edit</button>
       <button type="button" class="btn btn--secondary btn--xs" data-delete-school="${s.id}" ${empty ? "" : "disabled"}
@@ -299,7 +328,57 @@ el("schoolList").addEventListener("click", async (e) => {
       setStatus(err.message, "error");
       deleteBtn.disabled = false;
     }
+    return;
   }
+
+  const removeGroupBtn = e.target.closest("[data-remove-group]");
+  if (removeGroupBtn) {
+    const groupId = removeGroupBtn.getAttribute("data-remove-group");
+    const schoolId = removeGroupBtn.getAttribute("data-remove-group-school");
+
+    const sure = window.confirm("Remove this group? This only works if no students are currently in it.");
+    if (!sure) return;
+
+    removeGroupBtn.disabled = true;
+    const { error } = await supabase.from("school_groups").delete().eq("id", groupId);
+
+    if (error) {
+      setStatus(
+        error.code === "23503" ? "This group still has students in it. Move them to a different group first." : "Couldn't remove that group. Try again.",
+        "error"
+      );
+      removeGroupBtn.disabled = false;
+      return;
+    }
+
+    await refreshGroupsForSchool(schoolId);
+    setStatus("Group removed.", "success");
+  }
+});
+
+el("schoolList").addEventListener("submit", async (e) => {
+  const form = e.target.closest("[data-add-group-school]");
+  if (!form) return;
+  e.preventDefault();
+
+  const schoolId = form.getAttribute("data-add-group-school");
+  const input = form.querySelector(".group-add-input");
+  const name = input.value.trim();
+  if (!name) return;
+
+  const submitBtn = form.querySelector("button[type=submit]");
+  submitBtn.disabled = true;
+  const { error } = await supabase.from("school_groups").insert({ school_id: schoolId, name });
+  submitBtn.disabled = false;
+
+  if (error) {
+    setStatus(error.code === "23505" ? "That group already exists." : "Couldn't add that group. Try again.", "error");
+    return;
+  }
+
+  input.value = "";
+  await refreshGroupsForSchool(schoolId);
+  setStatus("Group added.", "success");
 });
 
 el("schoolForm").addEventListener("submit", async (e) => {

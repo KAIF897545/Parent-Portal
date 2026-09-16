@@ -1104,6 +1104,58 @@ a {
   margin-top: 8px;
 }
 
+.group-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.group-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 4px 3px 10px;
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.group-chip__remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.group-chip__remove:hover {
+  background: var(--border);
+  color: var(--crimson);
+}
+
+.group-add-form {
+  display: flex;
+  gap: 6px;
+}
+
+.group-add-input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  background: var(--white);
+  color: var(--text);
+}
+
 /* Forms in cards, with a two-column grid on wider screens */
 .form-card {
   background: var(--white);
