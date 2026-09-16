@@ -64,3 +64,39 @@ export function clientIp(req) {
 export function sendJson(res, status, body) {
   res.status(status).json(body);
 }
+
+// Maps the PWxxx errcodes raised by the SQL functions in 002_functions.sql
+// to the message shown to the admin. PW004 always renders as exactly
+// "Password rejected." — a fuller message would confirm that some other
+// account uses that string.
+export const PW_MESSAGES = {
+  PW001: "Password must be at least 8 characters.",
+  PW004: "Password rejected.",
+  PW007: "Unknown student.",
+  PW008: "Unknown coach.",
+  PW009: "Unknown school.",
+  PW015: "Full name is required.",
+  PW016: "Unknown module.",
+  PW017: "Unknown group for that school.",
+  PW018: "Enter a valid email address.",
+  PW019: "That email is already in use.",
+  PW020: "Role must be coach or admin.",
+  PW021: "Choose a school for this coach.",
+  PW022: "Admins don't belong to a school.",
+  PW023: "School name is required.",
+  PW024: "Prefix must be 2 to 6 letters.",
+  PW025: "That prefix is already in use.",
+};
+
+// Chess/Maldives-themed word + 4 digits, matching the passwords already
+// seeded for test accounts. Not shown to anyone but the admin, once.
+const PASSWORD_WORDS = [
+  "knight", "bishop", "castle", "gambit", "endgame",
+  "opening", "tactic", "island", "atoll", "lagoon",
+];
+
+export function randomPassword() {
+  const word = PASSWORD_WORDS[Math.floor(Math.random() * PASSWORD_WORDS.length)];
+  const digits = String(Math.floor(1000 + Math.random() * 9000));
+  return word + digits;
+}

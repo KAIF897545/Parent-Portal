@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="css/site.css" />
+</head>
+<body>
+<div class="page page--wide">
+  <header class="appbar">
+    <div class="appbar__brand">
+      <div class="brand__mark" aria-hidden="true">♞</div>
+      <div class="appbar__names">
+        <h1>Administration</h1>
+        <p class="appbar__meta" id="roleLine">Loading…</p>
+      </div>
+    </div>
+    <div class="appbar__actions">
+      <button type="button" class="btn btn--secondary" id="signOutButton">Sign out</button>
+    </div>
+  </header>
+
+  <div id="status" class="form-message" role="status" aria-live="polite"></div>
+
+  <div class="tabs" role="tablist" aria-label="Admin sections">
+    <button type="button" class="tab" id="tabSchools" role="tab" aria-selected="true" aria-controls="panelSchools">Schools</button>
+    <button type="button" class="tab" id="tabStudents" role="tab" aria-selected="false" aria-controls="panelStudents">Students</button>
+    <button type="button" class="tab" id="tabCoaches" role="tab" aria-selected="false" aria-controls="panelCoaches">Coach accounts</button>
+  </div>
+
+  <!-- SCHOOLS -->
+  <section id="panelSchools" class="tabpanel">
+    <h2 class="section-title">School portals</h2>
+    <div class="entity-grid" id="schoolList"></div>
+
+    <h2 class="section-title">Add a school</h2>
+    <div class="form-card">
+      <form id="schoolForm" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="schName">Name</label>
+            <input type="text" id="schName" placeholder="Maldives Chess Club" required>
+          </div>
+          <div class="field">
+            <label for="schLocation">Location</label>
+            <input type="text" id="schLocation" placeholder="Malé">
+          </div>
+          <div class="field">
+            <label for="schPrefix">Student ID prefix</label>
+            <input type="text" id="schPrefix" placeholder="MCC" maxlength="6" required>
+            <p class="field__hint">2–6 letters. Locks once the school has students.</p>
+          </div>
+          <div class="field">
+            <label for="schGroups">Class groups</label>
+            <input type="text" id="schGroups" placeholder="Saturday Beginners, Sunday Intermediate">
+            <p class="field__hint">Comma-separated. You can add more later.</p>
+          </div>
+        </div>
+        <p class="form-message" id="schoolMessage" role="alert" aria-live="assertive"></p>
+        <button type="submit" class="btn btn--primary" id="schoolSubmit" style="width:auto">Create school</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- STUDENTS -->
+  <section id="panelStudents" class="tabpanel" hidden>
+    <h2 class="section-title">Students</h2>
+    <div class="toolbar">
+      <label class="visually-hidden" for="stuSchoolFilter">School</label>
+      <select id="stuSchoolFilter" aria-label="School"></select>
+      <label class="visually-hidden" for="stuGroupFilter">Group</label>
+      <select id="stuGroupFilter" aria-label="Filter by group"><option value="">All groups</option></select>
+      <label class="visually-hidden" for="stuSearch">Search</label>
+      <input type="search" id="stuSearch" placeholder="Search name or student ID">
+    </div>
+    <ul class="roster-list" id="studentList"></ul>
+
+    <h2 class="section-title">Add a student</h2>
+    <div class="form-card">
+      <form id="studentForm" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="stuSchool">School</label>
+            <select id="stuSchool" required></select>
+          </div>
+          <div class="field">
+            <label for="stuName">Full name</label>
+            <input type="text" id="stuName" placeholder="Ahmed Rasheed" required>
+          </div>
+          <div class="field">
+            <label for="stuCategory">Category</label>
+            <select id="stuCategory">
+              <option>Beginner</option>
+              <option>Intermediate</option>
+              <option>Advanced</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="stuGroup">Group</label>
+            <select id="stuGroup"><option value="">No group</option></select>
+          </div>
+          <div class="field">
+            <label for="stuModule">Starting module</label>
+            <select id="stuModule" required></select>
+          </div>
+          <div class="field">
+            <label for="stuPassword">Starting password</label>
+            <div class="field__inline">
+              <input type="text" id="stuPassword" class="mono" placeholder="Leave blank to generate">
+            </div>
+            <p class="field__hint">Shown once, right after creation. The student changes it on first sign-in.</p>
+          </div>
+        </div>
+        <p class="form-message" id="studentMessage" role="alert" aria-live="assertive"></p>
+        <button type="submit" class="btn btn--primary" id="studentSubmit" style="width:auto">Create student</button>
+      </form>
+      <div id="studentResult"></div>
+    </div>
+
+    <h2 class="section-title">Bulk add</h2>
+    <div class="form-card">
+      <p class="field__hint" style="margin-top:0">
+        One full name per line. Every row uses the school, category, group and module picked above.
+      </p>
+      <form id="bulkForm" novalidate>
+        <div class="field">
+          <label for="bulkNames">Full names</label>
+          <textarea id="bulkNames" rows="6" placeholder="Aishath Ibrahim&#10;Hassan Naseer&#10;Mariyam Shifa"></textarea>
+        </div>
+        <p class="form-message" id="bulkMessage" role="alert" aria-live="assertive"></p>
+        <button type="submit" class="btn btn--primary" id="bulkSubmit" style="width:auto">Create all</button>
+      </form>
+      <div id="bulkResult"></div>
+    </div>
+  </section>
+
+  <!-- COACHES -->
+  <section id="panelCoaches" class="tabpanel" hidden>
+    <h2 class="section-title">Coach accounts</h2>
+    <ul class="roster-list" id="coachList"></ul>
+
+    <h2 class="section-title">Add a coach account</h2>
+    <div class="form-card">
+      <form id="coachForm" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="coachEmailInput">Email</label>
+            <input type="email" id="coachEmailInput" placeholder="hassan@maldiveschessclub.com" required>
+          </div>
+          <div class="field">
+            <label for="coachNameInput">Name</label>
+            <input type="text" id="coachNameInput" placeholder="Hassan Naseer" required>
+          </div>
+          <div class="field">
+            <label for="coachRole">Role</label>
+            <select id="coachRole">
+              <option value="coach" selected>Coach</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="field" id="coachSchoolField">
+            <label for="coachSchool">School</label>
+            <select id="coachSchool" required></select>
+          </div>
+          <div class="field">
+            <label for="coachPasswordInput">Starting password</label>
+            <input type="text" id="coachPasswordInput" class="mono" placeholder="Leave blank to generate">
+            <p class="field__hint">Shown once. Coaches never get a way to change their own password — only the admin resets it.</p>
+          </div>
+        </div>
+        <p class="form-message" id="coachFormMessage" role="alert" aria-live="assertive"></p>
+        <button type="submit" class="btn btn--primary" id="coachSubmit" style="width:auto">Create account</button>
+      </form>
+      <div id="coachResult"></div>
+    </div>
+  </section>
+</div>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>
