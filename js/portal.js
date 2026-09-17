@@ -79,13 +79,33 @@ function renderFeedback(rows) {
   const box = document.getElementById("feedbackList");
   box.innerHTML = rows.length
     ? rows
-        .map(
-          (f, i) => `<div class="feedback-card" style="animation-delay:${i * 60}ms">
-            <div class="feedback-card__month">${formatMonth(f.month)}</div>
+        .map((f, i) => {
+          const stars = f.rating
+            ? `<div class="feedback-card__stars" aria-label="${f.rating} out of 5 stars">${"★".repeat(
+                f.rating
+              )}${"☆".repeat(5 - f.rating)}</div>`
+            : "";
+          const highlight = f.highlight
+            ? `<div class="feedback-card__tag feedback-card__tag--highlight">
+                <span class="feedback-card__tag-icon" aria-hidden="true">🏆</span>${escapeHtml(f.highlight)}
+              </div>`
+            : "";
+          const nextFocus = f.next_focus
+            ? `<div class="feedback-card__tag feedback-card__tag--focus">
+                <span class="feedback-card__tag-icon" aria-hidden="true">🎯</span>${escapeHtml(f.next_focus)}
+              </div>`
+            : "";
+          return `<div class="feedback-card" style="animation-delay:${i * 60}ms">
+            <div class="feedback-card__top">
+              <div class="feedback-card__month">${formatMonth(f.month)}</div>
+              ${stars}
+            </div>
+            ${highlight}
             <div class="feedback-card__text">${escapeHtml(f.body)}</div>
+            ${nextFocus}
             <div class="feedback-card__when">Written ${formatDate(f.created_at)}</div>
-          </div>`
-        )
+          </div>`;
+        })
         .join("")
     : `<div class="feedback-card">Your coach writes a summary at the end of each month. Your first one will appear here.</div>`;
 }
@@ -181,7 +201,7 @@ async function init() {
     // No coach name here on purpose — feedback reads as a note from "the club", not an audit trail.
     supabase
       .from("feedback")
-      .select("month, body, created_at")
+      .select("month, body, rating, highlight, next_focus, created_at")
       .eq("student_id", uid)
       .order("month", { ascending: false })
       .order("created_at", { ascending: false }),

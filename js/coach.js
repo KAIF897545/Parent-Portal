@@ -634,7 +634,7 @@ async function loadStudentNotes(studentId) {
   const [{ data: fb }, { data: nt }] = await Promise.all([
     supabase
       .from("feedback")
-      .select("id, month, body, created_at, coach:coaches(name)")
+      .select("id, month, body, rating, highlight, next_focus, created_at, coach:coaches(name)")
       .eq("student_id", studentId)
       .order("month", { ascending: false })
       .order("created_at", { ascending: false }),
@@ -749,11 +749,34 @@ function notesPaneHtml(student) {
   const showing = state.notePane;
   const due = feedbackDueForStudent(student.id);
 
+  const starRow = (value) =>
+    [1, 2, 3, 4, 5]
+      .map(
+        (n) =>
+          `<button type="button" class="star-picker__star${n <= value ? " is-filled" : ""}" data-star="${n}"
+            aria-label="${n} star${n > 1 ? "s" : ""}">&#9733;</button>`
+      )
+      .join("");
+
   const form =
     showing === "feedback"
       ? `<textarea id="fbText" placeholder="Monthly summary for ${escapeHtml(
           student.full_name
         )}. They will read this, so write it to them."></textarea>
+        <div class="fb-extra">
+          <label class="fb-extra__label">Effort &amp; growth this month</label>
+          <div class="star-picker" id="fbRating" data-value="0">${starRow(0)}</div>
+        </div>
+        <div class="fb-extra">
+          <label class="fb-extra__label" for="fbHighlight">&#127942; This month's highlight (optional)</label>
+          <input type="text" id="fbHighlight" class="fb-extra__input" maxlength="120"
+            placeholder="e.g. Won their first practice game">
+        </div>
+        <div class="fb-extra">
+          <label class="fb-extra__label" for="fbFocus">&#127919; Focus for next month (optional)</label>
+          <input type="text" id="fbFocus" class="fb-extra__input" maxlength="120"
+            placeholder="e.g. Opening principles and simple tactics">
+        </div>
         <div class="notes__row">
           <input type="month" id="fbMonth" value="${thisMonthKey()}">
           <button type="button" class="btn btn--primary btn--xs" id="fbSave">Save feedback</button>
@@ -773,8 +796,10 @@ function notesPaneHtml(student) {
               (f) => `<div class="entry">
                 <div class="entry__meta">${formatMonth(f.month)} · ${escapeHtml(f.coach?.name || "—")} · ${formatDate(
                 f.created_at
-              )}</div>
+              )}${f.rating ? ` · <span class="entry__stars">${"&#9733;".repeat(f.rating)}${"&#9734;".repeat(5 - f.rating)}</span>` : ""}</div>
+                ${f.highlight ? `<div class="entry__tag entry__tag--highlight">&#127942; ${escapeHtml(f.highlight)}</div>` : ""}
                 <div class="entry__body">${escapeHtml(f.body)}</div>
+                ${f.next_focus ? `<div class="entry__tag entry__tag--focus">&#127919; ${escapeHtml(f.next_focus)}</div>` : ""}
               </div>`
             )
             .join("")
@@ -815,6 +840,22 @@ el("checklistWrap").addEventListener("click", async (e) => {
     return;
   }
 
+  // Handled with direct DOM updates, not a re-render, so clicking a star
+  // doesn't wipe whatever the coach has already typed into the textarea
+  // or the highlight/focus fields in the same form.
+  const starBtn = e.target.closest("[data-star]");
+  if (starBtn) {
+    const value = Number(starBtn.getAttribute("data-star"));
+    const row = starBtn.closest(".star-picker");
+    const already = Number(row.dataset.value) === value;
+    const next = already ? 0 : value; // click the same star again to clear
+    row.dataset.value = String(next);
+    row.querySelectorAll("[data-star]").forEach((btn) => {
+      btn.classList.toggle("is-filled", Number(btn.getAttribute("data-star")) <= next);
+    });
+    return;
+  }
+
   if (e.target.id === "fbSave") {
     const text = el("fbText").value.trim();
     if (!text) {
@@ -822,10 +863,19 @@ el("checklistWrap").addEventListener("click", async (e) => {
       return;
     }
     const monthDate = `${el("fbMonth").value}-01`;
+    const ratingValue = Number(el("fbRating")?.dataset.value) || null;
+    const highlight = el("fbHighlight")?.value.trim() || null;
+    const nextFocus = el("fbFocus")?.value.trim() || null;
     e.target.disabled = true;
-    const { error } = await supabase
-      .from("feedback")
-      .insert({ student_id: student.id, coach_id: state.coach.id, month: monthDate, body: text });
+    const { error } = await supabase.from("feedback").insert({
+      student_id: student.id,
+      coach_id: state.coach.id,
+      month: monthDate,
+      body: text,
+      rating: ratingValue,
+      highlight,
+      next_focus: nextFocus,
+    });
     e.target.disabled = false;
     if (error) {
       setStatus("Couldn't save feedback. Try again.", "error");

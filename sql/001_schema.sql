@@ -203,12 +203,15 @@ for each row execute function public.enforce_checkpoint_item();
 -- feedback — monthly summary, student-readable
 -- ---------------------------------------------------------------------
 create table public.feedback (
-  id         uuid primary key default gen_random_uuid(),
-  student_id uuid not null references public.students(id),
-  coach_id   uuid not null references public.coaches(id),
-  month      date not null,
-  body       text not null check (length(btrim(body)) > 0),
-  created_at timestamptz not null default now()
+  id          uuid primary key default gen_random_uuid(),
+  student_id  uuid not null references public.students(id),
+  coach_id    uuid not null references public.coaches(id),
+  month       date not null,
+  body        text not null check (length(btrim(body)) > 0),
+  rating      smallint check (rating between 1 and 5),
+  highlight   text,
+  next_focus  text,
+  created_at  timestamptz not null default now()
 );
 
 create index feedback_student_month on public.feedback (student_id, month desc);
