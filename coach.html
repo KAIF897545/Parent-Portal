@@ -38,24 +38,36 @@
 
   <section id="panelToday" class="tabpanel">
     <div class="stat-grid">
-      <div class="stat">
-        <div class="stat__label">Active students</div>
-        <div class="stat__value" id="statCount">—</div>
+      <div class="stat stat--students" style="animation-delay: 0ms">
+        <div class="stat__icon" aria-hidden="true">♟</div>
+        <div class="stat__body">
+          <div class="stat__label">Active students</div>
+          <div class="stat__value" id="statCount">—</div>
+        </div>
       </div>
-      <div class="stat">
-        <div class="stat__label">Present</div>
-        <div class="stat__value" id="statPresent">—</div>
+      <div class="stat stat--present" style="animation-delay: 60ms">
+        <div class="stat__icon" aria-hidden="true">✓</div>
+        <div class="stat__body">
+          <div class="stat__label">Present</div>
+          <div class="stat__value" id="statPresent">—</div>
+        </div>
       </div>
-      <div class="stat">
-        <div class="stat__label">Awaiting first sign-in</div>
-        <div class="stat__value" id="statPending">—</div>
+      <div class="stat stat--pending" style="animation-delay: 120ms">
+        <div class="stat__icon" aria-hidden="true">⏳</div>
+        <div class="stat__body">
+          <div class="stat__label">Awaiting first sign-in</div>
+          <div class="stat__value" id="statPending">—</div>
+        </div>
       </div>
     </div>
 
     <div class="attendance-layout">
       <aside class="card cal-card" aria-label="Choose a session date">
         <div class="cal-head">
-          <span class="cal-title" id="calTitle"></span>
+          <div class="cal-head__title">
+            <span class="cal-title" id="calTitle"></span>
+            <span class="cal-subtitle" id="calSubtitle"></span>
+          </div>
           <div>
             <button type="button" class="icon-btn" id="calPrev" aria-label="Previous month">&lsaquo;</button>
             <button type="button" class="icon-btn" id="calNext" aria-label="Next month">&rsaquo;</button>

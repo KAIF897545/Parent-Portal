@@ -1,5 +1,5 @@
 import { supabase } from "./supabase.js";
-import { escapeHtml, formatDate, formatMonth, formatDateTime, maldivesDateParts } from "./utils.js";
+import { escapeHtml, formatDate, formatMonth, formatDateTime, maldivesDateParts, initials } from "./utils.js";
 
 const el = (id) => document.getElementById(id);
 
@@ -337,6 +337,12 @@ function renderCalendar() {
   const month = state.attCalendarMonth;
   el("calTitle").textContent = month.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 
+  const sessionDays = state.attMonthCounts.size;
+  const totalPresent = [...state.attMonthCounts.values()].reduce((sum, n) => sum + n, 0);
+  el("calSubtitle").textContent = sessionDays
+    ? `${sessionDays} session${sessionDays === 1 ? "" : "s"} · ${totalPresent} present marks`
+    : "No sessions recorded yet";
+
   const firstOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
   const offset = (firstOfMonth.getDay() + 6) % 7; // grid starts on Monday
   const start = new Date(firstOfMonth);
@@ -401,7 +407,7 @@ function renderSession() {
 
   el("attendanceList").innerHTML = state.students.length
     ? state.students
-        .map((s) => {
+        .map((s, i) => {
           const on = draftSet.has(s.id);
           const was = savedIds.has(s.id);
           const info = savedMap.get(s.id);
@@ -413,13 +419,14 @@ function renderSession() {
                   info.markedAt
                 )}</span>`
               : "";
-          return `<li class="roster-row">
-            <button type="button" class="attend-btn" data-att="${s.id}" aria-pressed="${on}"
-              aria-label="Mark ${escapeHtml(s.full_name)} present">✓</button>
+          return `<li class="roster-row${on ? " is-present" : ""}" style="animation-delay:${i * 25}ms">
+            <span class="avatar-circle avatar-circle--sm" aria-hidden="true">${escapeHtml(initials(s.full_name))}</span>
             <span class="roster-row__name">${escapeHtml(s.full_name)}
               <span class="roster-row__sub">${escapeHtml(s.student_code)}</span>
               ${markedLine}
             </span>${changeTag}
+            <button type="button" class="attend-btn" data-att="${s.id}" aria-pressed="${on}"
+              aria-label="Mark ${escapeHtml(s.full_name)} present">✓</button>
           </li>`;
         })
         .join("")
@@ -587,15 +594,20 @@ function renderPicker() {
 
   el("studentPicker").innerHTML = list.length
     ? list
-        .map((s) => {
+        .map((s, i) => {
           const stats = studentModuleStats(s.id, s.current_module_id);
           const due = feedbackDueForStudent(s.id);
           return `<button type="button" class="picker__item" data-student="${s.id}" aria-pressed="${
             state.selectedStudent === s.id
-          }">${escapeHtml(s.full_name)}
-            <small>${escapeHtml(s.student_code)} · ${moduleLabel(s.current_module_id)} ${stats.pct}%${
+          }" style="animation-delay:${i * 20}ms">
+            <span class="avatar-circle avatar-circle--sm" aria-hidden="true">${escapeHtml(
+              initials(s.full_name)
+            )}</span>
+            <span class="picker__item-text">${escapeHtml(s.full_name)}
+              <small>${escapeHtml(s.student_code)} · ${moduleLabel(s.current_module_id)} ${stats.pct}%${
             due ? ' · <span class="picker__due">summary due</span>' : ""
           }</small>
+            </span>
           </button>`;
         })
         .join("")
@@ -683,6 +695,7 @@ function renderChecklist() {
 
   el("checklistWrap").innerHTML = `
     <div class="checklist-head">
+      <span class="avatar-circle avatar-circle--sm" aria-hidden="true">${escapeHtml(initials(student.full_name))}</span>
       <span class="checklist-head__name">${escapeHtml(student.full_name)} · ${escapeHtml(studentGroupName(student))}</span>
       <span class="track"><span class="track__bar" style="width:${stats.pct}%"></span></span>
       <span class="checklist-head__pct">${stats.done}/${stats.total}</span>

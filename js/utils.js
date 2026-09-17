@@ -1,5 +1,15 @@
 // Small helpers shared by the dashboard pages.
 
+export function initials(name) {
+  return String(name ?? "")
+    .split(/\s+/)
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 export function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (c) => ({
     "&": "&amp;",

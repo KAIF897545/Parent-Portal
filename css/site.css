@@ -756,6 +756,12 @@ body.portal-landing .brand__sub {
   box-shadow: 0 4px 12px rgba(176, 15, 46, 0.3);
 }
 
+.avatar-circle--sm {
+  width: 30px;
+  height: 30px;
+  font-size: 0.72rem;
+}
+
 .appbar__names h1 {
   font-size: 1.3rem;
   margin: 0;
@@ -810,6 +816,16 @@ body.portal-landing .brand__sub {
   margin-top: 0;
 }
 
+.section-title__sub {
+  display: inline-block;
+  margin-left: 10px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  vertical-align: middle;
+}
+
 /* Stat cards */
 .stat-grid {
   display: grid;
@@ -819,10 +835,67 @@ body.portal-landing .brand__sub {
 }
 
 .stat {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  animation: fadeInUp 0.4s ease both;
+}
+
+.stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(26, 12, 14, 0.1);
+}
+
+.stat::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gold);
+}
+
+.stat--present::before {
+  background: var(--success);
+}
+
+.stat--pending::before {
+  background: var(--crimson);
+}
+
+.stat__icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  background: rgba(201, 169, 97, 0.14);
+  color: var(--gold-dark);
+}
+
+.stat--present .stat__icon {
+  background: rgba(47, 107, 58, 0.12);
+  color: var(--success);
+}
+
+.stat--pending .stat__icon {
+  background: rgba(176, 15, 46, 0.08);
+  color: var(--crimson);
+}
+
+.stat__body {
+  min-width: 0;
 }
 
 .stat__label {
@@ -853,8 +926,20 @@ body.portal-landing .brand__sub {
   gap: 12px;
   background: var(--white);
   border: 1px solid var(--border);
+  border-left: 3px solid transparent;
   border-radius: var(--radius);
   padding: 10px 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  animation: fadeInUp 0.35s ease both;
+}
+
+.roster-row:hover {
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px rgba(26, 12, 14, 0.07);
+}
+
+.roster-row.is-present {
+  border-left-color: var(--success);
 }
 
 .roster-row__name {
@@ -942,10 +1027,21 @@ body.portal-landing .brand__sub {
   margin-bottom: 12px;
 }
 
+.cal-head__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .cal-title {
   font-family: var(--font-heading);
   font-weight: 600;
   font-size: 1.02rem;
+}
+
+.cal-subtitle {
+  font-size: 0.74rem;
+  color: var(--text-muted);
 }
 
 .icon-btn {
@@ -1148,16 +1244,31 @@ body.portal-landing .brand__sub {
 }
 
 .picker__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   border: 1px solid var(--border);
   background: var(--white);
-  border-radius: 8px;
-  padding: 8px 12px;
+  border-radius: 999px;
+  padding: 6px 16px 6px 6px;
   text-align: left;
   font-family: var(--font-body);
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   color: var(--text);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  animation: fadeInUp 0.35s ease both;
+}
+
+.picker__item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(26, 12, 14, 0.1);
+  border-color: var(--gold);
+}
+
+.picker__item-text {
+  min-width: 0;
 }
 
 .picker__item small {
@@ -1167,9 +1278,19 @@ body.portal-landing .brand__sub {
   margin-top: 2px;
 }
 
+.picker__item .avatar-circle {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: var(--near-black);
+}
+
 .picker__item[aria-pressed="true"] {
   border-color: var(--crimson);
   background: rgba(176, 15, 46, 0.06);
+}
+
+.picker__item[aria-pressed="true"] .avatar-circle {
+  background: linear-gradient(135deg, var(--crimson), var(--near-black));
+  color: var(--cream);
 }
 
 .picker__item:focus-visible {
@@ -1597,6 +1718,17 @@ body.portal-landing .brand__sub {
   pointer-events: none;
 }
 
+.ring-card__mark {
+  position: absolute;
+  bottom: -18px;
+  right: 8px;
+  font-family: var(--font-heading);
+  font-size: 7rem;
+  line-height: 1;
+  color: rgba(247, 241, 232, 0.05);
+  pointer-events: none;
+}
+
 .ring-card__text .mod {
   font-family: var(--font-heading);
   font-size: 1.25rem;
@@ -1838,6 +1970,27 @@ body.portal-landing .brand__sub {
 .unit-lite:hover {
   transform: translateX(2px);
   box-shadow: 0 4px 12px rgba(26, 12, 14, 0.08);
+}
+
+.unit-lite__icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.unit-lite.is-full .unit-lite__icon {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--white);
 }
 
 .unit-lite__name {

@@ -1,5 +1,5 @@
 import { supabase } from "./supabase.js";
-import { escapeHtml, formatDate, formatMonth } from "./utils.js";
+import { escapeHtml, formatDate, formatMonth, initials } from "./utils.js";
 
 function setStatus(text, kind) {
   const box = document.getElementById("status");
@@ -37,6 +37,7 @@ function renderRing(student, unitList, tickSet, cpSet) {
   const card = document.getElementById("ringCard");
   card.hidden = false;
   card.innerHTML = `
+    <span class="ring-card__mark" aria-hidden="true">♞</span>
     <div class="ring-card__ring">${ringSvg(prog.pct)}</div>
     <div class="ring-card__text">
       <div class="mod">${escapeHtml(student.module?.name ?? "")}</div>
@@ -49,6 +50,11 @@ function renderRing(student, unitList, tickSet, cpSet) {
 }
 
 function renderBadges(unitList, cpSet) {
+  const withCheckpoint = unitList.filter((u) => u.checkpoint);
+  const earned = withCheckpoint.filter((u) => cpSet.has(u.checkpoint.id)).length;
+  const summary = document.getElementById("badgeSummary");
+  if (summary) summary.textContent = `${earned} of ${withCheckpoint.length} earned`;
+
   document.getElementById("badgeRow").innerHTML = unitList
     .map((u, i) => {
       const got = u.checkpoint && cpSet.has(u.checkpoint.id);
@@ -76,6 +82,9 @@ function renderNextUp(unitList, tickSet) {
 }
 
 function renderFeedback(rows) {
+  const summary = document.getElementById("feedbackSummary");
+  if (summary) summary.textContent = rows.length ? `${rows.length} note${rows.length === 1 ? "" : "s"}` : "";
+
   const box = document.getElementById("feedbackList");
   box.innerHTML = rows.length
     ? rows
@@ -111,6 +120,10 @@ function renderFeedback(rows) {
 }
 
 function renderUnits(unitList, tickSet) {
+  const overall = moduleTotals(unitList, tickSet);
+  const summary = document.getElementById("unitSummary");
+  if (summary) summary.textContent = `${overall.done} of ${overall.total} signed off`;
+
   document.getElementById("unitList").innerHTML = unitList
     .map((u, i) => {
       const total = u.items.length;
@@ -118,7 +131,8 @@ function renderUnits(unitList, tickSet) {
       const full = total > 0 && done === total;
       const pct = total ? Math.round((done / total) * 100) : 0;
       return `<div class="unit-lite${full ? " is-full" : ""}" style="animation-delay:${i * 40}ms">
-        <span class="unit-lite__name">${escapeHtml(u.name)}${full ? " ✓" : ""}</span>
+        <span class="unit-lite__icon">${full ? "✓" : i + 1}</span>
+        <span class="unit-lite__name">${escapeHtml(u.name)}</span>
         <span class="track track--mini"><span class="track__bar" style="width:${pct}%"></span></span>
         <span class="unit-lite__count">${done}/${total}</span>
       </div>`;
@@ -156,15 +170,8 @@ async function init() {
     return;
   }
 
-  const initials = student.full_name
-    .split(/\s+/)
-    .map((w) => w[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
   const avatar = document.getElementById("studentAvatar");
-  if (avatar) avatar.textContent = initials;
+  if (avatar) avatar.textContent = initials(student.full_name);
 
   document.getElementById("studentName").textContent = student.full_name;
   document.getElementById("studentMeta").textContent = [
