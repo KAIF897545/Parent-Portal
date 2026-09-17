@@ -151,7 +151,7 @@ async function init() {
   const { data: student, error } = await supabase
     .from("students")
     .select(
-      `id, full_name, student_code, category, must_change_password, created_at, current_module_id,
+      `id, full_name, student_code, must_change_password, created_at, current_module_id,
        group:school_groups(name), school:schools(name), module:modules(id, number, name)`
     )
     .eq("id", uid)

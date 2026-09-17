@@ -436,7 +436,7 @@ async function onStudentsSchoolChange() {
 async function loadStudents(schoolId) {
   const { data, error } = await supabase
     .from("students")
-    .select("id, full_name, student_code, category, group_id, current_module_id, must_change_password, active")
+    .select("id, full_name, student_code, group_id, current_module_id, must_change_password, active")
     .eq("school_id", schoolId)
     .order("full_name");
 
@@ -493,14 +493,9 @@ function renderStudentRow(s, schoolId) {
           )}</option>`
       )
       .join("");
-    const categoryOptions = ["Beginner", "Intermediate", "Advanced"]
-      .map((c) => `<option ${c === s.category ? "selected" : ""}>${c}</option>`)
-      .join("");
-
     return `<li class="roster-row roster-row--edit">
       <div class="edit-grid">
         <input type="text" id="editStuName_${s.id}" value="${escapeHtml(s.full_name)}" placeholder="Full name">
-        <select id="editStuCategory_${s.id}">${categoryOptions}</select>
         <select id="editStuGroup_${s.id}">${groupOptions}</select>
         <select id="editStuModule_${s.id}">${moduleOptions}</select>
       </div>
@@ -515,7 +510,7 @@ function renderStudentRow(s, schoolId) {
     <span class="roster-row__name">${escapeHtml(s.full_name)}
       <span class="roster-row__sub">${escapeHtml(s.student_code)} · ${escapeHtml(
     groupLabel(schoolId, s.group_id)
-  )} · ${escapeHtml(moduleLabel(s.current_module_id))} · ${escapeHtml(s.category || "—")}${
+  )} · ${escapeHtml(moduleLabel(s.current_module_id))}${
     s.must_change_password ? ' · <span class="due-flag">first sign-in pending</span>' : ""
   }${s.active ? "" : ' · <span class="due-flag">inactive</span>'}</span>
     </span>
@@ -587,7 +582,6 @@ el("studentList").addEventListener("click", async (e) => {
   if (saveBtn) {
     const studentId = saveBtn.getAttribute("data-save-student");
     const fullName = el(`editStuName_${studentId}`).value.trim();
-    const category = el(`editStuCategory_${studentId}`).value;
     const groupId = el(`editStuGroup_${studentId}`).value || null;
     const moduleId = el(`editStuModule_${studentId}`).value;
 
@@ -599,7 +593,7 @@ el("studentList").addEventListener("click", async (e) => {
     saveBtn.disabled = true;
     const { error } = await supabase
       .from("students")
-      .update({ full_name: fullName, category, group_id: groupId, current_module_id: moduleId })
+      .update({ full_name: fullName, group_id: groupId, current_module_id: moduleId })
       .eq("id", studentId);
     saveBtn.disabled = false;
 
@@ -678,7 +672,6 @@ el("studentForm").addEventListener("submit", async (e) => {
   const payload = {
     schoolId: el("stuSchool").value,
     fullName: el("stuName").value.trim(),
-    category: el("stuCategory").value,
     groupId: el("stuGroup").value || null,
     moduleId: el("stuModule").value,
     password: el("stuPassword").value.trim() || undefined,
@@ -730,7 +723,6 @@ el("bulkForm").addEventListener("submit", async (e) => {
 
   const rows = names.map((fullName) => ({
     fullName,
-    category: el("stuCategory").value,
     groupId: el("stuGroup").value || null,
     moduleId: el("stuModule").value,
   }));

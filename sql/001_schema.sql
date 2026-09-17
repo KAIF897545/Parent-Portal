@@ -79,7 +79,6 @@ create table public.students (
   student_code        text not null,
   full_name           text not null,
   login_name          text not null,
-  category            text not null default '',
   group_id            uuid references public.school_groups(id),
   current_module_id   uuid not null references public.modules(id),
   must_change_password boolean not null default true,

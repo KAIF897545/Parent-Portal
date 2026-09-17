@@ -114,15 +114,16 @@ grant execute on function public.can_see_student(uuid) to authenticated;
 -- my_identity() — first-login confirmation screen
 -- ---------------------------------------------------------------------
 create or replace function public.my_identity()
-returns table (full_name text, student_code text, category text, school_name text)
+returns table (full_name text, student_code text, group_name text, school_name text)
 language sql
 security definer
 stable
 set search_path = public, pg_temp
 as $$
-  select s.full_name, s.student_code, s.category, sc.name
+  select s.full_name, s.student_code, g.name, sc.name
   from public.students s
   join public.schools sc on sc.id = s.school_id
+  left join public.school_groups g on g.id = s.group_id
   where s.id = auth.uid();
 $$;
 
@@ -387,7 +388,6 @@ grant execute on function public.next_student_code(uuid) to service_role;
 create or replace function public.admin_create_student(
   p_school_id uuid,
   p_full_name text,
-  p_category  text,
   p_group_id  uuid,
   p_module_id uuid,
   p_password  text
@@ -460,11 +460,10 @@ begin
   );
 
   insert into public.students (
-    id, school_id, student_code, full_name, category, group_id, current_module_id,
+    id, school_id, student_code, full_name, group_id, current_module_id,
     must_change_password, active
   ) values (
     new_id, p_school_id, code, btrim(p_full_name),
-    coalesce(nullif(btrim(p_category), ''), 'Beginner'),
     p_group_id, p_module_id, true, true
   );
 
@@ -472,8 +471,8 @@ begin
 end;
 $$;
 
-revoke all on function public.admin_create_student(uuid, text, text, uuid, uuid, text) from public;
-grant execute on function public.admin_create_student(uuid, text, text, uuid, uuid, text) to service_role;
+revoke all on function public.admin_create_student(uuid, text, uuid, uuid, text) from public;
+grant execute on function public.admin_create_student(uuid, text, uuid, uuid, text) to service_role;
 
 -- ---------------------------------------------------------------------
 -- admin_create_coach(...) — service role only.

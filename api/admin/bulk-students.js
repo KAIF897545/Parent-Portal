@@ -1,5 +1,5 @@
 // POST /api/admin/bulk-students
-// { schoolId, rows: [{ fullName, category?, groupId?, moduleId }] }
+// { schoolId, rows: [{ fullName, groupId?, moduleId }] }
 //
 // Creates each row server-side, one admin_create_student call per row, and
 // returns the whole list — including every generated password — once.
@@ -53,7 +53,6 @@ export default async function handler(req, res) {
         const { data, error } = await client.rpc("admin_create_student", {
           p_school_id: schoolId,
           p_full_name: fullName,
-          p_category: typeof row.category === "string" ? row.category : "",
           p_group_id: typeof row.groupId === "string" && row.groupId ? row.groupId : null,
           p_module_id: moduleId,
           p_password: password,

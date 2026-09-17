@@ -159,15 +159,17 @@ async function loadGroups() {
     .eq("school_id", state.schoolId)
     .order("name");
   state.groups = data || [];
-  el("groupFilter").innerHTML =
+  const options =
     '<option value="">All groups</option>' +
     state.groups.map((g) => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join("");
+  el("groupFilter").innerHTML = options;
+  el("attGroupFilter").innerHTML = options;
 }
 
 async function loadStudents() {
   const { data, error } = await supabase
     .from("students")
-    .select("id, full_name, student_code, category, group_id, current_module_id, must_change_password, active")
+    .select("id, full_name, student_code, group_id, current_module_id, must_change_password, active")
     .eq("school_id", state.schoolId)
     .eq("active", true)
     .order("full_name");
@@ -266,6 +268,15 @@ function attIsDirty(dateKey) {
   if (draft.size !== saved.size) return true;
   for (const id of draft) if (!saved.has(id)) return true;
   return false;
+}
+
+// Filters the roster shown while marking attendance by group, so the
+// "Active students"/"Present" stat cards (whole-school context) stay
+// separate from the roster list and "Mark everyone present" (which only
+// need to act on the group currently in view).
+function filteredAttendanceStudents() {
+  const group = el("attGroupFilter").value;
+  return group ? state.students.filter((s) => s.group_id === group) : state.students;
 }
 
 async function initAttendanceTab() {
@@ -405,8 +416,10 @@ function renderSession() {
     statusEl.className = "status-line";
   }
 
-  el("attendanceList").innerHTML = state.students.length
-    ? state.students
+  const rosterStudents = filteredAttendanceStudents();
+
+  el("attendanceList").innerHTML = rosterStudents.length
+    ? rosterStudents
         .map((s, i) => {
           const on = draftSet.has(s.id);
           const was = savedIds.has(s.id);
@@ -430,11 +443,15 @@ function renderSession() {
           </li>`;
         })
         .join("")
-    : `<p class="empty-state">No active students at this school yet.</p>`;
+    : `<p class="empty-state">${
+        state.students.length ? "No students in that group." : "No active students at this school yet."
+      }</p>`;
 
   const presentShown = state.students.filter((s) => draftSet.has(s.id)).length;
   el("statPresent").textContent = `${presentShown} / ${state.students.length}`;
-  el("markAllPresent").hidden = state.students.length > 0 && presentShown === state.students.length;
+
+  const presentShownFiltered = rosterStudents.filter((s) => draftSet.has(s.id)).length;
+  el("markAllPresent").hidden = rosterStudents.length > 0 && presentShownFiltered === rosterStudents.length;
 
   const added = [...draftSet].filter((id) => !savedIds.has(id));
   const removed = [...savedIds].filter((id) => !draftSet.has(id));
@@ -502,10 +519,12 @@ el("attendanceList").addEventListener("click", (e) => {
 el("markAllPresent").addEventListener("click", () => {
   const dateKey = state.attSelectedDate;
   const draft = new Set(attDraftFor(dateKey));
-  state.students.forEach((s) => draft.add(s.id));
+  filteredAttendanceStudents().forEach((s) => draft.add(s.id));
   state.attDrafts.set(dateKey, draft);
   renderAttendanceTab();
 });
+
+el("attGroupFilter").addEventListener("change", renderSession);
 
 el("discardAttendance").addEventListener("click", () => {
   state.attDrafts.delete(state.attSelectedDate);
@@ -555,11 +574,9 @@ window.addEventListener("beforeunload", (e) => {
 
 function filteredStudents() {
   const group = el("groupFilter").value;
-  const cat = el("categoryFilter").value;
   const q = el("searchFilter").value.trim().toLowerCase();
   return state.students.filter((s) => {
     if (group && s.group_id !== group) return false;
-    if (cat && s.category !== cat) return false;
     if (q && !(`${s.full_name} ${s.student_code}`.toLowerCase().includes(q))) return false;
     return true;
   });
@@ -619,7 +636,7 @@ function renderPicker() {
   }
 }
 
-["groupFilter", "categoryFilter", "searchFilter"].forEach((id) => {
+["groupFilter", "searchFilter"].forEach((id) => {
   el(id).addEventListener("input", renderPicker);
   el(id).addEventListener("change", renderPicker);
 });

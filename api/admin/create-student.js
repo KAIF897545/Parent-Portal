@@ -1,5 +1,5 @@
 // POST /api/admin/create-student
-// { schoolId, fullName, category?, groupId?, moduleId, password? }
+// { schoolId, fullName, groupId?, moduleId, password? }
 //
 // Creates the student's auth account (synthetic email) and her students
 // row. If no password is supplied, one is generated and returned once —
@@ -23,7 +23,6 @@ export default async function handler(req, res) {
     const body = req.body || {};
     const schoolId = typeof body.schoolId === "string" ? body.schoolId : "";
     const fullName = typeof body.fullName === "string" ? body.fullName.trim() : "";
-    const category = typeof body.category === "string" ? body.category : "";
     const groupId = typeof body.groupId === "string" && body.groupId ? body.groupId : null;
     const moduleId = typeof body.moduleId === "string" ? body.moduleId : "";
     const requestedPassword = typeof body.password === "string" && body.password.trim() ? body.password.trim() : null;
@@ -41,7 +40,6 @@ export default async function handler(req, res) {
       const { data, error } = await client.rpc("admin_create_student", {
         p_school_id: schoolId,
         p_full_name: fullName,
-        p_category: category,
         p_group_id: groupId,
         p_module_id: moduleId,
         p_password: password,

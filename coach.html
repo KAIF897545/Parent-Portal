@@ -92,6 +92,8 @@
 
         <div class="toolbar">
           <span class="hint">Tick students, then save.</span>
+          <label class="visually-hidden" for="attGroupFilter">Group</label>
+          <select id="attGroupFilter" aria-label="Filter by group"><option value="">All groups</option></select>
           <button type="button" class="btn btn--secondary btn--xs" id="markAllPresent">Mark everyone present</button>
         </div>
 
@@ -121,13 +123,6 @@
     <div class="toolbar">
       <label class="visually-hidden" for="groupFilter">Group</label>
       <select id="groupFilter" aria-label="Filter by group"><option value="">All groups</option></select>
-      <label class="visually-hidden" for="categoryFilter">Category</label>
-      <select id="categoryFilter" aria-label="Filter by category">
-        <option value="">All categories</option>
-        <option>Beginner</option>
-        <option>Intermediate</option>
-        <option>Advanced</option>
-      </select>
       <label class="visually-hidden" for="searchFilter">Search</label>
       <input type="search" id="searchFilter" placeholder="Search name or student ID" />
     </div>

@@ -29,7 +29,7 @@ async function init() {
 
   document.getElementById("identityName").textContent = row.full_name;
   document.getElementById("identityCode").textContent = row.student_code;
-  document.getElementById("identityCategory").textContent = row.category || "—";
+  document.getElementById("identityGroup").textContent = row.group_name || "—";
   document.getElementById("identitySchool").textContent = row.school_name;
 
   loadingMessage.hidden = true;
