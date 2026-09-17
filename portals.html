@@ -29,6 +29,174 @@
     <section class="portal-info">
       <span class="eyebrow eyebrow--mint">How it works</span>
       <h2 class="portal-info__title">Getting started takes a minute</h2>
+
+      <div class="portal-reel">
+        <div class="portal-reel__frame" id="portalReelFrame">
+          <div class="portal-reel__bg"></div>
+          <div class="portal-reel__knight" aria-hidden="true">&#9822;</div>
+          <div class="portal-reel__wipe" id="portalReelWipe"></div>
+          <div class="portal-reel__flash" id="portalReelFlash"></div>
+          <div class="portal-reel__progress" id="portalReelProgress"></div>
+
+          <section class="portal-reel__scene portal-reel__scene--center" data-duration="3600">
+            <div class="portal-reel__logo"><img src="assets/mcc-logo.jpg" alt="" /></div>
+            <div class="portal-reel__wordmark">Maldives Chess Club</div>
+            <div class="portal-reel__tagline">Sixty&#8209;four squares, one thousand islands.</div>
+          </section>
+
+          <section class="portal-reel__scene portal-reel__scene--center" data-duration="4200">
+            <span class="portal-reel__eyebrow portal-reel__eyebrow--crimson">The problem</span>
+            <p class="portal-reel__title">Chess doesn't stop when the session ends.</p>
+            <p class="portal-reel__body" style="margin-inline: auto">
+              Built to bridge ocean gaps and connect schools and coaches across the atolls.
+            </p>
+          </section>
+
+          <section class="portal-reel__scene portal-reel__scene--split" data-duration="3800">
+            <div class="portal-reel__copy">
+              <span class="portal-reel__eyebrow portal-reel__eyebrow--gold">Introducing</span>
+              <p class="portal-reel__title">The Student &amp; Coach Portal</p>
+            </div>
+            <div class="portal-reel__visual">
+              <div class="portal-reel__card">
+                <div class="portal-reel__card-avatar">PT</div>
+                <h4>Private Tutoring</h4>
+                <p>Male&#8217; / Hulhumal&eacute;</p>
+                <div class="portal-reel__card-link">Enter portal &rarr;</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="portal-reel__scene portal-reel__scene--split" data-duration="5600">
+            <div class="portal-reel__copy">
+              <span class="portal-reel__eyebrow">How it works</span>
+              <p class="portal-reel__title" style="font-size: 1.3rem">Three steps, every session</p>
+            </div>
+            <div class="portal-reel__visual">
+              <div class="portal-reel__steps">
+                <div class="portal-reel__step-row">
+                  <span class="portal-reel__step-num">1</span>
+                  <div>
+                    <h5>Pick your school</h5>
+                    <p>Each program opens straight to its own sign-in page.</p>
+                  </div>
+                </div>
+                <div class="portal-reel__step-row">
+                  <span class="portal-reel__step-num">2</span>
+                  <div>
+                    <h5>Sign in</h5>
+                    <p>Full name and password for students, club email for coaches.</p>
+                  </div>
+                </div>
+                <div class="portal-reel__step-row">
+                  <span class="portal-reel__step-num">3</span>
+                  <div>
+                    <h5>Follow progress</h5>
+                    <p>Modules, checkpoints, and coach notes, after every session.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="portal-reel__scene portal-reel__scene--split" data-duration="5800">
+            <div class="portal-reel__copy">
+              <span class="portal-reel__eyebrow portal-reel__eyebrow--crimson">Student view</span>
+              <p class="portal-reel__title" style="font-size: 1.25rem">Growth is tracked. Brilliance is recognized.</p>
+            </div>
+            <div class="portal-reel__visual">
+              <div class="portal-reel__ring">
+                <svg viewBox="0 0 90 90">
+                  <circle class="portal-reel__ring-track" cx="45" cy="45" r="40" />
+                  <circle class="portal-reel__ring-bar" cx="45" cy="45" r="40" />
+                </svg>
+                <div class="portal-reel__ring-label">82%</div>
+              </div>
+              <div class="portal-reel__chips">
+                <span class="portal-reel__chip is-done">Checkpoint 1 &#10003;</span>
+                <span class="portal-reel__chip is-done">Checkpoint 2 &#10003;</span>
+                <span class="portal-reel__chip">Checkpoint 3</span>
+              </div>
+              <div class="portal-reel__feedback">
+                <div class="portal-reel__feedback-month">September</div>
+                <p>Great focus this month &mdash; board setup and notation are solid.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="portal-reel__scene portal-reel__scene--split" data-duration="5800">
+            <div class="portal-reel__copy">
+              <span class="portal-reel__eyebrow portal-reel__eyebrow--gold">Coach view</span>
+              <p class="portal-reel__title" style="font-size: 1.25rem">Mark attendance and progress, live.</p>
+            </div>
+            <div class="portal-reel__visual">
+              <div class="portal-reel__tabs">
+                <span class="portal-reel__tab">Module 1</span>
+                <span class="portal-reel__tab is-current">Module 2</span>
+                <span class="portal-reel__tab">Module 3</span>
+              </div>
+              <div class="portal-reel__roster">
+                <div class="portal-reel__roster-row">
+                  <span class="portal-reel__roster-name">Aiman R.</span>
+                  <span class="portal-reel__attend is-present"></span>
+                </div>
+                <div class="portal-reel__roster-row">
+                  <span class="portal-reel__roster-name">Zara H.</span>
+                  <span class="portal-reel__attend is-present"></span>
+                </div>
+                <div class="portal-reel__roster-row">
+                  <span class="portal-reel__roster-name">Ibrahim N.</span>
+                  <span class="portal-reel__attend"></span>
+                </div>
+              </div>
+              <div class="portal-reel__checklist">
+                <div class="portal-reel__checklist-item is-done">
+                  <span class="portal-reel__checklist-box">&#10003;</span>
+                  <span>Sets up the board correctly</span>
+                </div>
+                <div class="portal-reel__checklist-item">
+                  <span class="portal-reel__checklist-box"></span>
+                  <span>States the castling conditions</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="portal-reel__scene portal-reel__scene--split" data-duration="5600">
+            <div class="portal-reel__copy">
+              <span class="portal-reel__eyebrow portal-reel__eyebrow--gold">Coach view</span>
+              <p class="portal-reel__title" style="font-size: 1.25rem">Write it down while it's fresh.</p>
+            </div>
+            <div class="portal-reel__visual">
+              <div class="portal-reel__notes">
+                <div class="portal-reel__notes-student">Monthly note for <b>Zara H.</b></div>
+                <div class="portal-reel__notes-box">
+                  Great focus this month, ready to move to opening principles next<span class="portal-reel__cursor"></span>
+                </div>
+                <span class="portal-reel__notes-save">Save note</span>
+                <div class="portal-reel__history">
+                  <div class="portal-reel__history-meta">AUGUST</div>
+                  <div class="portal-reel__history-body">Good progress on piece movement. Keep practicing at home.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="portal-reel__scene portal-reel__scene--center" data-duration="5000">
+            <div class="portal-reel__logo"><img src="assets/mcc-logo.jpg" alt="" /></div>
+            <p class="portal-reel__title" style="font-size: 1.4rem">Mentorship, never more than a click away.</p>
+            <a class="portal-reel__cta-btn" href="#schoolGrid">Enter your portal</a>
+            <div class="portal-reel__cta-credit">Conceived &amp; built by Kaif Mausoom and Mohamed Farish</div>
+          </section>
+        </div>
+
+        <div class="portal-reel__controls">
+          <button class="icon-btn" id="portalReelPlayPause" type="button" aria-label="Pause">&#10073;&#10073;</button>
+          <button class="icon-btn" id="portalReelReplay" type="button" aria-label="Replay">&#8635;</button>
+          <span class="portal-reel__scene-label" id="portalReelSceneLabel">Scene 1 / 8</span>
+        </div>
+      </div>
+
       <div class="step-timeline">
         <div class="step">
           <div class="step__num-wrap"><span class="step__num">1</span></div>
@@ -72,5 +240,6 @@
 </div>
 
 <script type="module" src="js/portals.js"></script>
+<script src="js/portal-reel.js"></script>
 </body>
 </html>
