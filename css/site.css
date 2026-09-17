@@ -444,6 +444,19 @@ a {
   font-size: 0.95rem;
 }
 
+.school-card__avatar--logo {
+  background: var(--white);
+  border: 1px solid var(--border);
+  padding: 4px;
+}
+
+.school-card__avatar--logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
 .school-card h2 {
   font-size: 1.15rem;
   margin-bottom: 4px;
