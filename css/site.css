@@ -12,8 +12,13 @@
   --success: #2f6b3a;
   --radius: 10px;
   --shadow: 0 8px 24px rgba(26, 12, 14, 0.12);
-  --font-heading: "Newsreader", Georgia, serif;
+  --font-heading: "Fraunces", Georgia, serif;
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Fixed regardless of theme -- for text/gradients on a saturated crimson
+     surface (--fixed-light) or a pale gold/mint surface (--fixed-dark),
+     where the surface color barely changes between light and dark theme. */
+  --fixed-light: #f4f1e8;
+  --fixed-dark: #1a0c0e;
 }
 
 * {
@@ -71,13 +76,6 @@ a {
 .brand {
   text-align: center;
   margin-bottom: 28px;
-}
-
-.brand__mark {
-  font-size: 2.2rem;
-  color: var(--gold);
-  line-height: 1;
-  text-shadow: 0 2px 10px rgba(201, 169, 97, 0.35);
 }
 
 .brand__logo {
@@ -245,7 +243,7 @@ a {
 
 .btn--primary {
   background: var(--crimson);
-  color: var(--cream);
+  color: var(--fixed-light);
 }
 
 .btn--primary:hover:not(:disabled) {
@@ -269,7 +267,7 @@ a {
 
 .btn--danger {
   background: var(--crimson-dark);
-  color: var(--cream);
+  color: var(--fixed-light);
   border: 1px solid var(--crimson-dark);
 }
 
@@ -507,6 +505,7 @@ body.portal-landing {
   --crimson-dark: #c92943;
   --mint: #3ecf8e;
   --mint-dark: #29a86e;
+  --success: var(--mint);
   --shadow: 0 20px 44px rgba(0, 0, 0, 0.55);
   position: relative;
   background:
@@ -1081,7 +1080,7 @@ body.portal-landing .brand__sub {
   height: 28px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-  color: var(--near-black);
+  color: var(--fixed-dark);
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 0.68rem;
@@ -1256,7 +1255,7 @@ body.portal-landing .brand__sub {
 }
 
 .portal-reel__chip.is-done {
-  color: var(--near-black);
+  color: var(--fixed-dark);
   background: var(--gold);
   border-color: var(--gold);
 }
@@ -1341,7 +1340,7 @@ body.portal-landing .brand__sub {
 .portal-reel__tab.is-current {
   background: var(--crimson);
   border-color: var(--crimson);
-  color: var(--cream);
+  color: var(--fixed-light);
 }
 
 .portal-reel__roster {
@@ -1445,7 +1444,7 @@ body.portal-landing .brand__sub {
   align-items: center;
   justify-content: center;
   font-size: 0.58rem;
-  color: var(--near-black);
+  color: var(--fixed-dark);
 }
 
 .portal-reel__checklist-item.is-done .portal-reel__checklist-box {
@@ -1515,7 +1514,7 @@ body.portal-landing .brand__sub {
   padding: 5px 13px;
   border-radius: 999px;
   background: var(--mint);
-  color: var(--near-black);
+  color: var(--fixed-dark);
   font-size: 0.66rem;
   font-weight: 700;
   opacity: 0;
@@ -1554,7 +1553,7 @@ body.portal-landing .brand__sub {
   padding: 10px 22px;
   border-radius: 999px;
   background: var(--crimson);
-  color: var(--cream);
+  color: var(--fixed-light);
   font-weight: 700;
   font-size: 0.8rem;
   text-decoration: none;
@@ -1665,8 +1664,22 @@ body.portal-landing .brand__sub {
   gap: 14px;
 }
 
-.appbar__brand .brand__mark {
-  font-size: 1.6rem;
+.appbar__logo {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  padding: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--border);
+}
+
+.appbar__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  display: block;
 }
 
 .avatar-circle {
@@ -1677,8 +1690,8 @@ body.portal-landing .brand__sub {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--crimson), var(--near-black));
-  color: var(--cream);
+  background: linear-gradient(135deg, var(--crimson), var(--fixed-dark));
+  color: var(--fixed-light);
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 1.05rem;
@@ -1834,7 +1847,7 @@ body.portal-landing .brand__sub {
 .attend-btn[aria-pressed="true"] {
   background: var(--success);
   border-color: var(--success);
-  color: var(--white);
+  color: var(--fixed-light);
 }
 
 .attend-btn:focus-visible {
@@ -1965,7 +1978,7 @@ body.portal-landing .brand__sub {
 .cal-day[aria-pressed="true"] {
   background: var(--crimson);
   border-color: var(--crimson);
-  color: var(--cream);
+  color: var(--fixed-light);
   font-weight: 700;
 }
 
@@ -1977,7 +1990,7 @@ body.portal-landing .brand__sub {
 }
 
 .cal-day[aria-pressed="true"] .cal-day__mark {
-  color: var(--cream);
+  color: var(--fixed-light);
 }
 
 .cal-day.is-draft .cal-day__mark:empty::after {
@@ -2127,7 +2140,7 @@ body.portal-landing .brand__sub {
 
 .picker__item .avatar-circle {
   background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-  color: var(--near-black);
+  color: var(--fixed-dark);
 }
 
 .picker__item[aria-pressed="true"] {
@@ -2136,8 +2149,8 @@ body.portal-landing .brand__sub {
 }
 
 .picker__item[aria-pressed="true"] .avatar-circle {
-  background: linear-gradient(135deg, var(--crimson), var(--near-black));
-  color: var(--cream);
+  background: linear-gradient(135deg, var(--crimson), var(--fixed-dark));
+  color: var(--fixed-light);
 }
 
 .picker__item:focus-visible {
@@ -2227,7 +2240,7 @@ body.portal-landing .brand__sub {
 .module-tab[aria-selected="true"] {
   background: var(--crimson);
   border-color: var(--crimson);
-  color: var(--cream);
+  color: var(--fixed-light);
 }
 
 /* Curriculum unit accordion */
@@ -2303,7 +2316,7 @@ body.portal-landing .brand__sub {
 .curriculum-item.is-done .curriculum-item__check {
   background: var(--success);
   border-color: var(--success);
-  color: var(--white);
+  color: var(--fixed-light);
 }
 
 .curriculum-item__check:disabled {
@@ -2631,7 +2644,7 @@ body.portal-landing .brand__sub {
 .fb-cal__month[aria-pressed="true"] {
   background: var(--crimson);
   border-color: var(--crimson);
-  color: var(--cream);
+  color: var(--fixed-light);
 }
 
 .fb-cal__month.has-feedback::after {
@@ -2663,11 +2676,11 @@ body.portal-landing .brand__sub {
   align-items: center;
   gap: 24px;
   flex-wrap: wrap;
-  background: linear-gradient(135deg, #241013, var(--near-black) 70%);
+  background: linear-gradient(135deg, #241013, var(--fixed-dark) 70%);
   border-radius: 16px;
   padding: 26px 28px;
   margin-bottom: 24px;
-  color: var(--cream);
+  color: var(--fixed-light);
   box-shadow: 0 14px 32px rgba(26, 12, 14, 0.28);
   overflow: hidden;
   animation: fadeInUp 0.5s ease both;
@@ -2757,7 +2770,7 @@ body.portal-landing .brand__sub {
   height: 22px;
   border-radius: 50%;
   background: var(--gold);
-  color: var(--near-black);
+  color: var(--fixed-dark);
   font-size: 0.75rem;
   font-weight: 700;
   flex-shrink: 0;
@@ -2990,7 +3003,7 @@ body.portal-landing .brand__sub {
 .unit-lite.is-full .unit-lite__icon {
   background: var(--success);
   border-color: var(--success);
-  color: var(--white);
+  color: var(--fixed-light);
 }
 
 .unit-lite__name {

@@ -18,11 +18,12 @@ function ringSvg(pct) {
   const r = 52;
   const c = 2 * Math.PI * r;
   const off = c * (1 - pct / 100);
+  const crimson = getComputedStyle(document.documentElement).getPropertyValue("--crimson").trim() || "#b00f2e";
   return `<svg width="130" height="130" viewBox="0 0 130 130" role="img" aria-label="${pct} percent of this module signed off">
     <circle cx="65" cy="65" r="${r}" fill="none" stroke="rgba(247,241,232,.22)" stroke-width="11"/>
-    <circle cx="65" cy="65" r="${r}" fill="none" stroke="#b00f2e" stroke-width="11" stroke-linecap="round"
+    <circle cx="65" cy="65" r="${r}" fill="none" stroke="${crimson}" stroke-width="11" stroke-linecap="round"
       stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 65 65)"/>
-    <text x="65" y="72" text-anchor="middle" font-family="Newsreader, Georgia, serif" font-size="28" fill="#f7f1e8">${pct}%</text>
+    <text x="65" y="72" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="28" fill="#f4f1e8">${pct}%</text>
   </svg>`;
 }
 
