@@ -925,6 +925,10 @@ body.portal-landing .brand__sub {
   align-items: start;
 }
 
+.attendance-main {
+  min-width: 0;
+}
+
 .cal-card {
   padding: 16px;
   position: sticky;
