@@ -288,9 +288,6 @@ async function initAttendanceTab() {
   state.attDrafts = new Map();
   state.attLog = [];
 
-  el("statCount").textContent = state.students.length;
-  el("statPending").textContent = state.students.filter((s) => s.must_change_password).length;
-
   await Promise.all([loadAttendanceMonth(), loadAttendanceDate(t)]);
   renderAttendanceTab();
 }
@@ -446,9 +443,6 @@ function renderSession() {
     : `<p class="empty-state">${
         state.students.length ? "No students in that group." : "No active students at this school yet."
       }</p>`;
-
-  const presentShown = state.students.filter((s) => draftSet.has(s.id)).length;
-  el("statPresent").textContent = `${presentShown} / ${state.students.length}`;
 
   const presentShownFiltered = rosterStudents.filter((s) => draftSet.has(s.id)).length;
   el("markAllPresent").hidden = rosterStudents.length > 0 && presentShownFiltered === rosterStudents.length;

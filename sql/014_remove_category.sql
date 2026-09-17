@@ -98,7 +98,11 @@ grant execute on function public.admin_create_student(uuid, text, uuid, uuid, te
 
 -- my_identity() showed "Category" on the first-login confirmation screen;
 -- now shows the student's group instead (nullable — not every student has
--- one, hence the left join).
+-- one, hence the left join). Its return columns are changing shape, so
+-- (like admin_create_student above) it has to be dropped before it can
+-- be recreated — create or replace can't do that on its own.
+drop function if exists public.my_identity();
+
 create or replace function public.my_identity()
 returns table (full_name text, student_code text, group_name text, school_name text)
 language sql
