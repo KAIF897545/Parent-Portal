@@ -5,6 +5,7 @@ const status = document.getElementById("status");
 
 const SCHOOL_LOGOS = {
   "brightway international school": "assets/brightway-logo.jpg",
+  "private tutoring": "assets/private-tutoring-logo.jpg",
 };
 
 function escapeHtml(value) {
