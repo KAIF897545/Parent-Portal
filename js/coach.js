@@ -28,6 +28,7 @@ const state = {
   fbCalYear: null, // set lazily from the selected student's most recent feedback
   fbSelectedMonth: null, // "YYYY-MM" filter for the history list, or null for all
   fbEditingId: null, // feedback row id currently loaded into the form, or null for "new"
+  ntEditingId: null, // coach_notes row id currently loaded into the form, or null for "new"
   rosterTicks: new Map(), // student_id -> Map(item_id -> {on, coachName})
   rosterCps: new Map(), // student_id -> Map(item_id -> {on, evidence, coachName})
   rosterFeedbackMonths: new Map(), // student_id -> [month, ...]
@@ -660,6 +661,7 @@ el("studentPicker").addEventListener("click", async (e) => {
   state.fbCalYear = null;
   state.fbSelectedMonth = null;
   state.fbEditingId = null;
+  state.ntEditingId = null;
   renderPicker();
 
   el("checklistWrap").innerHTML = '<p class="form-message">Loading…</p>';
@@ -687,11 +689,6 @@ async function loadStudentNotes(studentId) {
 
 // --- Progress tab: checklist ------------------------------------------------
 
-function studentGroupName(student) {
-  const g = state.groups.find((g) => g.id === student.group_id);
-  return g ? g.name : "—";
-}
-
 function renderChecklist() {
   const student = state.students.find((s) => s.id === state.selectedStudent);
   if (!student) {
@@ -718,10 +715,21 @@ function renderChecklist() {
 
   const unitsHtml = mod.units.map((u) => renderUnit(student, u)).join("");
 
+  const groupOptions =
+    '<option value="">No group</option>' +
+    state.groups
+      .map(
+        (g) =>
+          `<option value="${g.id}" ${g.id === student.group_id ? "selected" : ""}>${escapeHtml(g.name)}</option>`
+      )
+      .join("");
+
   el("checklistWrap").innerHTML = `
     <div class="checklist-head">
       <span class="avatar-circle avatar-circle--sm" aria-hidden="true">${escapeHtml(initials(student.full_name))}</span>
-      <span class="checklist-head__name">${escapeHtml(student.full_name)} · ${escapeHtml(studentGroupName(student))}</span>
+      <span class="checklist-head__name">${escapeHtml(student.full_name)}</span>
+      <label class="visually-hidden" for="checklistGroupSelect">Group</label>
+      <select id="checklistGroupSelect" class="checklist-head__group" aria-label="Group">${groupOptions}</select>
       <span class="track"><span class="track__bar" style="width:${stats.pct}%"></span></span>
       <span class="checklist-head__pct">${stats.done}/${stats.total}</span>
     </div>
@@ -806,6 +814,7 @@ function notesPaneHtml(student) {
   const editingEntry = state.fbEditingId ? state.feedback.find((f) => f.id === state.fbEditingId) : null;
   const formMonth = editingEntry ? String(editingEntry.month).slice(0, 7) : thisMonthKey();
   const formRating = editingEntry ? editingEntry.rating || 0 : 0;
+  const editingNote = state.ntEditingId ? state.notes.find((n) => n.id === state.ntEditingId) : null;
 
   const form =
     showing === "feedback"
@@ -838,9 +847,14 @@ function notesPaneHtml(student) {
           ${editingEntry ? '<button type="button" class="btn btn--secondary btn--xs" id="fbCancelEdit">Cancel</button>' : ""}
           <span class="notes__hint">Visible to the student</span>
         </div>`
-      : `<textarea id="ntText" placeholder="Note for other coaches. The student never sees this."></textarea>
+      : `<textarea id="ntText" placeholder="Note for other coaches. The student never sees this.">${
+          editingNote ? escapeHtml(editingNote.body) : ""
+        }</textarea>
         <div class="notes__row">
-          <button type="button" class="btn btn--primary btn--xs" id="ntSave">Save note</button>
+          <button type="button" class="btn btn--primary btn--xs" id="ntSave">${
+            editingNote ? "Update note" : "Save note"
+          }</button>
+          ${editingNote ? '<button type="button" class="btn btn--secondary btn--xs" id="ntCancelEdit">Cancel</button>' : ""}
           <span class="notes__hint">Coaches only</span>
         </div>`;
 
@@ -902,6 +916,10 @@ function notesPaneHtml(student) {
             (n) => `<div class="entry">
               <div class="entry__meta">${escapeHtml(n.coach?.name || "—")} · ${formatDate(n.created_at)}</div>
               <div class="entry__body">${escapeHtml(n.body)}</div>
+              <div class="entry__actions">
+                <button type="button" class="btn btn--secondary btn--xs" data-ntedit="${n.id}">Edit</button>
+                <button type="button" class="btn btn--danger btn--xs" data-ntdelete="${n.id}">Delete</button>
+              </div>
             </div>`
           )
           .join("")
@@ -1057,21 +1075,54 @@ el("checklistWrap").addEventListener("click", async (e) => {
     return;
   }
 
+  if (e.target.closest("#ntCancelEdit")) {
+    state.ntEditingId = null;
+    renderChecklist();
+    return;
+  }
+
+  const ntEditBtn = e.target.closest("[data-ntedit]");
+  if (ntEditBtn) {
+    state.ntEditingId = ntEditBtn.getAttribute("data-ntedit");
+    renderChecklist();
+    return;
+  }
+
+  const ntDeleteBtn = e.target.closest("[data-ntdelete]");
+  if (ntDeleteBtn) {
+    const id = ntDeleteBtn.getAttribute("data-ntdelete");
+    const sure = window.confirm(`Delete this note about ${student.full_name}? This can't be undone.`);
+    if (!sure) return;
+    ntDeleteBtn.disabled = true;
+    const { error } = await supabase.from("coach_notes").delete().eq("id", id);
+    if (error) {
+      ntDeleteBtn.disabled = false;
+      setStatus("Couldn't delete that note. Try again.", "error");
+      return;
+    }
+    if (state.ntEditingId === id) state.ntEditingId = null;
+    await loadStudentNotes(student.id);
+    renderChecklist();
+    return;
+  }
+
   if (e.target.id === "ntSave") {
     const text = el("ntText").value.trim();
     if (!text) {
       el("ntText").focus();
       return;
     }
+    const editingId = state.ntEditingId;
     e.target.disabled = true;
-    const { error } = await supabase
-      .from("coach_notes")
-      .insert({ student_id: student.id, coach_id: state.coach.id, body: text });
+    const { error } = editingId
+      ? await supabase.from("coach_notes").update({ body: text, coach_id: state.coach.id }).eq("id", editingId)
+      : await supabase.from("coach_notes").insert({ student_id: student.id, coach_id: state.coach.id, body: text });
     e.target.disabled = false;
     if (error) {
-      setStatus("Couldn't save the note. Try again.", "error");
+      setStatus(editingId ? "Couldn't update the note. Try again." : "Couldn't save the note. Try again.", "error");
       return;
     }
+    state.ntEditingId = null;
     await loadStudentNotes(student.id);
     renderChecklist();
     return;
@@ -1135,6 +1186,34 @@ el("checklistWrap").addEventListener("click", async (e) => {
     renderPicker();
     renderChecklist();
   }
+});
+
+el("checklistWrap").addEventListener("change", async (e) => {
+  const groupSelect = e.target.closest("#checklistGroupSelect");
+  if (!groupSelect) return;
+  const student = state.students.find((s) => s.id === state.selectedStudent);
+  if (!student) return;
+
+  const newGroupId = groupSelect.value || null;
+  const previousGroupId = student.group_id;
+  groupSelect.disabled = true;
+  const { error } = await supabase.from("students").update({ group_id: newGroupId }).eq("id", student.id);
+  groupSelect.disabled = false;
+  if (error) {
+    setStatus("Couldn't change that student's group. Try again.", "error");
+    groupSelect.value = previousGroupId || "";
+    return;
+  }
+  student.group_id = newGroupId;
+  // If the active group filter would now hide the student we just reassigned,
+  // widen it back to "All groups" instead of letting renderPicker() silently
+  // clear the selection and wipe the checklist out from under the coach.
+  const groupFilterEl = el("groupFilter");
+  if (groupFilterEl.value && groupFilterEl.value !== newGroupId) {
+    groupFilterEl.value = "";
+  }
+  renderPicker();
+  setStatus("Group updated.", "success");
 });
 
 // --- Top-level tabs ---------------------------------------------------------

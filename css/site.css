@@ -1277,6 +1277,16 @@ body.portal-landing .brand__sub {
   white-space: nowrap;
 }
 
+.checklist-head__group {
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--text);
+}
+
 /* Module tab strip */
 .module-tabs {
   display: flex;
