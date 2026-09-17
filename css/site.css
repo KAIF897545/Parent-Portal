@@ -1015,6 +1015,7 @@ body.portal-landing .brand__sub {
 }
 
 .cal-card {
+  min-width: 0;
   padding: 16px;
   position: sticky;
   top: 16px;
@@ -1081,7 +1082,8 @@ body.portal-landing .brand__sub {
 .cal-day {
   position: relative;
   aspect-ratio: 1;
-  min-height: 36px;
+  min-width: 0;
+  min-height: 0;
   border-radius: 8px;
   border: 1px solid transparent;
   background: none;
