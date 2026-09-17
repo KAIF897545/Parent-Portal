@@ -439,27 +439,27 @@ body.portal-landing .btn--secondary:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   margin-bottom: 14px;
   background: linear-gradient(135deg, var(--gold), var(--gold-dark));
   color: #1a0c0e;
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1.15rem;
 }
 
 .school-card__avatar--logo {
   background: var(--white);
   border: 1px solid var(--border);
-  padding: 4px;
+  padding: 3px;
 }
 
 .school-card__avatar--logo img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 50%;
 }
 
