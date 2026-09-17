@@ -80,6 +80,21 @@
           <input type="text" id="studentCode" name="student_code" autocomplete="off" />
           <p class="field__hint">Two students share this name. Enter your ID from your slip.</p>
         </div>
+        <p class="forgot-row">
+          <button type="button" class="text-btn" id="studentForgotToggle">Forgot password?</button>
+        </p>
+        <div class="field" id="studentForgotPanel" hidden>
+          <label for="studentForgotEmail">Email on file with the club</label>
+          <input type="email" id="studentForgotEmail" autocomplete="email" placeholder="parent@example.com" />
+          <p class="field__hint">Only works if a coach or admin has added an email to your account.</p>
+          <button type="button" class="btn btn--secondary" id="studentForgotSubmit">Send reset link</button>
+          <div
+            id="studentForgotMessage"
+            class="form-message"
+            role="status"
+            aria-live="polite"
+          ></div>
+        </div>
         <div
           id="studentMessage"
           class="form-message"

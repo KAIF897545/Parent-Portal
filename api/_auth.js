@@ -88,6 +88,8 @@ export const PW_MESSAGES = {
   PW025: "That prefix is already in use.",
   PW026: "Remove every student and coach from this school before deleting it.",
   PW027: "This coach has recorded activity. Deactivate them instead of deleting.",
+  PW028: "Coaches can only change a student's group.",
+  PW029: 'That email is already used by another account. For siblings on one email, try a "+" alias (e.g. name+child2@gmail.com) — it still reaches the same inbox.',
 };
 
 // Chess/Maldives-themed word + 4 digits, matching the passwords already

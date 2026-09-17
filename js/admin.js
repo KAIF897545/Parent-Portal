@@ -436,7 +436,7 @@ async function onStudentsSchoolChange() {
 async function loadStudents(schoolId) {
   const { data, error } = await supabase
     .from("students")
-    .select("id, full_name, student_code, group_id, current_module_id, must_change_password, active")
+    .select("id, full_name, student_code, group_id, current_module_id, must_change_password, active, email")
     .eq("school_id", schoolId)
     .order("full_name");
 
@@ -463,7 +463,7 @@ function filteredStudents() {
   const q = el("stuSearch").value.trim().toLowerCase();
   return state.students.filter((s) => {
     if (group && s.group_id !== group) return false;
-    if (q && !`${s.full_name} ${s.student_code}`.toLowerCase().includes(q)) return false;
+    if (q && !`${s.full_name} ${s.student_code} ${s.email || ""}`.toLowerCase().includes(q)) return false;
     return true;
   });
 }
@@ -498,6 +498,7 @@ function renderStudentRow(s, schoolId) {
         <input type="text" id="editStuName_${s.id}" value="${escapeHtml(s.full_name)}" placeholder="Full name">
         <select id="editStuGroup_${s.id}">${groupOptions}</select>
         <select id="editStuModule_${s.id}">${moduleOptions}</select>
+        <input type="email" id="editStuEmail_${s.id}" value="${escapeHtml(s.email || "")}" placeholder="Email (optional)">
       </div>
       <div class="entity-card__actions">
         <button type="button" class="btn btn--primary btn--xs" data-save-student="${s.id}">Save</button>
@@ -513,6 +514,7 @@ function renderStudentRow(s, schoolId) {
   )} · ${escapeHtml(moduleLabel(s.current_module_id))}${
     s.must_change_password ? ' · <span class="due-flag">first sign-in pending</span>' : ""
   }${s.active ? "" : ' · <span class="due-flag">inactive</span>'}</span>
+      <span class="roster-row__sub">${s.email ? escapeHtml(s.email) : "no email on file"}</span>
     </span>
     <span class="roster-row__buttons">
       <button type="button" class="btn btn--secondary btn--xs" data-edit-student="${s.id}">Edit</button>
@@ -581,9 +583,11 @@ el("studentList").addEventListener("click", async (e) => {
   const saveBtn = e.target.closest("[data-save-student]");
   if (saveBtn) {
     const studentId = saveBtn.getAttribute("data-save-student");
+    const student = state.students.find((s) => s.id === studentId);
     const fullName = el(`editStuName_${studentId}`).value.trim();
     const groupId = el(`editStuGroup_${studentId}`).value || null;
     const moduleId = el(`editStuModule_${studentId}`).value;
+    const email = el(`editStuEmail_${studentId}`).value.trim();
 
     if (!fullName) {
       setStatus("Full name is required.", "error");
@@ -595,13 +599,26 @@ el("studentList").addEventListener("click", async (e) => {
       .from("students")
       .update({ full_name: fullName, group_id: groupId, current_module_id: moduleId })
       .eq("id", studentId);
-    saveBtn.disabled = false;
 
     if (error) {
+      saveBtn.disabled = false;
       setStatus("Couldn't save that student. Try again.", "error");
       return;
     }
 
+    // email lives on auth.users too, which the browser can't reach directly,
+    // so it's a separate call only made when the value actually changed.
+    if (email !== (student?.email || "")) {
+      try {
+        await callApi("set-student-email", { studentId, email });
+      } catch (err) {
+        saveBtn.disabled = false;
+        setStatus(err.message, "error");
+        return;
+      }
+    }
+
+    saveBtn.disabled = false;
     state.editingStudentId = null;
     await loadStudents(el("stuSchoolFilter").value);
     renderStudentList();
@@ -675,6 +692,7 @@ el("studentForm").addEventListener("submit", async (e) => {
     groupId: el("stuGroup").value || null,
     moduleId: el("stuModule").value,
     password: el("stuPassword").value.trim() || undefined,
+    email: el("stuEmail").value.trim() || undefined,
   };
 
   if (!payload.fullName) {

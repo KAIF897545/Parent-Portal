@@ -1,9 +1,11 @@
 // POST /api/admin/create-student
-// { schoolId, fullName, groupId?, moduleId, password? }
+// { schoolId, fullName, groupId?, moduleId, password?, email? }
 //
-// Creates the student's auth account (synthetic email) and her students
-// row. If no password is supplied, one is generated and returned once —
-// there is no way to look it up afterwards.
+// Creates the student's auth account and her students row. If no password
+// is supplied, one is generated and returned once — there is no way to
+// look it up afterwards. If no email is supplied, the account gets a
+// synthetic placeholder instead; a real email lets the student use
+// "Forgot password?" on the sign-in page later.
 
 import { requireAdmin, serviceClient, rateLimit, clientIp, sendJson, HttpError, PW_MESSAGES, randomPassword } from "../_auth.js";
 
@@ -26,6 +28,7 @@ export default async function handler(req, res) {
     const groupId = typeof body.groupId === "string" && body.groupId ? body.groupId : null;
     const moduleId = typeof body.moduleId === "string" ? body.moduleId : "";
     const requestedPassword = typeof body.password === "string" && body.password.trim() ? body.password.trim() : null;
+    const email = typeof body.email === "string" && body.email.trim() ? body.email.trim() : null;
 
     if (!schoolId || !fullName || !moduleId) {
       return sendJson(res, 400, { error: "School, full name, and module are required." });
@@ -43,6 +46,7 @@ export default async function handler(req, res) {
         p_group_id: groupId,
         p_module_id: moduleId,
         p_password: password,
+        p_email: email,
       });
 
       if (!error) {
@@ -57,7 +61,7 @@ export default async function handler(req, res) {
 
       lastCode = error.code;
       // Only worth retrying with a fresh random password on a collision;
-      // any other rejection (bad school, bad module...) won't change.
+      // any other rejection (bad school, bad module, taken email...) won't change.
       if (error.code !== "PW004" || requestedPassword) break;
     }
 

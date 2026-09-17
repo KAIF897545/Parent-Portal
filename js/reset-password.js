@@ -90,11 +90,16 @@ passwordForm.addEventListener("submit", async (event) => {
   const { data: sessionData } = await supabase.auth.getSession();
   const uid = sessionData?.session?.user?.id;
 
-  const { data: coachRow } = await supabase
-    .from("coaches")
-    .select("role")
-    .eq("id", uid)
-    .single();
+  const [{ data: coachRow }, { data: studentRow }] = await Promise.all([
+    supabase.from("coaches").select("role").eq("id", uid).maybeSingle(),
+    supabase.from("students").select("id").eq("id", uid).maybeSingle(),
+  ]);
 
-  window.location.href = coachRow?.role === "admin" ? "admin.html" : coachRow ? "coach.html" : "login.html";
+  window.location.href = coachRow?.role === "admin"
+    ? "admin.html"
+    : coachRow
+    ? "coach.html"
+    : studentRow
+    ? "portal.html"
+    : "login.html";
 });

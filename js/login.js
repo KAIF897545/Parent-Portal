@@ -164,6 +164,44 @@ studentForm.addEventListener("submit", async (event) => {
   }
 });
 
+// --- Student "Forgot password?" ---
+
+const studentForgotToggle = document.getElementById("studentForgotToggle");
+const studentForgotPanel = document.getElementById("studentForgotPanel");
+const studentForgotEmail = document.getElementById("studentForgotEmail");
+const studentForgotSubmit = document.getElementById("studentForgotSubmit");
+const studentForgotMessage = document.getElementById("studentForgotMessage");
+
+studentForgotToggle.addEventListener("click", () => {
+  studentForgotPanel.hidden = !studentForgotPanel.hidden;
+  if (!studentForgotPanel.hidden) studentForgotEmail.focus();
+});
+
+studentForgotSubmit.addEventListener("click", async () => {
+  const email = studentForgotEmail.value.trim();
+  studentForgotMessage.textContent = "";
+  studentForgotMessage.className = "form-message";
+
+  if (!email) {
+    studentForgotMessage.textContent = "Enter the email on file with the club.";
+    studentForgotMessage.className = "form-message form-message--error";
+    return;
+  }
+
+  studentForgotSubmit.disabled = true;
+  studentForgotMessage.textContent = "Sending…";
+
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password.html`,
+  });
+
+  // Same message whether or not that email is on file -- confirming
+  // either way would let someone probe which emails are registered.
+  studentForgotMessage.textContent = "If that email is on file, a reset link is on its way.";
+  studentForgotMessage.className = "form-message form-message--success";
+  studentForgotSubmit.disabled = false;
+});
+
 // --- Coach sign-in ---
 
 const coachForm = document.getElementById("coachForm");
