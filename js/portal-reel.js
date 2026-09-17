@@ -46,11 +46,22 @@
 
     segs.forEach(function (seg, idx) {
       seg.classList.remove("is-active", "is-done");
-      if (idx < i) seg.classList.add("is-done");
+      var f = seg.querySelector(".portal-reel__seg-fill");
+      if (idx < i) {
+        seg.classList.add("is-done");
+        f.style.transition = "";
+        f.style.animation = "";
+        f.style.width = "";
+      } else if (idx !== i) {
+        f.style.transition = "";
+        f.style.animation = "";
+        f.style.width = "";
+      }
     });
 
     var activeSeg = segs[i];
     var fillEl = activeSeg.querySelector(".portal-reel__seg-fill");
+    fillEl.style.animation = "";
     fillEl.style.transition = "none";
     fillEl.style.width = "0%";
     activeSeg.style.setProperty("--seg-dur", dur + "ms");
