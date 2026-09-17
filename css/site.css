@@ -267,6 +267,21 @@ a {
   background: rgba(176, 15, 46, 0.06);
 }
 
+.btn--danger {
+  background: var(--crimson-dark);
+  color: var(--cream);
+  border: 1px solid var(--crimson-dark);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: #6b0919;
+}
+
+.btn--danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn:focus-visible {
   outline: 2px solid var(--gold);
   outline-offset: 2px;
@@ -1539,9 +1554,35 @@ body.portal-landing .brand__sub {
   border-radius: 4px;
 }
 
+.entry__rating {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(201, 169, 97, 0.16);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
 .entry__stars {
   color: var(--gold-dark);
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+  font-size: 1.05rem;
+}
+
+.entry__label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 8px 0 3px;
+}
+
+.entry__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .entry__tag {
@@ -1605,6 +1646,90 @@ body.portal-landing .brand__sub {
 .due-flag {
   color: var(--crimson);
   font-weight: 600;
+}
+
+/* Feedback month-picker calendar (coach + student) */
+.fb-cal {
+  margin: 0 0 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.fb-cal__head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.fb-cal__year {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.95rem;
+  min-width: 40px;
+  text-align: center;
+}
+
+.fb-cal__months {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.fb-cal__month {
+  position: relative;
+  padding: 8px 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-family: var(--font-body);
+  color: var(--text-muted);
+}
+
+.fb-cal__month.has-feedback {
+  color: var(--text);
+  border-color: var(--gold);
+  font-weight: 600;
+}
+
+.fb-cal__month:hover:not(:disabled) {
+  background: var(--cream);
+}
+
+.fb-cal__month:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fb-cal__month[aria-pressed="true"] {
+  background: var(--crimson);
+  border-color: var(--crimson);
+  color: var(--cream);
+}
+
+.fb-cal__month.has-feedback::after {
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold-dark);
+}
+
+.fb-cal__month[aria-pressed="true"].has-feedback::after {
+  background: var(--cream);
+}
+
+.fb-cal__clear {
+  display: block;
+  margin: 10px auto 0;
+  font-size: 0.8rem;
 }
 
 /* Student dashboard: progress ring + badges */
@@ -1820,10 +1945,20 @@ body.portal-landing .brand__sub {
   margin-bottom: 0;
 }
 
+.feedback-card__rating {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(201, 169, 97, 0.16);
+  border: 1px solid rgba(201, 169, 97, 0.4);
+}
+
 .feedback-card__stars {
-  color: var(--gold);
-  font-size: 0.95rem;
-  letter-spacing: 2px;
+  color: var(--gold-dark);
+  font-size: 1.3rem;
+  letter-spacing: 3px;
+  text-shadow: 0 1px 2px rgba(201, 169, 97, 0.3);
 }
 
 .feedback-card__tag {
@@ -1842,6 +1977,20 @@ body.portal-landing .brand__sub {
   line-height: 1.3;
 }
 
+.feedback-card__tag-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.feedback-card__tag-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
 .feedback-card__tag--highlight {
   background: rgba(201, 169, 97, 0.16);
   color: var(--gold-dark);
@@ -1852,6 +2001,15 @@ body.portal-landing .brand__sub {
   color: var(--crimson-dark);
   margin-top: 10px;
   margin-bottom: 0;
+}
+
+.feedback-card__label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 4px;
 }
 
 .feedback-card__text {

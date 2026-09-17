@@ -65,6 +65,52 @@ export function formatDateTime(value) {
   return date ? `${date}, ${time}` : "";
 }
 
+const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// "YYYY-MM" keys for every month that has at least one feedback row.
+export function feedbackMonthKeys(rows) {
+  return new Set((rows || []).map((f) => String(f.month).slice(0, 7)));
+}
+
+// A compact year-at-a-glance month picker, shared by the coach and student
+// feedback panes, for filtering a history down to a single month. Months
+// with no feedback are disabled outright rather than left clickable into an
+// empty result. Clicking the already-selected month (handled by the caller)
+// clears the filter back to "all months".
+export function feedbackCalendarHtml(rows, year, selectedMonth) {
+  const present = feedbackMonthKeys(rows);
+  const years = [...present].map((k) => Number(k.slice(0, 4)));
+  const currentYear = new Date().getFullYear();
+  const minYear = years.length ? Math.min(...years) : currentYear;
+  const maxYear = Math.max(currentYear, ...years);
+
+  const months = MONTH_ABBR.map((label, i) => {
+    const key = `${year}-${String(i + 1).padStart(2, "0")}`;
+    const has = present.has(key);
+    const pressed = key === selectedMonth;
+    return `<button type="button" class="fb-cal__month${has ? " has-feedback" : ""}" data-fbcal-month="${key}"
+      aria-pressed="${pressed}" ${has ? "" : "disabled"}>${label}</button>`;
+  }).join("");
+
+  return `<div class="fb-cal">
+    <div class="fb-cal__head">
+      <button type="button" class="icon-btn" data-fbcal-prev aria-label="Previous year" ${
+        year <= minYear ? "disabled" : ""
+      }>&lsaquo;</button>
+      <span class="fb-cal__year">${year}</span>
+      <button type="button" class="icon-btn" data-fbcal-next aria-label="Next year" ${
+        year >= maxYear ? "disabled" : ""
+      }>&rsaquo;</button>
+    </div>
+    <div class="fb-cal__months">${months}</div>
+    ${
+      selectedMonth
+        ? `<button type="button" class="btn btn--link fb-cal__clear" data-fbcal-clear>Show all months</button>`
+        : ""
+    }
+  </div>`;
+}
+
 // Adds a Show/Hide button to every password input on the page, so typed
 // passwords don't have to stay hidden behind dots to be checked.
 export function enablePasswordToggles() {

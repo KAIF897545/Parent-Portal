@@ -1,5 +1,12 @@
 import { supabase } from "./supabase.js";
-import { escapeHtml, formatDate, formatMonth, initials } from "./utils.js";
+import { escapeHtml, formatDate, formatMonth, initials, feedbackCalendarHtml } from "./utils.js";
+
+// All feedback for the signed-in student, and the month-picker calendar's
+// current view — both are module-scoped since the calendar filters the
+// list in place rather than re-fetching.
+let fbRows = [];
+let fbCalYear = null;
+let fbSelectedMonth = null;
 
 function setStatus(text, kind) {
   const box = document.getElementById("status");
@@ -81,43 +88,102 @@ function renderNextUp(unitList, tickSet) {
     : `<h3>Module complete</h3><p class="field__hint">Everything in this module is signed off. Ask your coach about moving up.</p>`;
 }
 
-function renderFeedback(rows) {
+function renderFeedbackCal() {
+  const box = document.getElementById("feedbackCal");
+  if (!box) return;
+  box.hidden = fbRows.length === 0;
+  if (!fbRows.length) return;
+  box.innerHTML = feedbackCalendarHtml(fbRows, fbCalYear, fbSelectedMonth);
+}
+
+function renderFeedbackList() {
+  const rows = fbSelectedMonth ? fbRows.filter((f) => String(f.month).slice(0, 7) === fbSelectedMonth) : fbRows;
+
   const summary = document.getElementById("feedbackSummary");
-  if (summary) summary.textContent = rows.length ? `${rows.length} note${rows.length === 1 ? "" : "s"}` : "";
+  if (summary) summary.textContent = fbRows.length ? `${fbRows.length} note${fbRows.length === 1 ? "" : "s"}` : "";
 
   const box = document.getElementById("feedbackList");
-  box.innerHTML = rows.length
-    ? rows
-        .map((f, i) => {
-          const stars = f.rating
-            ? `<div class="feedback-card__stars" aria-label="${f.rating} out of 5 stars">${"★".repeat(
-                f.rating
-              )}${"☆".repeat(5 - f.rating)}</div>`
-            : "";
-          const highlight = f.highlight
-            ? `<div class="feedback-card__tag feedback-card__tag--highlight">
-                <span class="feedback-card__tag-icon" aria-hidden="true">🏆</span>${escapeHtml(f.highlight)}
-              </div>`
-            : "";
-          const nextFocus = f.next_focus
-            ? `<div class="feedback-card__tag feedback-card__tag--focus">
-                <span class="feedback-card__tag-icon" aria-hidden="true">🎯</span>${escapeHtml(f.next_focus)}
-              </div>`
-            : "";
-          return `<div class="feedback-card" style="animation-delay:${i * 60}ms">
-            <div class="feedback-card__top">
-              <div class="feedback-card__month">${formatMonth(f.month)}</div>
-              ${stars}
-            </div>
-            ${highlight}
-            <div class="feedback-card__text">${escapeHtml(f.body)}</div>
-            ${nextFocus}
-            <div class="feedback-card__when">Written ${formatDate(f.created_at)}</div>
-          </div>`;
-        })
-        .join("")
-    : `<div class="feedback-card">Your coach writes a summary at the end of each month. Your first one will appear here.</div>`;
+  if (rows.length) {
+    box.innerHTML = rows
+      .map((f, i) => {
+        const stars = f.rating
+          ? `<div class="feedback-card__rating" aria-label="${f.rating} out of 5 stars">
+              <span class="feedback-card__stars">${"★".repeat(f.rating)}${"☆".repeat(5 - f.rating)}</span>
+            </div>`
+          : "";
+        const highlight = f.highlight
+          ? `<div class="feedback-card__tag feedback-card__tag--highlight">
+              <span class="feedback-card__tag-icon" aria-hidden="true">🏆</span>
+              <div class="feedback-card__tag-body">
+                <span class="feedback-card__tag-label">This month's highlight</span>
+                <span>${escapeHtml(f.highlight)}</span>
+              </div>
+            </div>`
+          : "";
+        const nextFocus = f.next_focus
+          ? `<div class="feedback-card__tag feedback-card__tag--focus">
+              <span class="feedback-card__tag-icon" aria-hidden="true">🎯</span>
+              <div class="feedback-card__tag-body">
+                <span class="feedback-card__tag-label">Next month's target</span>
+                <span>${escapeHtml(f.next_focus)}</span>
+              </div>
+            </div>`
+          : "";
+        return `<div class="feedback-card" style="animation-delay:${i * 60}ms">
+          <div class="feedback-card__top">
+            <div class="feedback-card__month">${formatMonth(f.month)}</div>
+            ${stars}
+          </div>
+          ${highlight}
+          <div class="feedback-card__label">Feedback</div>
+          <div class="feedback-card__text">${escapeHtml(f.body)}</div>
+          ${nextFocus}
+          <div class="feedback-card__when">Written ${formatDate(f.created_at)}</div>
+        </div>`;
+      })
+      .join("");
+  } else if (fbRows.length) {
+    box.innerHTML = `<div class="feedback-card">No feedback for ${escapeHtml(
+      formatMonth(`${fbSelectedMonth}-01`)
+    )}.</div>`;
+  } else {
+    box.innerHTML = `<div class="feedback-card">Your coach writes a summary at the end of each month. Your first one will appear here.</div>`;
+  }
 }
+
+function renderFeedback(rows) {
+  fbRows = rows || [];
+  fbCalYear = fbRows.length ? Number(String(fbRows[0].month).slice(0, 4)) : new Date().getFullYear();
+  fbSelectedMonth = null;
+  renderFeedbackCal();
+  renderFeedbackList();
+}
+
+document.getElementById("feedbackCal")?.addEventListener("click", (e) => {
+  const monthBtn = e.target.closest("[data-fbcal-month]");
+  if (monthBtn && !monthBtn.disabled) {
+    const key = monthBtn.getAttribute("data-fbcal-month");
+    fbSelectedMonth = fbSelectedMonth === key ? null : key;
+    renderFeedbackCal();
+    renderFeedbackList();
+    return;
+  }
+  if (e.target.closest("[data-fbcal-clear]")) {
+    fbSelectedMonth = null;
+    renderFeedbackCal();
+    renderFeedbackList();
+    return;
+  }
+  if (e.target.closest("[data-fbcal-prev]:not(:disabled)")) {
+    fbCalYear -= 1;
+    renderFeedbackCal();
+    return;
+  }
+  if (e.target.closest("[data-fbcal-next]:not(:disabled)")) {
+    fbCalYear += 1;
+    renderFeedbackCal();
+  }
+});
 
 function renderUnits(unitList, tickSet) {
   const overall = moduleTotals(unitList, tickSet);

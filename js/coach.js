@@ -1,5 +1,13 @@
 import { supabase } from "./supabase.js";
-import { escapeHtml, formatDate, formatMonth, formatDateTime, maldivesDateParts, initials } from "./utils.js";
+import {
+  escapeHtml,
+  formatDate,
+  formatMonth,
+  formatDateTime,
+  maldivesDateParts,
+  initials,
+  feedbackCalendarHtml,
+} from "./utils.js";
 
 const el = (id) => document.getElementById(id);
 
@@ -17,6 +25,9 @@ const state = {
   notePane: "feedback",
   feedback: [],
   notes: [],
+  fbCalYear: null, // set lazily from the selected student's most recent feedback
+  fbSelectedMonth: null, // "YYYY-MM" filter for the history list, or null for all
+  fbEditingId: null, // feedback row id currently loaded into the form, or null for "new"
   rosterTicks: new Map(), // student_id -> Map(item_id -> {on, coachName})
   rosterCps: new Map(), // student_id -> Map(item_id -> {on, evidence, coachName})
   rosterFeedbackMonths: new Map(), // student_id -> [month, ...]
@@ -646,6 +657,9 @@ el("studentPicker").addEventListener("click", async (e) => {
   state.moduleId = student.current_module_id;
   state.openUnits = new Set();
   state.notePane = "feedback";
+  state.fbCalYear = null;
+  state.fbSelectedMonth = null;
+  state.fbEditingId = null;
   renderPicker();
 
   el("checklistWrap").innerHTML = '<p class="form-message">Loading…</p>';
@@ -773,6 +787,13 @@ function notesPaneHtml(student) {
   const showing = state.notePane;
   const due = feedbackDueForStudent(student.id);
 
+  if (state.fbCalYear == null) {
+    state.fbCalYear = state.feedback.length
+      ? Number(String(state.feedback[0].month).slice(0, 4))
+      : new Date().getFullYear();
+  }
+  if (!state.feedback.length) state.fbSelectedMonth = null;
+
   const starRow = (value) =>
     [1, 2, 3, 4, 5]
       .map(
@@ -782,28 +803,39 @@ function notesPaneHtml(student) {
       )
       .join("");
 
+  const editingEntry = state.fbEditingId ? state.feedback.find((f) => f.id === state.fbEditingId) : null;
+  const formMonth = editingEntry ? String(editingEntry.month).slice(0, 7) : thisMonthKey();
+  const formRating = editingEntry ? editingEntry.rating || 0 : 0;
+
   const form =
     showing === "feedback"
       ? `<textarea id="fbText" placeholder="Monthly summary for ${escapeHtml(
           student.full_name
-        )}. They will read this, so write it to them."></textarea>
+        )}. They will read this, so write it to them.">${
+          editingEntry ? escapeHtml(editingEntry.body) : ""
+        }</textarea>
         <div class="fb-extra">
           <label class="fb-extra__label">Effort &amp; growth this month</label>
-          <div class="star-picker" id="fbRating" data-value="0">${starRow(0)}</div>
+          <div class="star-picker" id="fbRating" data-value="${formRating}">${starRow(formRating)}</div>
         </div>
         <div class="fb-extra">
-          <label class="fb-extra__label" for="fbHighlight">&#127942; This month's highlight (optional)</label>
+          <label class="fb-extra__label" for="fbHighlight">This month's highlight (optional)</label>
           <input type="text" id="fbHighlight" class="fb-extra__input" maxlength="120"
+            value="${editingEntry ? escapeHtml(editingEntry.highlight || "") : ""}"
             placeholder="e.g. Won their first practice game">
         </div>
         <div class="fb-extra">
-          <label class="fb-extra__label" for="fbFocus">&#127919; Focus for next month (optional)</label>
+          <label class="fb-extra__label" for="fbFocus">Next month's target (optional)</label>
           <input type="text" id="fbFocus" class="fb-extra__input" maxlength="120"
+            value="${editingEntry ? escapeHtml(editingEntry.next_focus || "") : ""}"
             placeholder="e.g. Opening principles and simple tactics">
         </div>
         <div class="notes__row">
-          <input type="month" id="fbMonth" value="${thisMonthKey()}">
-          <button type="button" class="btn btn--primary btn--xs" id="fbSave">Save feedback</button>
+          <input type="month" id="fbMonth" value="${formMonth}">
+          <button type="button" class="btn btn--primary btn--xs" id="fbSave">${
+            editingEntry ? "Update feedback" : "Save feedback"
+          }</button>
+          ${editingEntry ? '<button type="button" class="btn btn--secondary btn--xs" id="fbCancelEdit">Cancel</button>' : ""}
           <span class="notes__hint">Visible to the student</span>
         </div>`
       : `<textarea id="ntText" placeholder="Note for other coaches. The student never sees this."></textarea>
@@ -812,22 +844,58 @@ function notesPaneHtml(student) {
           <span class="notes__hint">Coaches only</span>
         </div>`;
 
+  const visibleFeedback = state.fbSelectedMonth
+    ? state.feedback.filter((f) => String(f.month).slice(0, 7) === state.fbSelectedMonth)
+    : state.feedback;
+
+  const feedbackCal =
+    showing === "feedback" && state.feedback.length
+      ? feedbackCalendarHtml(state.feedback, state.fbCalYear, state.fbSelectedMonth)
+      : "";
+
+  const feedbackEmptyMsg = state.fbSelectedMonth
+    ? `No feedback for ${formatMonth(`${state.fbSelectedMonth}-01`)}.`
+    : "No feedback written yet.";
+
   const history =
     showing === "feedback"
-      ? state.feedback.length
-        ? state.feedback
+      ? visibleFeedback.length
+        ? visibleFeedback
             .map(
               (f) => `<div class="entry">
                 <div class="entry__meta">${formatMonth(f.month)} · ${escapeHtml(f.coach?.name || "—")} · ${formatDate(
                 f.created_at
-              )}${f.rating ? ` · <span class="entry__stars">${"&#9733;".repeat(f.rating)}${"&#9734;".repeat(5 - f.rating)}</span>` : ""}</div>
-                ${f.highlight ? `<div class="entry__tag entry__tag--highlight">&#127942; ${escapeHtml(f.highlight)}</div>` : ""}
+              )}${
+                f.rating
+                  ? ` <span class="entry__rating" aria-label="${f.rating} out of 5 stars"><span class="entry__stars">${"★".repeat(
+                      f.rating
+                    )}${"☆".repeat(5 - f.rating)}</span></span>`
+                  : ""
+              }</div>
+                ${
+                  f.highlight
+                    ? `<div class="entry__tag entry__tag--highlight"><b>This month's highlight:</b> ${escapeHtml(
+                        f.highlight
+                      )}</div>`
+                    : ""
+                }
+                <div class="entry__label">Feedback</div>
                 <div class="entry__body">${escapeHtml(f.body)}</div>
-                ${f.next_focus ? `<div class="entry__tag entry__tag--focus">&#127919; ${escapeHtml(f.next_focus)}</div>` : ""}
+                ${
+                  f.next_focus
+                    ? `<div class="entry__tag entry__tag--focus"><b>Next month's target:</b> ${escapeHtml(
+                        f.next_focus
+                      )}</div>`
+                    : ""
+                }
+                <div class="entry__actions">
+                  <button type="button" class="btn btn--secondary btn--xs" data-fbedit="${f.id}">Edit</button>
+                  <button type="button" class="btn btn--danger btn--xs" data-fbdelete="${f.id}">Delete</button>
+                </div>
               </div>`
             )
             .join("")
-        : '<div class="entry"><div class="entry__meta">No feedback written yet.</div></div>'
+        : `<div class="entry"><div class="entry__meta">${escapeHtml(feedbackEmptyMsg)}</div></div>`
       : state.notes.length
       ? state.notes
           .map(
@@ -849,6 +917,7 @@ function notesPaneHtml(student) {
       </button>
     </div>
     ${form}
+    ${feedbackCal}
     <div class="notes__history">${history}</div>
   </div>`;
 }
@@ -860,6 +929,70 @@ el("checklistWrap").addEventListener("click", async (e) => {
   const noteTab = e.target.closest("[data-notetab]");
   if (noteTab) {
     state.notePane = noteTab.getAttribute("data-notetab");
+    renderChecklist();
+    return;
+  }
+
+  const fbCalMonth = e.target.closest("[data-fbcal-month]");
+  if (fbCalMonth && !fbCalMonth.disabled) {
+    const key = fbCalMonth.getAttribute("data-fbcal-month");
+    state.fbSelectedMonth = state.fbSelectedMonth === key ? null : key;
+    renderChecklist();
+    return;
+  }
+
+  if (e.target.closest("[data-fbcal-clear]")) {
+    state.fbSelectedMonth = null;
+    renderChecklist();
+    return;
+  }
+
+  const fbCalPrev = e.target.closest("[data-fbcal-prev]");
+  if (fbCalPrev && !fbCalPrev.disabled) {
+    state.fbCalYear -= 1;
+    renderChecklist();
+    return;
+  }
+
+  const fbCalNext = e.target.closest("[data-fbcal-next]");
+  if (fbCalNext && !fbCalNext.disabled) {
+    state.fbCalYear += 1;
+    renderChecklist();
+    return;
+  }
+
+  if (e.target.closest("#fbCancelEdit")) {
+    state.fbEditingId = null;
+    renderChecklist();
+    return;
+  }
+
+  const fbEditBtn = e.target.closest("[data-fbedit]");
+  if (fbEditBtn) {
+    state.fbEditingId = fbEditBtn.getAttribute("data-fbedit");
+    renderChecklist();
+    return;
+  }
+
+  const fbDeleteBtn = e.target.closest("[data-fbdelete]");
+  if (fbDeleteBtn) {
+    const id = fbDeleteBtn.getAttribute("data-fbdelete");
+    const entry = state.feedback.find((f) => f.id === id);
+    const sure = window.confirm(
+      `Delete the ${entry ? formatMonth(entry.month) : ""} feedback for ${student.full_name}? This can't be undone.`
+    );
+    if (!sure) return;
+    fbDeleteBtn.disabled = true;
+    const { error } = await supabase.from("feedback").delete().eq("id", id);
+    if (error) {
+      fbDeleteBtn.disabled = false;
+      setStatus("Couldn't delete that feedback entry. Try again.", "error");
+      return;
+    }
+    if (state.fbEditingId === id) state.fbEditingId = null;
+    await loadStudentNotes(student.id);
+    await loadRosterFeedbackMonths(state.students.map((s) => s.id));
+    renderPicker();
     renderChecklist();
     return;
   }
@@ -890,8 +1023,10 @@ el("checklistWrap").addEventListener("click", async (e) => {
     const ratingValue = Number(el("fbRating")?.dataset.value) || null;
     const highlight = el("fbHighlight")?.value.trim() || null;
     const nextFocus = el("fbFocus")?.value.trim() || null;
+    const editingId = state.fbEditingId;
     e.target.disabled = true;
-    const { error } = await supabase.from("feedback").insert({
+
+    const payload = {
       student_id: student.id,
       coach_id: state.coach.id,
       month: monthDate,
@@ -899,14 +1034,23 @@ el("checklistWrap").addEventListener("click", async (e) => {
       rating: ratingValue,
       highlight,
       next_focus: nextFocus,
-    });
+    };
+    const { error } = editingId
+      ? await supabase.from("feedback").update(payload).eq("id", editingId)
+      : await supabase.from("feedback").insert(payload);
+
     e.target.disabled = false;
     if (error) {
-      setStatus("Couldn't save feedback. Try again.", "error");
+      setStatus(editingId ? "Couldn't update feedback. Try again." : "Couldn't save feedback. Try again.", "error");
       return;
     }
-    if (!state.rosterFeedbackMonths.has(student.id)) state.rosterFeedbackMonths.set(student.id, []);
-    state.rosterFeedbackMonths.get(student.id).push(monthDate);
+    if (editingId) {
+      state.fbEditingId = null;
+      await loadRosterFeedbackMonths(state.students.map((s) => s.id));
+    } else {
+      if (!state.rosterFeedbackMonths.has(student.id)) state.rosterFeedbackMonths.set(student.id, []);
+      state.rosterFeedbackMonths.get(student.id).push(monthDate);
+    }
     await loadStudentNotes(student.id);
     renderPicker();
     renderChecklist();
