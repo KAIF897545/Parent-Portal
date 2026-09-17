@@ -265,6 +265,14 @@ a {
   background: rgba(176, 15, 46, 0.06);
 }
 
+body.portal-landing .btn--secondary {
+  background: var(--white);
+}
+
+body.portal-landing .btn--secondary:hover {
+  background: rgba(226, 55, 79, 0.14);
+}
+
 .btn--danger {
   background: var(--crimson-dark);
   color: var(--fixed-light);
@@ -495,12 +503,12 @@ a {
    Overriding the shared custom properties here (instead of writing new rules)
    re-themes every component on this page for free: cards, borders, text. */
 body.portal-landing {
-  --cream: #070403;
-  --white: rgba(244, 241, 232, 0.035);
+  --cream: #14100e;
+  --white: rgba(244, 241, 232, 0.06);
   --near-black: #f4f1e8;
   --text: var(--near-black);
-  --text-muted: rgba(244, 241, 232, 0.62);
-  --border: rgba(244, 241, 232, 0.16);
+  --text-muted: rgba(244, 241, 232, 0.74);
+  --border: rgba(244, 241, 232, 0.2);
   --crimson: #e2374f;
   --crimson-dark: #c92943;
   --mint: #3ecf8e;
@@ -1780,6 +1788,7 @@ body.portal-landing .brand__sub {
 
 .roster-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   background: var(--white);
@@ -2518,6 +2527,7 @@ body.portal-landing .brand__sub {
 
 .entry__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
 }
