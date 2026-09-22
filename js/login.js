@@ -62,20 +62,10 @@ loadSchoolName();
 // --- Student sign-in ---
 
 const studentForm = document.getElementById("studentForm");
-const studentNameInput = document.getElementById("studentName");
+const studentEmailInput = document.getElementById("studentEmail");
 const studentPasswordInput = document.getElementById("studentPassword");
-const studentCodeField = document.getElementById("studentCodeField");
-const studentCodeInput = document.getElementById("studentCode");
 const studentMessage = document.getElementById("studentMessage");
 const studentSubmit = document.getElementById("studentSubmit");
-
-function hideStudentCodeField() {
-  studentCodeField.hidden = true;
-  studentCodeInput.value = "";
-}
-
-studentNameInput.addEventListener("input", hideStudentCodeField);
-studentPasswordInput.addEventListener("input", hideStudentCodeField);
 
 function setStudentMessage(text, kind) {
   studentMessage.textContent = text;
@@ -88,16 +78,11 @@ studentForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   setStudentMessage("", null);
 
-  if (!schoolId) {
-    setStudentMessage("Choose a school portal first.", "error");
-    return;
-  }
-
-  const name = studentNameInput.value.trim();
+  const email = studentEmailInput.value.trim();
   const password = studentPasswordInput.value;
 
-  if (!name || !password) {
-    setStudentMessage("Enter your name and password.", "error");
+  if (!email || !password) {
+    setStudentMessage("Enter your email and password.", "error");
     return;
   }
 
@@ -105,54 +90,25 @@ studentForm.addEventListener("submit", async (event) => {
   setStudentMessage("Signing in…", null);
 
   try {
-    const response = await fetch("/api/resolve-login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        school: schoolId,
-        name,
-        password,
-        student_code: studentCodeField.hidden ? null : studentCodeInput.value.trim(),
-      }),
-    });
-
-    const body = await response.json().catch(() => ({}));
-
-    if (response.status === 409 && body.ambiguous) {
-      studentCodeField.hidden = false;
-      studentCodeInput.focus();
-      setStudentMessage("Enter your student ID to continue.", null);
-      return;
-    }
-
-    if (response.status === 429) {
-      setStudentMessage(body.error || "Too many attempts. Wait a few minutes and try again.", "error");
-      return;
-    }
-
-    if (!response.ok || !body.email) {
-      setStudentMessage(body.error || "Name or password not recognised. Ask your coach for help.", "error");
-      return;
-    }
-
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email: body.email,
+      email,
       password,
     });
 
     if (signInError || !signInData?.user) {
-      setStudentMessage("Name or password not recognised. Ask your coach for help.", "error");
+      setStudentMessage("Email or password not recognised. Ask your coach for help.", "error");
       return;
     }
 
     const { data: studentRow, error: studentError } = await supabase
       .from("students")
-      .select("must_change_password")
+      .select("must_change_password, active")
       .eq("id", signInData.user.id)
       .single();
 
-    if (studentError || !studentRow) {
-      setStudentMessage("Something went wrong. Try again.", "error");
+    if (studentError || !studentRow || !studentRow.active) {
+      setStudentMessage("This account is not active. Ask your coach for help.", "error");
+      await supabase.auth.signOut();
       return;
     }
 
@@ -168,23 +124,23 @@ studentForm.addEventListener("submit", async (event) => {
 
 const studentForgotToggle = document.getElementById("studentForgotToggle");
 const studentForgotPanel = document.getElementById("studentForgotPanel");
-const studentForgotEmail = document.getElementById("studentForgotEmail");
 const studentForgotSubmit = document.getElementById("studentForgotSubmit");
 const studentForgotMessage = document.getElementById("studentForgotMessage");
 
 studentForgotToggle.addEventListener("click", () => {
   studentForgotPanel.hidden = !studentForgotPanel.hidden;
-  if (!studentForgotPanel.hidden) studentForgotEmail.focus();
+  if (!studentForgotPanel.hidden) studentEmailInput.focus();
 });
 
 studentForgotSubmit.addEventListener("click", async () => {
-  const email = studentForgotEmail.value.trim();
+  const email = studentEmailInput.value.trim();
   studentForgotMessage.textContent = "";
   studentForgotMessage.className = "form-message";
 
   if (!email) {
-    studentForgotMessage.textContent = "Enter the email on file with the club.";
+    studentForgotMessage.textContent = "Enter your email above first.";
     studentForgotMessage.className = "form-message form-message--error";
+    studentEmailInput.focus();
     return;
   }
 

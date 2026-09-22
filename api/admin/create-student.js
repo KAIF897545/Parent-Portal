@@ -1,11 +1,10 @@
 // POST /api/admin/create-student
-// { schoolId, fullName, groupId?, moduleId, password?, email? }
+// { schoolId, fullName, groupId?, moduleId, password?, email }
 //
 // Creates the student's auth account and her students row. If no password
 // is supplied, one is generated and returned once — there is no way to
-// look it up afterwards. If no email is supplied, the account gets a
-// synthetic placeholder instead; a real email lets the student use
-// "Forgot password?" on the sign-in page later.
+// look it up afterwards. Email is required: students sign in with it
+// directly (supabase.auth.signInWithPassword), not by full name.
 
 import { requireAdmin, serviceClient, rateLimit, clientIp, sendJson, HttpError, PW_MESSAGES, randomPassword } from "../_auth.js";
 
@@ -30,8 +29,8 @@ export default async function handler(req, res) {
     const requestedPassword = typeof body.password === "string" && body.password.trim() ? body.password.trim() : null;
     const email = typeof body.email === "string" && body.email.trim() ? body.email.trim() : null;
 
-    if (!schoolId || !fullName || !moduleId) {
-      return sendJson(res, 400, { error: "School, full name, and module are required." });
+    if (!schoolId || !fullName || !moduleId || !email) {
+      return sendJson(res, 400, { error: "School, full name, module, and email are required." });
     }
 
     const client = serviceClient();

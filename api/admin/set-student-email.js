@@ -1,12 +1,12 @@
 // POST /api/admin/set-student-email
 // { studentId, email }
 //
-// Sets (or clears, with an empty string) the real email used both for
-// display in the admin panel and for the student's own "Forgot password?"
-// flow on the sign-in page. Goes through admin_set_student_email rather
-// than a plain students.update() because it also has to update the
-// matching auth.users/auth.identities row, which the browser can't reach
-// directly.
+// Sets the email a student signs in and resets their password with.
+// Can't be cleared to blank — that would leave the account with no way
+// to sign in at all; use Deactivate for that instead. Goes through
+// admin_set_student_email rather than a plain students.update() because
+// it also has to update the matching auth.users/auth.identities row,
+// which the browser can't reach directly.
 
 import { requireAdmin, serviceClient, rateLimit, clientIp, sendJson, HttpError, PW_MESSAGES } from "../_auth.js";
 
@@ -29,11 +29,14 @@ export default async function handler(req, res) {
     if (!studentId) {
       return sendJson(res, 400, { error: "studentId is required." });
     }
+    if (!email) {
+      return sendJson(res, 400, { error: "Enter a valid email address." });
+    }
 
     const client = serviceClient();
     const { error } = await client.rpc("admin_set_student_email", {
       p_student: studentId,
-      p_email: email || null,
+      p_email: email,
     });
 
     if (error) {

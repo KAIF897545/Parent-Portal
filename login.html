@@ -56,12 +56,12 @@
     >
       <form id="studentForm" novalidate>
         <div class="field">
-          <label for="studentName">Full name</label>
+          <label for="studentEmail">Email</label>
           <input
-            type="text"
-            id="studentName"
-            name="name"
-            autocomplete="name"
+            type="email"
+            id="studentEmail"
+            name="email"
+            autocomplete="username"
             required
           />
         </div>
@@ -75,18 +75,11 @@
             required
           />
         </div>
-        <div class="field" id="studentCodeField" hidden>
-          <label for="studentCode">Student ID</label>
-          <input type="text" id="studentCode" name="student_code" autocomplete="off" />
-          <p class="field__hint">Two students share this name. Enter your ID from your slip.</p>
-        </div>
         <p class="forgot-row">
           <button type="button" class="text-btn" id="studentForgotToggle">Forgot password?</button>
         </p>
         <div class="field" id="studentForgotPanel" hidden>
-          <label for="studentForgotEmail">Email on file with the club</label>
-          <input type="email" id="studentForgotEmail" autocomplete="email" placeholder="parent@example.com" />
-          <p class="field__hint">Only works if a coach or admin has added an email to your account.</p>
+          <p class="field__hint">We'll send a reset link to the email above.</p>
           <button type="button" class="btn btn--secondary" id="studentForgotSubmit">Send reset link</button>
           <div
             id="studentForgotMessage"

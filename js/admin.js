@@ -498,7 +498,7 @@ function renderStudentRow(s, schoolId) {
         <input type="text" id="editStuName_${s.id}" value="${escapeHtml(s.full_name)}" placeholder="Full name">
         <select id="editStuGroup_${s.id}">${groupOptions}</select>
         <select id="editStuModule_${s.id}">${moduleOptions}</select>
-        <input type="email" id="editStuEmail_${s.id}" value="${escapeHtml(s.email || "")}" placeholder="Email (optional)">
+        <input type="email" id="editStuEmail_${s.id}" value="${escapeHtml(s.email || "")}" placeholder="Email">
       </div>
       <div class="entity-card__actions">
         <button type="button" class="btn btn--primary btn--xs" data-save-student="${s.id}">Save</button>
@@ -514,7 +514,9 @@ function renderStudentRow(s, schoolId) {
   )} · ${escapeHtml(moduleLabel(s.current_module_id))}${
     s.must_change_password ? ' · <span class="due-flag">first sign-in pending</span>' : ""
   }${s.active ? "" : ' · <span class="due-flag">inactive</span>'}</span>
-      <span class="roster-row__sub">${s.email ? escapeHtml(s.email) : "no email on file"}</span>
+      <span class="roster-row__sub">${
+    s.email ? escapeHtml(s.email) : '<span class="due-flag">no email — can\'t sign in yet</span>'
+  }</span>
     </span>
     <span class="roster-row__buttons">
       <button type="button" class="btn btn--secondary btn--xs" data-edit-student="${s.id}">Edit</button>
@@ -591,6 +593,11 @@ el("studentList").addEventListener("click", async (e) => {
 
     if (!fullName) {
       setStatus("Full name is required.", "error");
+      return;
+    }
+
+    if (!email) {
+      setStatus("Email is required — students sign in with it.", "error");
       return;
     }
 
@@ -692,11 +699,16 @@ el("studentForm").addEventListener("submit", async (e) => {
     groupId: el("stuGroup").value || null,
     moduleId: el("stuModule").value,
     password: el("stuPassword").value.trim() || undefined,
-    email: el("stuEmail").value.trim() || undefined,
+    email: el("stuEmail").value.trim(),
   };
 
   if (!payload.fullName) {
     setFormMessage("studentMessage", "Full name is required.", "error");
+    return;
+  }
+
+  if (!payload.email) {
+    setFormMessage("studentMessage", "Email is required — students sign in with it.", "error");
     return;
   }
 
