@@ -29,6 +29,10 @@ const state = {
   fbSelectedMonth: null, // "YYYY-MM" filter for the history list, or null for all
   fbEditingId: null, // feedback row id currently loaded into the form, or null for "new"
   ntEditingId: null, // coach_notes row id currently loaded into the form, or null for "new"
+  syllabusModuleId: null,
+  syllabusOpenUnits: new Set(),
+  syllabusOpenItems: new Set(),
+  syllabusScrollTo: null, // item id to scroll to + flash-highlight after the next syllabus render
   rosterTicks: new Map(), // student_id -> Map(item_id -> {on, coachName})
   rosterCps: new Map(), // student_id -> Map(item_id -> {on, evidence, coachName})
   rosterFeedbackMonths: new Map(), // student_id -> [month, ...]
@@ -131,7 +135,9 @@ async function loadCurriculum() {
     supabase.from("units").select("id, module_id, number, name, sort_order").order("sort_order"),
     supabase
       .from("items")
-      .select("id, unit_id, description, pass_standard, is_checkpoint, sort_order")
+      .select(
+        "id, unit_id, description, pass_standard, is_checkpoint, sort_order, how_to_teach, how_to_check, puzzles, assignments"
+      )
       .order("sort_order"),
   ]);
 
@@ -756,6 +762,8 @@ function renderUnit(student, unit) {
         <span class="curriculum-item__text">${escapeHtml(it.description)}
           <span class="curriculum-item__pass">Pass: ${escapeHtml(it.pass_standard)}</span>
         </span>
+        <button type="button" class="syllabus-jump" data-syllabus-link="${unit.id}:${it.id}"
+          aria-label="Open this item in the syllabus" title="Open in syllabus">📖</button>
         <span class="curriculum-item__meta">${
           mark ? `${escapeHtml(mark.coachName)}<br>${formatDate(mark.on)}` : "not marked"
         }</span>
@@ -767,7 +775,10 @@ function renderUnit(student, unit) {
   const cpMark = cp ? cps.get(cp.id) : null;
   const cpHtml = cp
     ? `<div class="checkpoint${cpMark ? " is-passed" : ""}">
-        <h4>Checkpoint</h4>
+        <h4>Checkpoint
+          <button type="button" class="syllabus-jump syllabus-jump--inline" data-syllabus-link="${unit.id}:${cp.id}"
+            aria-label="Open this checkpoint in the syllabus" title="Open in syllabus">📖</button>
+        </h4>
         <p>${escapeHtml(cp.pass_standard)}</p>
         ${
           cpMark
@@ -943,6 +954,16 @@ function notesPaneHtml(student) {
 el("checklistWrap").addEventListener("click", async (e) => {
   const student = state.students.find((s) => s.id === state.selectedStudent);
   if (!student) return;
+
+  const syllabusLink = e.target.closest("[data-syllabus-link]");
+  if (syllabusLink) {
+    const [unitId, itemId] = syllabusLink.getAttribute("data-syllabus-link").split(":");
+    const mod = state.curriculum.find((m) => m.units.some((u) => u.id === unitId));
+    const unit = mod?.units.find((u) => u.id === unitId);
+    const item = unit && [...unit.items, unit.checkpoint].find((it) => it && it.id === itemId);
+    if (unit && item) openSyllabusItem(unit, item);
+    return;
+  }
 
   const noteTab = e.target.closest("[data-notetab]");
   if (noteTab) {
@@ -1216,18 +1237,136 @@ el("checklistWrap").addEventListener("change", async (e) => {
   setStatus("Group updated.", "success");
 });
 
+// --- Syllabus tab: read-only teaching reference -----------------------------
+//
+// Presents the same modules/units/items as the Progress-tab checklist, but as
+// a reference "book" rather than something to tick off: each item expands to
+// show how to teach it, how to check it, puzzles to use, and assignments to
+// give. Only Module 1 has this content written so far (see sql/021); items
+// without it show a plain "not written yet" placeholder rather than blanks.
+
+function renderSyllabus() {
+  if (!state.curriculum.length) {
+    el("syllabusModuleTabs").innerHTML = "";
+    el("syllabusUnits").innerHTML = "";
+    return;
+  }
+  if (!state.syllabusModuleId) state.syllabusModuleId = state.curriculum[0].id;
+  const mod = state.curriculum.find((m) => m.id === state.syllabusModuleId) || state.curriculum[0];
+
+  el("syllabusModuleTabs").innerHTML = state.curriculum
+    .map(
+      (m) =>
+        `<button type="button" class="module-tab" data-syllabus-module="${m.id}" aria-selected="${m.id === mod.id}">
+          Module ${m.number} · ${escapeHtml(m.name)}
+        </button>`
+    )
+    .join("");
+
+  el("syllabusUnits").innerHTML = mod.units.map((u) => renderSyllabusUnit(u)).join("");
+
+  if (state.syllabusScrollTo) {
+    const targetId = state.syllabusScrollTo;
+    state.syllabusScrollTo = null;
+    requestAnimationFrame(() => {
+      const node = document.querySelector(`[data-syllabus-item="${targetId}"]`);
+      if (!node) return;
+      node.scrollIntoView({ behavior: "smooth", block: "center" });
+      node.classList.add("is-target");
+      setTimeout(() => node.classList.remove("is-target"), 2000);
+    });
+  }
+}
+
+function renderSyllabusUnit(unit) {
+  const open = state.syllabusOpenUnits.has(unit.id);
+  const allItems = unit.checkpoint ? [...unit.items, unit.checkpoint] : unit.items;
+  const rows = allItems.map((it) => renderSyllabusItem(it)).join("");
+
+  return `<div class="unit">
+    <button type="button" class="unit__head" data-syllabus-unit="${unit.id}">
+      <span class="unit__name">${escapeHtml(unit.number)} — ${escapeHtml(unit.name)}</span>
+      <span class="unit__count">${allItems.length} item${allItems.length === 1 ? "" : "s"}</span>
+    </button>
+    <div class="unit__body" ${open ? "" : "hidden"}>${rows}</div>
+  </div>`;
+}
+
+function renderSyllabusItem(item) {
+  const open = state.syllabusOpenItems.has(item.id);
+  const hasContent = item.how_to_teach || item.how_to_check || item.puzzles || item.assignments;
+
+  const body = hasContent
+    ? `<div class="syllabus-section"><h5>How to teach it</h5><p>${escapeHtml(item.how_to_teach || "—")}</p></div>
+       <div class="syllabus-section"><h5>How to check it</h5><p>${escapeHtml(item.how_to_check || "—")}</p></div>
+       <div class="syllabus-section"><h5>Puzzles</h5><p>${escapeHtml(item.puzzles || "—")}</p></div>
+       <div class="syllabus-section"><h5>Assignments</h5><p>${escapeHtml(item.assignments || "—")}</p></div>`
+    : `<p class="empty-state">Detailed syllabus content for this item hasn't been written yet.</p>`;
+
+  return `<div class="syllabus-item${item.is_checkpoint ? " syllabus-item--checkpoint" : ""}" data-syllabus-item="${item.id}">
+    <button type="button" class="syllabus-item__head" data-syllabus-item-toggle="${item.id}" aria-expanded="${open}">
+      <span class="syllabus-item__text">
+        ${item.is_checkpoint ? '<span class="syllabus-item__badge">Checkpoint</span>' : ""}${escapeHtml(item.description)}
+        <span class="curriculum-item__pass">Pass: ${escapeHtml(item.pass_standard)}</span>
+      </span>
+      <span class="syllabus-item__chevron" aria-hidden="true">${open ? "▾" : "▸"}</span>
+    </button>
+    <div class="syllabus-item__body" ${open ? "" : "hidden"}>${body}</div>
+  </div>`;
+}
+
+function openSyllabusItem(unit, item) {
+  state.syllabusModuleId = unit.module_id;
+  state.syllabusOpenUnits.add(unit.id);
+  state.syllabusOpenItems.add(item.id);
+  state.syllabusScrollTo = item.id;
+  selectTab("syllabus");
+  renderSyllabus();
+}
+
+el("syllabusModuleTabs").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-syllabus-module]");
+  if (!btn) return;
+  state.syllabusModuleId = btn.getAttribute("data-syllabus-module");
+  renderSyllabus();
+});
+
+el("syllabusUnits").addEventListener("click", (e) => {
+  const unitHead = e.target.closest("[data-syllabus-unit]");
+  if (unitHead) {
+    const id = unitHead.getAttribute("data-syllabus-unit");
+    if (state.syllabusOpenUnits.has(id)) state.syllabusOpenUnits.delete(id);
+    else state.syllabusOpenUnits.add(id);
+    renderSyllabus();
+    return;
+  }
+
+  const itemToggle = e.target.closest("[data-syllabus-item-toggle]");
+  if (itemToggle) {
+    const id = itemToggle.getAttribute("data-syllabus-item-toggle");
+    if (state.syllabusOpenItems.has(id)) state.syllabusOpenItems.delete(id);
+    else state.syllabusOpenItems.add(id);
+    renderSyllabus();
+  }
+});
+
 // --- Top-level tabs ---------------------------------------------------------
 
 function selectTab(name) {
-  const isToday = name === "today";
-  el("tabToday").setAttribute("aria-selected", String(isToday));
-  el("tabProgress").setAttribute("aria-selected", String(!isToday));
-  el("panelToday").hidden = !isToday;
-  el("panelProgress").hidden = isToday;
+  el("tabToday").setAttribute("aria-selected", String(name === "today"));
+  el("tabProgress").setAttribute("aria-selected", String(name === "progress"));
+  el("tabSyllabus").setAttribute("aria-selected", String(name === "syllabus"));
+  el("panelToday").hidden = name !== "today";
+  el("panelProgress").hidden = name !== "progress";
+  el("panelSyllabus").hidden = name !== "syllabus";
 }
 
 el("tabToday").addEventListener("click", () => selectTab("today"));
 el("tabProgress").addEventListener("click", () => selectTab("progress"));
+el("tabSyllabus").addEventListener("click", () => {
+  selectTab("syllabus");
+  renderSyllabus();
+});
 
 el("signOutButton").addEventListener("click", async () => {
   await supabase.auth.signOut();

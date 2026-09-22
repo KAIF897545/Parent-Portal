@@ -37,6 +37,7 @@
   <div class="tabs" role="tablist" aria-label="Dashboard sections">
     <button type="button" class="tab" id="tabToday" role="tab" aria-selected="true" aria-controls="panelToday">Attendance</button>
     <button type="button" class="tab" id="tabProgress" role="tab" aria-selected="false" aria-controls="panelProgress">Progress</button>
+    <button type="button" class="tab" id="tabSyllabus" role="tab" aria-selected="false" aria-controls="panelSyllabus">Syllabus</button>
   </div>
 
   <section id="panelToday" class="tabpanel">
@@ -107,6 +108,15 @@
     </div>
     <div class="picker" id="studentPicker"></div>
     <div id="checklistWrap"></div>
+  </section>
+
+  <section id="panelSyllabus" class="tabpanel" hidden>
+    <h2 class="section-title">Syllabus</h2>
+    <p class="field__hint" style="margin: -8px 0 16px;">
+      The full teaching reference, module by module — how to teach each item, how to check it, puzzles to use, and assignments to give.
+    </p>
+    <div class="module-tabs" id="syllabusModuleTabs"></div>
+    <div id="syllabusUnits"></div>
   </section>
 </div>
 
