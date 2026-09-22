@@ -698,12 +698,17 @@ el("studentForm").addEventListener("submit", async (e) => {
     fullName: el("stuName").value.trim(),
     groupId: el("stuGroup").value || null,
     moduleId: el("stuModule").value,
-    password: el("stuPassword").value.trim() || undefined,
+    studentCode: el("stuCode").value.trim(),
     email: el("stuEmail").value.trim(),
   };
 
   if (!payload.fullName) {
     setFormMessage("studentMessage", "Full name is required.", "error");
+    return;
+  }
+
+  if (!payload.studentCode) {
+    setFormMessage("studentMessage", "Student ID is required — it also becomes their starting password.", "error");
     return;
   }
 
@@ -719,10 +724,7 @@ el("studentForm").addEventListener("submit", async (e) => {
     el("stuSchool").value = payload.schoolId;
     el("studentResult").innerHTML = passwordBanner({
       title: `${result.fullName} created`,
-      lines: [
-        { label: "Student ID", value: result.studentCode },
-        { label: "Password", value: result.password },
-      ],
+      lines: [{ label: "Student ID / starting password", value: result.studentCode }],
     });
     if (payload.schoolId === el("stuSchoolFilter").value) {
       await loadStudents(payload.schoolId);
@@ -741,21 +743,33 @@ el("bulkForm").addEventListener("submit", async (e) => {
   setFormMessage("bulkMessage", "");
   el("bulkResult").innerHTML = "";
 
-  const names = el("bulkNames").value
+  const lines = el("bulkNames").value
     .split("\n")
     .map((n) => n.trim())
     .filter(Boolean);
 
-  if (!names.length) {
-    setFormMessage("bulkMessage", "Enter at least one name.", "error");
+  if (!lines.length) {
+    setFormMessage("bulkMessage", "Enter at least one student.", "error");
     return;
   }
 
-  const rows = names.map((fullName) => ({
-    fullName,
-    groupId: el("stuGroup").value || null,
-    moduleId: el("stuModule").value,
-  }));
+  const rows = [];
+  for (const line of lines) {
+    const [studentCode, email, ...nameParts] = line.split(",").map((p) => p.trim());
+    rows.push({
+      studentCode: studentCode || "",
+      email: email || "",
+      fullName: nameParts.join(",").trim(),
+      groupId: el("stuGroup").value || null,
+      moduleId: el("stuModule").value,
+    });
+  }
+
+  const malformed = rows.filter((r) => !r.studentCode || !r.email || !r.fullName);
+  if (malformed.length) {
+    setFormMessage("bulkMessage", "Each line needs Student ID, Email, Full name — separated by commas.", "error");
+    return;
+  }
 
   el("bulkSubmit").disabled = true;
   try {
@@ -771,15 +785,15 @@ el("bulkForm").addEventListener("submit", async (e) => {
         ${okRows
           .map(
             (r) =>
-              `<div class="pw-banner__line"><span>${escapeHtml(r.fullName)} (${escapeHtml(
+              `<div class="pw-banner__line"><span>${escapeHtml(r.fullName)}</span><code>${escapeHtml(
                 r.studentCode
-              )})</span><code>${escapeHtml(r.password)}</code></div>`
+              )}</code></div>`
           )
           .join("")}
         ${failRows.length ? `<p class="form-message form-message--error" style="margin-top:10px">Failed: ${failRows
           .map((r) => `${escapeHtml(r.fullName)} — ${escapeHtml(r.error)}`)
           .join("; ")}</p>` : ""}
-        <p class="pw-banner__hint">Shown once — write these down now.</p>
+        <p class="pw-banner__hint">Student ID doubles as the starting password — shown once, write these down now.</p>
       </div>`;
 
     if (el("stuSchool").value === el("stuSchoolFilter").value) {

@@ -94,8 +94,19 @@
             <select id="stuSchool" required></select>
           </div>
           <div class="field">
+            <label for="stuCode">Student ID</label>
+            <input type="text" id="stuCode" class="mono" placeholder="BW-CHESS01" autocomplete="off" required>
+            <p class="field__hint">At least 8 characters — this also becomes their starting password until they set their own.</p>
+          </div>
+          <div class="field">
+            <label for="stuEmail">Email</label>
+            <input type="email" id="stuEmail" placeholder="parent@example.com" autocomplete="off" required>
+            <p class="field__hint">Students sign in with this instead of their name — it must be real and unique.</p>
+          </div>
+          <div class="field">
             <label for="stuName">Full name</label>
             <input type="text" id="stuName" placeholder="Ahmed Rasheed" required>
+            <p class="field__hint">Shown on their profile — doesn't need to be unique.</p>
           </div>
           <div class="field">
             <label for="stuGroup">Group</label>
@@ -104,18 +115,6 @@
           <div class="field">
             <label for="stuModule">Starting module</label>
             <select id="stuModule" required></select>
-          </div>
-          <div class="field">
-            <label for="stuEmail">Email</label>
-            <input type="email" id="stuEmail" placeholder="parent@example.com" autocomplete="off" required>
-            <p class="field__hint">Students sign in with this instead of their name — it must be real and unique.</p>
-          </div>
-          <div class="field">
-            <label for="stuPassword">Starting password</label>
-            <div class="field__inline">
-              <input type="text" id="stuPassword" class="mono" placeholder="Leave blank to generate">
-            </div>
-            <p class="field__hint">Shown once, right after creation. The student changes it on first sign-in.</p>
           </div>
         </div>
         <p class="form-message" id="studentMessage" role="alert" aria-live="assertive"></p>
@@ -127,12 +126,18 @@
     <h2 class="section-title">Bulk add</h2>
     <div class="form-card">
       <p class="field__hint" style="margin-top:0">
-        One full name per line. Every row uses the school, group and module picked above.
+        One student per line: <code>Student ID, Email, Full name</code>. Every row uses the school, group and module
+        picked above.
       </p>
       <form id="bulkForm" novalidate>
         <div class="field">
-          <label for="bulkNames">Full names</label>
-          <textarea id="bulkNames" rows="6" placeholder="Aishath Ibrahim&#10;Hassan Naseer&#10;Mariyam Shifa"></textarea>
+          <label for="bulkNames">Students</label>
+          <textarea
+            id="bulkNames"
+            rows="6"
+            class="mono"
+            placeholder="BW-CHESS01, aishath@example.com, Aishath Ibrahim&#10;BW-CHESS02, hassan@example.com, Hassan Naseer"
+          ></textarea>
         </div>
         <p class="form-message" id="bulkMessage" role="alert" aria-live="assertive"></p>
         <button type="submit" class="btn btn--primary" id="bulkSubmit" style="width:auto">Create all</button>

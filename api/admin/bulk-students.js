@@ -1,11 +1,11 @@
 // POST /api/admin/bulk-students
-// { schoolId, rows: [{ fullName, groupId?, moduleId }] }
+// { schoolId, rows: [{ fullName, studentCode, email, groupId? }] }
 //
 // Creates each row server-side, one admin_create_student call per row, and
-// returns the whole list — including every generated password — once.
-// A row failing doesn't stop the rest; each result says ok or not.
+// returns the whole list once. A row failing doesn't stop the rest; each
+// result says ok or not. studentCode doubles as the starting password.
 
-import { requireAdmin, serviceClient, rateLimit, clientIp, sendJson, HttpError, PW_MESSAGES, randomPassword } from "../_auth.js";
+import { requireAdmin, serviceClient, rateLimit, clientIp, sendJson, HttpError, PW_MESSAGES } from "../_auth.js";
 
 const MAX_ROWS = 100;
 
@@ -39,39 +39,34 @@ export default async function handler(req, res) {
     for (const row of rows) {
       const fullName = typeof row?.fullName === "string" ? row.fullName.trim() : "";
       const moduleId = typeof row?.moduleId === "string" ? row.moduleId : "";
+      const studentCode = typeof row?.studentCode === "string" ? row.studentCode.trim() : "";
+      const email = typeof row?.email === "string" ? row.email.trim() : "";
 
-      if (!fullName || !moduleId) {
-        results.push({ fullName: fullName || "(blank)", ok: false, error: "Full name and module are required." });
+      if (!fullName || !moduleId || !studentCode || !email) {
+        results.push({
+          fullName: fullName || "(blank)",
+          ok: false,
+          error: "Student ID, email, full name, and module are required.",
+        });
         continue;
       }
 
-      let ok = false;
-      let lastCode = null;
+      const { data, error } = await client.rpc("admin_create_student", {
+        p_school_id: schoolId,
+        p_full_name: fullName,
+        p_group_id: typeof row.groupId === "string" && row.groupId ? row.groupId : null,
+        p_module_id: moduleId,
+        p_student_code: studentCode,
+        p_email: email,
+      });
 
-      for (let i = 0; i < 5 && !ok; i++) {
-        const password = randomPassword();
-        const { data, error } = await client.rpc("admin_create_student", {
-          p_school_id: schoolId,
-          p_full_name: fullName,
-          p_group_id: typeof row.groupId === "string" && row.groupId ? row.groupId : null,
-          p_module_id: moduleId,
-          p_password: password,
-        });
-
-        if (!error) {
-          const r = Array.isArray(data) ? data[0] : data;
-          results.push({ fullName, ok: true, studentCode: r.student_code, password });
-          ok = true;
-          break;
-        }
-
-        lastCode = error.code;
-        if (error.code !== "PW004") break;
+      if (error) {
+        results.push({ fullName, ok: false, error: PW_MESSAGES[error.code] || "Couldn't create this student." });
+        continue;
       }
 
-      if (!ok) {
-        results.push({ fullName, ok: false, error: PW_MESSAGES[lastCode] || "Couldn't create this student." });
-      }
+      const r = Array.isArray(data) ? data[0] : data;
+      results.push({ fullName, ok: true, studentCode: r.student_code });
     }
 
     return sendJson(res, 200, { results });
