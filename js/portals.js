@@ -39,7 +39,7 @@ async function load() {
 
   status.textContent = "";
   grid.innerHTML = schools
-    .map((school, i) => {
+    .map((school) => {
       const logo = SCHOOL_LOGOS[school.name.trim().toLowerCase()];
       const initials = school.name
         .split(/\s+/)
@@ -52,7 +52,7 @@ async function load() {
         ? `<span class="school-card__avatar school-card__avatar--logo" aria-hidden="true"><img src="${escapeHtml(logo)}" alt="" /></span>`
         : `<span class="school-card__avatar" aria-hidden="true">${escapeHtml(initials)}</span>`;
       return `
-        <a class="school-card" href="login.html?school=${encodeURIComponent(school.id)}" style="animation-delay:${i * 60}ms">
+        <a class="school-card" href="login.html?school=${encodeURIComponent(school.id)}">
           ${avatar}
           <h2>${escapeHtml(school.name)}</h2>
           ${school.location ? `<p>${escapeHtml(school.location)}</p>` : ""}
