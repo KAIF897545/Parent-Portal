@@ -173,7 +173,8 @@ button{font:inherit; color:inherit; cursor:pointer}
 .dvis.gold{background:var(--gold); color:var(--ink)}
 .dvis.beige{background:var(--beige-2); color:var(--ink)}
 .dvis .mega{position:absolute; right:-4%; bottom:-14%; font-size:clamp(220px,24vw,340px); line-height:1; opacity:.16}
-.portrait{position:relative; width:clamp(150px,15vw,200px); aspect-ratio:1; border-radius:50%; display:grid; place-items:center; font-family:var(--display); font-weight:800; font-size:clamp(52px,5vw,72px); letter-spacing:-0.04em}
+.portrait{position:relative; width:clamp(150px,15vw,200px); aspect-ratio:1; border-radius:50%; display:grid; place-items:center; overflow:hidden; font-family:var(--display); font-weight:800; font-size:clamp(52px,5vw,72px); letter-spacing:-0.04em}
+.portrait img{width:100%; height:100%; object-fit:cover; border-radius:50%}
 .dvis.red .portrait{background:#fff; color:var(--red); box-shadow:0 0 0 6px var(--gold)}
 .dvis.ink .portrait{background:var(--gold); color:var(--ink); box-shadow:0 0 0 6px var(--red)}
 .quote-mark{position:absolute; left:28px; top:10px; font-family:var(--display); font-weight:800; font-size:140px; line-height:1; opacity:.35}
