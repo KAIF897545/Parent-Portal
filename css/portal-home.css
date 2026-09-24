@@ -175,8 +175,8 @@ button{font:inherit; color:inherit; cursor:pointer}
 .dvis .mega{position:absolute; right:-4%; bottom:-14%; font-size:clamp(220px,24vw,340px); line-height:1; opacity:.16}
 .portrait{position:relative; width:clamp(150px,15vw,200px); aspect-ratio:1; border-radius:50%; display:grid; place-items:center; overflow:hidden; font-family:var(--display); font-weight:800; font-size:clamp(52px,5vw,72px); letter-spacing:-0.04em}
 .portrait img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 35%; border-radius:50%}
-.dvis.red .portrait{background:#fff; color:var(--red); box-shadow:0 0 0 6px var(--gold)}
-.dvis.ink .portrait{background:var(--gold); color:var(--ink); box-shadow:0 0 0 6px var(--red)}
+.dvis.red .portrait{background:#fff; color:var(--red); border:6px solid var(--gold)}
+.dvis.ink .portrait{background:var(--gold); color:var(--ink); border:6px solid var(--red)}
 .quote-mark{position:absolute; left:28px; top:10px; font-family:var(--display); font-weight:800; font-size:140px; line-height:1; opacity:.35}
 .road{position:relative; list-style:none; margin:0; padding:0; width:100%; max-width:340px; display:flex; flex-direction:column; gap:10px}
 .road li{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-radius:14px; background:rgba(255,255,255,.55); font-weight:700; font-size:15px}
