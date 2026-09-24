@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Choose your portal</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Maldives Chess Club — Student &amp; Coach Portal</title>
 <meta name="description" content="Sign in to your Maldives Chess Club student or coach portal — pick your school to get started." />
-<meta name="theme-color" content="#b00f2e" />
+<meta name="theme-color" content="#6c0f20" />
 <link rel="icon" href="assets/mcc-logo.jpg" type="image/jpeg" />
 <meta property="og:site_name" content="Maldives Chess Club" />
 <meta property="og:type" content="website" />
@@ -16,245 +16,193 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link
-  href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
+  href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap"
   rel="stylesheet"
 />
-<link rel="stylesheet" href="css/site.css" />
+<link rel="stylesheet" href="css/portal-home.css" />
 </head>
-<body class="portal-landing">
-<div class="page page--wide">
-  <header class="brand">
-    <div class="brand__logo">
-      <img src="assets/mcc-logo.jpg" alt="Maldives Chess Club" />
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Maldives Chess Club portal, back to top">
+      <span class="brand-mark"><img src="assets/mcc-logo.jpg" alt="" /></span>
+      <span class="brand-name">Maldives Chess Club<small>Student &amp; Coach Portal</small></span>
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#inside" data-spy="inside">What's inside</a>
+      <a href="#devs" data-spy="devs">From the team</a>
+      <a href="#hello" data-spy="hello">Contact</a>
+      <a class="btn btn-gold" href="#signin" style="margin-left:8px">Sign in</a>
+    </nav>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<main id="top">
+  <!-- HERO + SIGN IN -->
+  <section class="hero" id="signin">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1 class="display">
+          <span class="line"><span>Sixty-four squares.</span></span>
+          <span class="line"><span>One thousand islands.</span></span>
+        </h1>
+        <p class="hero-sub">Sign in to see your lessons, checkpoints and coach feedback, from Malé to the farthest atoll.</p>
+      </div>
+      <div class="panel" id="panel" aria-live="polite" aria-label="Sign in"></div>
     </div>
-    <h1 class="brand__name">Maldives Chess Club</h1>
-    <p class="brand__sub">Choose your school portal</p>
-  </header>
+  </section>
 
-  <main>
-    <div id="status" class="form-message" role="status" aria-live="polite"></div>
-    <div id="schoolGrid" class="school-grid"></div>
-
-    <section class="portal-info">
-      <span class="eyebrow eyebrow--mint">How it works</span>
-      <h2 class="portal-info__title">Getting started takes a minute</h2>
-
-      <div class="portal-reel">
-        <div class="portal-reel__frame" id="portalReelFrame">
-          <div class="portal-reel__bg"></div>
-          <div class="portal-reel__knight" aria-hidden="true">&#9822;</div>
-          <div class="portal-reel__wipe" id="portalReelWipe"></div>
-          <div class="portal-reel__flash" id="portalReelFlash"></div>
-          <div class="portal-reel__progress" id="portalReelProgress"></div>
-
-          <section class="portal-reel__scene portal-reel__scene--center" data-duration="3600">
-            <div class="portal-reel__logo"><img src="assets/mcc-logo.jpg" alt="" /></div>
-            <div class="portal-reel__wordmark">Maldives Chess Club</div>
-            <div class="portal-reel__tagline">Sixty&#8209;four squares, one thousand islands.</div>
-          </section>
-
-          <section class="portal-reel__scene portal-reel__scene--center" data-duration="4200">
-            <span class="portal-reel__eyebrow portal-reel__eyebrow--crimson">The problem</span>
-            <p class="portal-reel__title">Chess doesn't stop when the session ends.</p>
-            <p class="portal-reel__body" style="margin-inline: auto">
-              Built to bridge ocean gaps and connect schools and coaches across the atolls.
-            </p>
-          </section>
-
-          <section class="portal-reel__scene portal-reel__scene--split" data-duration="3800">
-            <div class="portal-reel__copy">
-              <span class="portal-reel__eyebrow portal-reel__eyebrow--gold">Introducing</span>
-              <p class="portal-reel__title">The Student &amp; Coach Portal</p>
-            </div>
-            <div class="portal-reel__visual">
-              <div class="portal-reel__card">
-                <div class="portal-reel__card-avatar">PT</div>
-                <h4>Private Tutoring</h4>
-                <p>Male&#8217; / Hulhumal&eacute;</p>
-                <div class="portal-reel__card-link">Enter portal &rarr;</div>
-              </div>
-            </div>
-          </section>
-
-          <section class="portal-reel__scene portal-reel__scene--split" data-duration="5600">
-            <div class="portal-reel__copy">
-              <span class="portal-reel__eyebrow">How it works</span>
-              <p class="portal-reel__title" style="font-size: 1.3rem">Three steps, every session</p>
-            </div>
-            <div class="portal-reel__visual">
-              <div class="portal-reel__steps">
-                <div class="portal-reel__step-row">
-                  <span class="portal-reel__step-num">1</span>
-                  <div>
-                    <h5>Pick your school</h5>
-                    <p>Each program opens straight to its own sign-in page.</p>
-                  </div>
-                </div>
-                <div class="portal-reel__step-row">
-                  <span class="portal-reel__step-num">2</span>
-                  <div>
-                    <h5>Sign in</h5>
-                    <p>Full name and password for students, club email for coaches.</p>
-                  </div>
-                </div>
-                <div class="portal-reel__step-row">
-                  <span class="portal-reel__step-num">3</span>
-                  <div>
-                    <h5>Follow progress</h5>
-                    <p>Modules, checkpoints, and coach notes, after every session.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="portal-reel__scene portal-reel__scene--split" data-duration="5800">
-            <div class="portal-reel__copy">
-              <span class="portal-reel__eyebrow portal-reel__eyebrow--crimson">Student view</span>
-              <p class="portal-reel__title" style="font-size: 1.25rem">Growth is tracked. Brilliance is recognized.</p>
-            </div>
-            <div class="portal-reel__visual">
-              <div class="portal-reel__ring">
-                <svg viewBox="0 0 90 90">
-                  <circle class="portal-reel__ring-track" cx="45" cy="45" r="40" />
-                  <circle class="portal-reel__ring-bar" cx="45" cy="45" r="40" />
-                </svg>
-                <div class="portal-reel__ring-label">82%</div>
-              </div>
-              <div class="portal-reel__chips">
-                <span class="portal-reel__chip is-done">Checkpoint 1 &#10003;</span>
-                <span class="portal-reel__chip is-done">Checkpoint 2 &#10003;</span>
-                <span class="portal-reel__chip">Checkpoint 3</span>
-              </div>
-              <div class="portal-reel__feedback">
-                <div class="portal-reel__feedback-month">September</div>
-                <p>Great focus this month &mdash; board setup and notation are solid.</p>
-              </div>
-            </div>
-          </section>
-
-          <section class="portal-reel__scene portal-reel__scene--split" data-duration="5800">
-            <div class="portal-reel__copy">
-              <span class="portal-reel__eyebrow portal-reel__eyebrow--gold">Coach view</span>
-              <p class="portal-reel__title" style="font-size: 1.25rem">Mark attendance and progress, live.</p>
-            </div>
-            <div class="portal-reel__visual">
-              <div class="portal-reel__tabs">
-                <span class="portal-reel__tab">Module 1</span>
-                <span class="portal-reel__tab is-current">Module 2</span>
-                <span class="portal-reel__tab">Module 3</span>
-              </div>
-              <div class="portal-reel__roster">
-                <div class="portal-reel__roster-row">
-                  <span class="portal-reel__roster-name">Aiman R.</span>
-                  <span class="portal-reel__attend is-present"></span>
-                </div>
-                <div class="portal-reel__roster-row">
-                  <span class="portal-reel__roster-name">Zara H.</span>
-                  <span class="portal-reel__attend is-present"></span>
-                </div>
-                <div class="portal-reel__roster-row">
-                  <span class="portal-reel__roster-name">Ibrahim N.</span>
-                  <span class="portal-reel__attend"></span>
-                </div>
-              </div>
-              <div class="portal-reel__checklist">
-                <div class="portal-reel__checklist-item is-done">
-                  <span class="portal-reel__checklist-box">&#10003;</span>
-                  <span>Sets up the board correctly</span>
-                </div>
-                <div class="portal-reel__checklist-item">
-                  <span class="portal-reel__checklist-box"></span>
-                  <span>States the castling conditions</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="portal-reel__scene portal-reel__scene--split" data-duration="5600">
-            <div class="portal-reel__copy">
-              <span class="portal-reel__eyebrow portal-reel__eyebrow--gold">Coach view</span>
-              <p class="portal-reel__title" style="font-size: 1.25rem">Write it down while it's fresh.</p>
-            </div>
-            <div class="portal-reel__visual">
-              <div class="portal-reel__notes">
-                <div class="portal-reel__notes-student">Monthly note for <b>Zara H.</b></div>
-                <div class="portal-reel__notes-box">
-                  Great focus this month, ready to move to opening principles next<span class="portal-reel__cursor"></span>
-                </div>
-                <span class="portal-reel__notes-save">Save note</span>
-                <div class="portal-reel__history">
-                  <div class="portal-reel__history-meta">AUGUST</div>
-                  <div class="portal-reel__history-body">Good progress on piece movement. Keep practicing at home.</div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="portal-reel__scene portal-reel__scene--center" data-duration="5000">
-            <div class="portal-reel__logo"><img src="assets/mcc-logo.jpg" alt="" /></div>
-            <p class="portal-reel__title" style="font-size: 1.4rem">Mentorship, never more than a click away.</p>
-            <a class="portal-reel__cta-btn" href="#schoolGrid">Enter your portal</a>
-            <div class="portal-reel__cta-credit">Conceived &amp; built by Kaif Mausoom and Mohamed Farish</div>
-          </section>
-        </div>
-
-        <div class="portal-reel__controls">
-          <button class="icon-btn" id="portalReelPlayPause" type="button" aria-label="Pause">&#10073;&#10073;</button>
-          <button class="icon-btn" id="portalReelReplay" type="button" aria-label="Replay">&#8635;</button>
-          <span class="portal-reel__scene-label" id="portalReelSceneLabel">Scene 1 / 8</span>
+  <!-- STATEMENT: sheet that slides over the hero -->
+  <div class="stack">
+  <section class="sheet" id="sheet">
+    <div class="sheet-pin">
+      <p id="statement">Built to bridge ocean gaps, so schools and coaches across the atolls share one board, and chess doesn&rsquo;t stop when the session ends. <span class="sig">Maldives Chess Club.</span></p>
+    </div>
+  </section>
+  <div class="rest">
+  <!-- INSIDE -->
+  <div class="story-stack">
+  <section class="inside" id="inside">
+    <div class="wrap inside-wrap">
+      <div class="inside-head reveal">
+        <div><h2 class="display">What&rsquo;s inside</h2><p class="lede dark" id="ex-body"></p></div>
+        <div class="tabs" role="tablist" aria-label="Portal views">
+          <button type="button" role="tab" id="tab-student" aria-selected="true" aria-controls="tp" data-tab="student">Students</button>
+          <button type="button" role="tab" id="tab-coach" aria-selected="false" aria-controls="tp" data-tab="coach" tabindex="-1">Coaches</button>
+          <button type="button" role="tab" id="tab-notes" aria-selected="false" aria-controls="tp" data-tab="notes" tabindex="-1">Monthly notes</button>
         </div>
       </div>
+      <div class="inside-grid reveal" style="--d:.12s" id="tp" role="tabpanel">
+        <div class="demo view" id="demo"></div>
+      </div>
+    </div>
+  </section>
 
-      <div class="step-timeline">
-        <div class="step">
-          <div class="step__num-wrap"><span class="step__num">1</span></div>
-          <h3>Pick your school</h3>
-          <p>Choose a card above for your school or program — each one opens straight to its own sign-in page.</p>
-        </div>
-        <div class="step">
-          <div class="step__num-wrap"><span class="step__num">2</span></div>
-          <h3>Sign in</h3>
-          <p>Students sign in with their full name and password. Coaches and admins use their club email.</p>
-        </div>
-        <div class="step">
-          <div class="step__num-wrap"><span class="step__num">3</span></div>
-          <h3>Follow progress</h3>
-          <p>See curriculum modules, checkpoints passed, and monthly notes from your coach, updated after every session.</p>
+  <!-- LAUNCH STORY: second curtain -->
+  <section class="story" id="story" aria-labelledby="story-title">
+    <div class="story-pin">
+      <div class="story-frame" id="story-frame">
+        <img class="story-img" id="story-img" alt="Two girls in traditional Maldivian dress playing chess on a beach under a tree" src="assets/story-beach-chess.jpg" />
+      </div>
+      <p class="story-kicker" id="story-kicker" aria-hidden="true">The story <span>behind the portal.</span></p>
+      <div class="story-scrim" id="story-scrim"></div>
+      <div class="story-copy" id="story-copy">
+        <span class="story-meta">Launch story <i aria-hidden="true"></i> Sep 17, 2026</span>
+        <h2 class="display" id="story-title">Maldives Chess Club Student &amp; Coach Portal</h2>
+        <p>An innovative tool for developing young chess enthusiasts.</p>
+        <a class="btn btn-gold" href="https://maldiveschessclub.com/news/the">Read the launch story</a>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <!-- FROM THE DEVELOPERS -->
+  <section class="devs" id="devs">
+    <div class="wrap">
+      <h2 class="display reveal">Hear from the developers.</h2>
+      <div class="dgrid">
+        <nav class="rail" aria-label="Jump to a card">
+          <button class="r0" data-go="0" aria-current="true" aria-label="Kaif Mausoom">KM</button>
+          <button class="r1" data-go="1" aria-label="Mohamed Farish">MF</button>
+          <button class="r2" data-go="2" aria-label="What's next"><span aria-hidden="true">&#9820;</span></button>
+          <button class="r3" data-go="3" aria-label="Send feedback"><span aria-hidden="true">&#9993;</span></button>
+        </nav>
+        <div class="dcards">
+          <article class="dcard" style="--i:0">
+            <div class="dtext">
+              <span class="dlabel">Kaif Mausoom, Events Coordinator</span>
+              <h3 style="color:var(--red)">Progress shouldn&rsquo;t get lost between sessions.</h3>
+              <p>Running tournaments, I kept seeing the same thing: a student makes real progress, then a week passes and nobody remembers exactly where they left off. The portal fixes that. Every checkpoint, attendance mark and coach note lives in one place, whichever island you&rsquo;re on.</p>
+              <a class="btn-line" href="#signin">Try the sign-in</a>
+            </div>
+            <div class="dvis red"><span class="quote-mark" aria-hidden="true">&ldquo;</span><span class="mega" aria-hidden="true">&#9818;</span><span class="portrait" aria-hidden="true">KM</span></div>
+          </article>
+          <article class="dcard" style="--i:1">
+            <div class="dtext">
+              <span class="dlabel">Mohamed Farish, co-builder</span>
+              <h3 style="color:var(--ink)">One system, a portal for every school.</h3>
+              <p>We kept it simple on purpose. Students sign in with their email and password, coaches with their club email, and every school runs its own portal on the same system. Adding a new school never means starting over, and each coach only sees their own students.</p>
+              <a class="btn-line" href="#inside">See what&rsquo;s inside</a>
+            </div>
+            <div class="dvis ink"><span class="quote-mark" aria-hidden="true" style="color:var(--gold)">&ldquo;</span><span class="mega" aria-hidden="true">&#9819;</span><span class="portrait" aria-hidden="true">MF</span></div>
+          </article>
+          <article class="dcard" style="--i:2">
+            <div class="dtext">
+              <span class="dlabel">What&rsquo;s next</span>
+              <h3 style="color:#8a6414">More of the club, in one place.</h3>
+              <p>The portal is the first step. Next on the board: signing up for events online, results and standings for every tournament, and turning a photo of your scoresheet into a game you can replay.</p>
+              <a class="btn-line" href="https://maldiveschessclub.com">Follow along on the main site</a>
+            </div>
+            <div class="dvis gold"><span class="mega" aria-hidden="true">&#9820;</span>
+              <ul class="road">
+                <li>Online event entry <span class="chip">Coming soon</span></li>
+                <li>Results and standings <span class="chip">Coming soon</span></li>
+                <li>Scoresheet photo to PGN <span class="chip soft">Planned</span></li>
+              </ul>
+            </div>
+          </article>
+          <article class="dcard" style="--i:3">
+            <div class="dtext">
+              <span class="dlabel">Your turn</span>
+              <h3 style="color:var(--red)">Tell us what to build next.</h3>
+              <p>Students, coaches and parents shape what comes next. Found something confusing, or wish the portal did one more thing? Send it straight to the people building it.</p>
+            </div>
+            <div class="dvis beige"><span class="mega" aria-hidden="true">&#9993;</span>
+              <form class="fb" id="fb" novalidate>
+                <div class="who" role="group" aria-label="I am a">
+                  <button type="button" aria-pressed="true" data-who="Student">Student</button>
+                  <button type="button" aria-pressed="false" data-who="Coach">Coach</button>
+                  <button type="button" aria-pressed="false" data-who="Parent">Parent</button>
+                </div>
+                <label class="sr-only" for="fb-msg">Your feedback</label>
+                <textarea id="fb-msg" placeholder="I wish the portal could…" aria-describedby="fb-err"></textarea>
+                <span class="err" id="fb-err"></span>
+                <button class="btn btn-maroon" type="submit">Send feedback</button>
+              </form>
+            </div>
+          </article>
         </div>
       </div>
+    </div>
+  </section>
 
-      <p class="portal-note">
-        <strong>Note:</strong> only students and coaches already in an MCC program can use this platform. If any
-        coaches or schools outside of MCC in the Maldives are interested in using this, they can contact Kaif
-        Mausoom via <a href="tel:9140545">9140545</a> or <a href="mailto:info@maldiveschessclub.com">info@maldiveschessclub.com</a>.
-      </p>
-    </section>
+  <!-- HELLO -->
+  <footer class="hello" id="hello">
+    <div class="wrap">
+      <h2 class="display reveal">Say hello.</h2>
+      <div class="contact reveal" style="--d:.12s">
+        <div>
+          <small>Want the portal for your school?</small>
+          <a class="big-link" href="mailto:info@maldiveschessclub.com">info@maldiveschessclub.com</a><br>
+          <button type="button" class="copy" data-copy="info@maldiveschessclub.com">Copy email</button>
+        </div>
+        <div>
+          <small>Call the club</small>
+          <a class="big-link" href="tel:+9609140545">+960 914 0545</a><br>
+          <button type="button" class="copy" data-copy="+960 914 0545">Copy number</button>
+        </div>
+        <div>
+          <small>Who can sign in</small>
+          <p style="margin:0; color:var(--blush); max-width:34ch">Students and coaches already in an MCC program. Other coaches and schools in the Maldives are welcome to get in touch.</p>
+        </div>
+      </div>
+      <div class="fine">
+        <span>The home of chess in the Maldives. Conceived and built by Kaif Mausoom and Mohamed Farish.</span>
+        <nav aria-label="Club links">
+          <a href="#story">Launch story</a>
+          <a href="https://maldiveschessclub.com">maldiveschessclub.com</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+  </div>
+  </div>
+</main>
 
-    <section class="portal-about">
-      <span class="eyebrow">About this portal</span>
-      <h2 class="portal-info__title">The Official Student &amp; Coach Portal</h2>
-      <p class="portal-about__tagline">Maldives Chess Club — sixty-four squares, one thousand islands.</p>
-      <p class="portal-about__credit">Built by Kaif Mausoom and Mohamed Farish.</p>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-      <p>Tracks curriculum progress, checkpoints, attendance, and monthly coach feedback for every student and school in the club.</p>
-
-      <a class="news-card" href="https://maldiveschessclub.com/news/the" target="_blank" rel="noopener">
-        <img class="news-card__image" src="assets/news-portal-launch.jpg" alt="" />
-        <span class="news-card__body">
-          <span class="news-card__date">Sep 17, 2026</span>
-          <span class="news-card__title">Maldives Chess Club Student &amp; Coach Portal</span>
-          <span class="news-card__excerpt">An innovative tool for developing young chess enthusiasts.</span>
-          <span class="news-card__link">Read more <span aria-hidden="true">&rarr;</span></span>
-        </span>
-      </a>
-
-      <a class="portal-about__link" href="https://maldiveschessclub.com" target="_blank" rel="noopener">Visit maldiveschessclub.com <span aria-hidden="true">&rarr;</span></a>
-    </section>
-  </main>
-</div>
-
-<script type="module" src="js/portals.js"></script>
-<script src="js/portal-reel.js"></script>
+<script type="module" src="js/portal-home.js"></script>
 </body>
 </html>

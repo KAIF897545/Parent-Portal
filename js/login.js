@@ -5,6 +5,7 @@ enablePasswordToggles();
 
 const params = new URLSearchParams(window.location.search);
 const schoolId = params.get("school");
+const initialRole = params.get("role");
 
 const schoolBanner = document.getElementById("schoolBanner");
 
@@ -37,6 +38,15 @@ for (const [name, tab] of Object.entries(tabs)) {
       selectTab(name === "student" ? "coach" : "student");
     }
   });
+}
+
+if (initialRole === "coach") {
+  tabs.student.setAttribute("aria-selected", "false");
+  tabs.student.tabIndex = -1;
+  panels.student.hidden = true;
+  tabs.coach.setAttribute("aria-selected", "true");
+  tabs.coach.tabIndex = 0;
+  panels.coach.hidden = false;
 }
 
 async function loadSchoolName() {
