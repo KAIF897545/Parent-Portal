@@ -75,64 +75,44 @@ const spy = new IntersectionObserver(
   if (el) spy.observe(el);
 });
 
-/* ---------- sign-in panel: real school picker, real handoff to login.html ---------- */
-const S = { step: "school", q: "", school: null, role: "student" };
+/* ---------- sign-in panel: real school picker, real handoff to login.html ----------
+   Picking a school navigates straight to login.html?school=<id> -- no intermediate
+   student/coach step here, since that's an extra tap and an extra button that has
+   to survive the scroll effects below it. login.html already has its own
+   student/coach tabs for that choice. */
+const S = { q: "" };
 const panel = $("#panel");
 
 function renderPanel(focusSel) {
-  if (S.step === "school") {
-    if (!schoolsLoaded) {
-      panel.innerHTML = `
-        <div class="view">
-          <div class="panel-head"><div><h3 class="panel-title">Sign in</h3><span class="school-place">Loading your schools…</span></div></div>
-        </div>`;
-      return;
-    }
-    const list = match(S.q);
+  if (!schoolsLoaded) {
     panel.innerHTML = `
       <div class="view">
-        <div class="panel-head"><div><h3 class="panel-title">Sign in</h3><span class="school-place">Start by choosing your school</span></div></div>
-        <div class="field"><label class="sr-only" for="s-q">Search schools</label>
-          <input class="input" id="s-q" type="search" autocomplete="off" placeholder="School or island" value="${esc(S.q)}"></div>
-        <div id="s-list">${
-          list
-            .map(
-              (s) => `
-          <button type="button" class="school" data-school="${s.id}">
-            ${schoolBadge(s)}
-            <span><span class="school-name">${esc(s.name)}</span><span class="school-place">${esc(s.place)}</span></span>
-            <span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-          </button>`
-            )
-            .join("") ||
-          `<p class="hint" style="margin:6px 0 0">No school matches &ldquo;${esc(
-            S.q
-          )}&rdquo;. Check the spelling, or <a href="#hello" style="color:var(--red);font-weight:800">ask the club about joining</a>.</p>`
-        }</div>
+        <div class="panel-head"><div><h3 class="panel-title">Sign in</h3><span class="school-place">Loading your schools…</span></div></div>
       </div>`;
-  } else {
-    const s = S.school,
-      st = S.role === "student";
-    panel.innerHTML = `
-      <div class="view">
-        <div class="panel-head">
-          <div style="display:flex;align-items:center;gap:14px">${schoolBadge(s)}
-            <div><h3 class="panel-title" style="font-size:24px">${esc(s.name)}</h3><span class="school-place">${esc(s.place)}</span></div></div>
-          <button type="button" class="pill" data-act="back">Change</button>
-        </div>
-        <div class="seg" role="tablist" aria-label="I am a">
-          <button type="button" role="tab" aria-selected="${st}" data-role="student">I&rsquo;m a student</button>
-          <button type="button" role="tab" aria-selected="${!st}" data-role="coach">I&rsquo;m a coach</button>
-        </div>
-        <a class="btn btn-maroon btn-wide" style="text-decoration:none;margin-top:4px"
-          href="login.html?school=${encodeURIComponent(s.id)}&role=${st ? "student" : "coach"}">Continue to sign in</a>
-        <p class="hint">${
-          st
-            ? "You'll enter your email and password on the next page."
-            : "Coach and admin accounts are set up by the club admin."
-        }</p>
-      </div>`;
+    return;
   }
+  const list = match(S.q);
+  panel.innerHTML = `
+    <div class="view">
+      <div class="panel-head"><div><h3 class="panel-title">Sign in</h3><span class="school-place">Choose your school to continue</span></div></div>
+      <div class="field"><label class="sr-only" for="s-q">Search schools</label>
+        <input class="input" id="s-q" type="search" autocomplete="off" placeholder="School or island" value="${esc(S.q)}"></div>
+      <div id="s-list">${
+        list
+          .map(
+            (s) => `
+        <a class="school" href="login.html?school=${encodeURIComponent(s.id)}">
+          ${schoolBadge(s)}
+          <span><span class="school-name">${esc(s.name)}</span><span class="school-place">${esc(s.place)}</span></span>
+          <span class="go" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>`
+          )
+          .join("") ||
+        `<p class="hint" style="margin:6px 0 0">No school matches &ldquo;${esc(
+          S.q
+        )}&rdquo;. Check the spelling, or <a href="#hello" style="color:var(--red);font-weight:800">ask the club about joining</a>.</p>`
+      }</div>
+    </div>`;
   if (window.__pinHero) window.__pinHero();
   if (focusSel) {
     const el = $(focusSel, panel);
@@ -140,29 +120,9 @@ function renderPanel(focusSel) {
   }
 }
 
-function pickSchool(id, scroll) {
-  S.school = SCHOOLS.find((s) => s.id === id);
-  S.step = "role";
-  renderPanel();
-  if (scroll) document.getElementById("signin").scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
-}
-
 panel.addEventListener("input", (e) => {
   if (e.target.id === "s-q") {
     S.q = e.target.value;
-    renderPanel("#s-q");
-  }
-});
-panel.addEventListener("click", (e) => {
-  const b = e.target.closest("button");
-  if (!b) return;
-  if (b.dataset.school) pickSchool(b.dataset.school);
-  if (b.dataset.role) {
-    S.role = b.dataset.role;
-    renderPanel();
-  }
-  if (b.dataset.act === "back") {
-    S.step = "school";
     renderPanel("#s-q");
   }
 });

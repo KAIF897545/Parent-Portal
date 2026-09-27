@@ -84,7 +84,7 @@ button{font:inherit; color:inherit; cursor:pointer}
 .input:focus{outline:none; border-color:var(--red); box-shadow:0 0 0 4px rgba(176,15,46,.15)}
 .input.bad{border-color:#b3122c; box-shadow:0 0 0 4px rgba(179,18,44,.12)}
 .err{font-size:13.5px; font-weight:600; color:#9e0f28; min-height:0}
-.school{display:flex; align-items:center; gap:16px; width:100%; padding:16px 18px; margin-bottom:10px; border:1px solid #e0cfae; border-radius:var(--r-md); background:var(--paper); text-align:left; transition:transform .15s, box-shadow .15s, border-color .15s}
+.school{display:flex; align-items:center; gap:16px; width:100%; padding:16px 18px; margin-bottom:10px; border:1px solid #e0cfae; border-radius:var(--r-md); background:var(--paper); text-align:left; text-decoration:none; color:inherit; transition:transform .15s, box-shadow .15s, border-color .15s}
 .school:hover{transform:translateY(-2px); border-color:var(--sand); box-shadow:0 14px 28px -16px rgba(40,5,12,.45)}
 .badge{position:relative; width:54px; height:54px; flex-shrink:0; border-radius:16px; background:var(--red); color:var(--gold-hi); display:grid; place-items:center; font-family:var(--display); font-weight:800; font-size:17px; overflow:hidden}
 .badge img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:16px}
@@ -102,7 +102,7 @@ button{font:inherit; color:inherit; cursor:pointer}
 .hint{font-size:14px; color:var(--muted); margin:14px 0 0}
 
 /* ---------- hero + sheet curtain ---------- */
-.hero{position:sticky; top:76px; z-index:3; min-height:calc(100vh - var(--navh,76px)); min-height:calc(100svh - var(--navh,76px)); display:flex; flex-direction:column; justify-content:center; transform-origin:50% 0; will-change:transform}
+.hero{position:sticky; top:76px; z-index:1; min-height:calc(100vh - var(--navh,76px)); min-height:calc(100svh - var(--navh,76px)); display:flex; flex-direction:column; justify-content:center; transform-origin:50% 0; will-change:transform}
 .stack{position:relative; z-index:2}
 .sheet{position:relative; height:230vh; margin-top:12vh; background:var(--beige); color:var(--ink); border-radius:clamp(28px,4vw,56px) clamp(28px,4vw,56px) 0 0; box-shadow:0 -30px 60px -30px rgba(10,0,2,.55)}
 .sheet-pin{position:sticky; top:76px; height:calc(100vh - 76px); display:flex; align-items:center; justify-content:center; padding:0 clamp(20px,5vw,64px)}
