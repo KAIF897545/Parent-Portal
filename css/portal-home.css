@@ -102,7 +102,7 @@ button{font:inherit; color:inherit; cursor:pointer}
 .hint{font-size:14px; color:var(--muted); margin:14px 0 0}
 
 /* ---------- hero + sheet curtain ---------- */
-.hero{position:sticky; top:76px; z-index:1; min-height:calc(100vh - var(--navh,76px)); min-height:calc(100svh - var(--navh,76px)); display:flex; flex-direction:column; justify-content:center; transform-origin:50% 0; will-change:transform}
+.hero{position:sticky; top:76px; z-index:3; min-height:calc(100vh - var(--navh,76px)); min-height:calc(100svh - var(--navh,76px)); display:flex; flex-direction:column; justify-content:center; transform-origin:50% 0; will-change:transform}
 .stack{position:relative; z-index:2}
 .sheet{position:relative; height:230vh; margin-top:12vh; background:var(--beige); color:var(--ink); border-radius:clamp(28px,4vw,56px) clamp(28px,4vw,56px) 0 0; box-shadow:0 -30px 60px -30px rgba(10,0,2,.55)}
 .sheet-pin{position:sticky; top:76px; height:calc(100vh - 76px); display:flex; align-items:center; justify-content:center; padding:0 clamp(20px,5vw,64px)}
