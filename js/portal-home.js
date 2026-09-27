@@ -133,6 +133,7 @@ function renderPanel(focusSel) {
         }</p>
       </div>`;
   }
+  if (window.__pinHero) window.__pinHero();
   if (focusSel) {
     const el = $(focusSel, panel);
     if (el) el.focus();
@@ -223,6 +224,7 @@ addEventListener("resize", () => {
   pinHero();
   onSheet();
 });
+window.__pinHero = pinHero;
 pinHero();
 onSheet();
 
