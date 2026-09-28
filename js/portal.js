@@ -249,6 +249,13 @@ async function init() {
     .filter(Boolean)
     .join(" · ");
 
+  const printFooter = document.getElementById("printFooter");
+  if (printFooter) {
+    printFooter.textContent = `${student.full_name} — Maldives Chess Club Parent Portal — printed ${formatDate(
+      new Date().toISOString()
+    )}`;
+  }
+
   const { data: units, error: unitsError } = await supabase
     .from("units")
     .select("id, number, name, sort_order")
@@ -300,6 +307,13 @@ async function init() {
 document.getElementById("signOutButton").addEventListener("click", async () => {
   await supabase.auth.signOut();
   window.location.href = "login.html";
+});
+
+window.addEventListener("beforeprint", () => document.body.classList.add("is-printing"));
+window.addEventListener("afterprint", () => document.body.classList.remove("is-printing"));
+
+document.getElementById("savePdfButton").addEventListener("click", () => {
+  window.print();
 });
 
 init();

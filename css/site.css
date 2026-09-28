@@ -2223,3 +2223,109 @@ body.portal-landing .brand__sub {
     gap: 2px;
   }
 }
+
+/* ===================== Printing (student "Save as PDF") ===================
+   Scoped to a real class (toggled by js/portal.js on the browser's own
+   beforeprint/afterprint events), not @media print -- a plain class works
+   for both actual printing and an on-screen preview toggle, with one ruleset
+   instead of two copies that could drift apart. */
+.print-only {
+  display: none;
+}
+
+body.is-printing .no-print {
+  display: none !important;
+}
+
+body.is-printing .print-only {
+  display: block;
+}
+
+/* Flip the dark portal-landing theme back to a light, ink-friendly one --
+   printing the site's actual dark background would waste ink and most
+   printers render its near-white text as invisible on paper anyway. */
+body.portal-landing.is-printing {
+  --cream: #ffffff;
+  --white: #ffffff;
+  --near-black: #1a0c0e;
+  --text: var(--near-black);
+  --text-muted: rgba(26, 12, 14, 0.62);
+  --border: rgba(26, 12, 14, 0.16);
+  --crimson: #b00f2e;
+  --crimson-dark: #8a0c22;
+  --success: #2f6b3a;
+  --shadow: none;
+  background: #fff !important;
+}
+
+body.is-printing::before {
+  display: none;
+}
+
+body.is-printing .ring-card__mark {
+  display: none;
+}
+
+body.is-printing .ring-card__ring svg circle:last-of-type {
+  stroke: #b00f2e !important;
+}
+
+body.is-printing .ring-card__ring svg text {
+  fill: #1a0c0e !important;
+}
+
+body.is-printing .ring-card,
+body.is-printing .feedback-card,
+body.is-printing .unit-lite,
+body.is-printing .badge,
+body.is-printing .next-up {
+  box-shadow: none !important;
+  border: 1px solid var(--border);
+}
+
+/* .ring-card is a "fixed dark" hero card by design (see --fixed-light/
+   --fixed-dark) so the theme flip above doesn't touch it -- override it
+   directly here instead, including its hardcoded light-on-dark text colors. */
+body.is-printing .ring-card {
+  background: #fff;
+  color: var(--text);
+}
+
+body.is-printing .ring-card::after {
+  display: none;
+}
+
+body.is-printing .ring-card__text .sub,
+body.is-printing .ring-card__counts div span {
+  color: var(--text-muted);
+}
+
+body.is-printing .pwa-install-toast {
+  display: none !important;
+}
+
+body.is-printing .print-footer {
+  margin-top: 32px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media print {
+  .badges,
+  .unit-list,
+  #feedbackList {
+    page-break-inside: auto;
+  }
+
+  .feedback-card,
+  .unit-lite {
+    page-break-inside: avoid;
+  }
+}
+
+@page {
+  margin: 14mm 12mm;
+}

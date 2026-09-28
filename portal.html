@@ -32,10 +32,13 @@
         <p class="appbar__meta" id="studentMeta"></p>
       </div>
     </div>
-    <div class="appbar__actions">
+    <div class="appbar__actions no-print">
+      <button type="button" class="btn btn--secondary" id="savePdfButton">Save as PDF</button>
       <button type="button" class="btn btn--secondary" id="signOutButton">Sign out</button>
     </div>
   </header>
+
+  <p class="print-only print-footer" id="printFooter"></p>
 
   <div id="status" class="form-message" role="status" aria-live="polite"></div>
 
