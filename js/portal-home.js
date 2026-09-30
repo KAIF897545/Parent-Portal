@@ -84,6 +84,19 @@ Object.values(spyTargets).forEach((el) => {
   if (el) spy.observe(el);
 });
 
+// Mobile nav toggle -- .nav-links is hidden below 760px (see portal-home.css)
+// until .nav carries .menu-open, which also flips the button into an X.
+const navToggle = $("#navToggle");
+const navLinksEl = $("#navLinks");
+function setMenu(open) {
+  nav.classList.toggle("menu-open", open);
+  navToggle.setAttribute("aria-expanded", String(open));
+}
+navToggle?.addEventListener("click", () => setMenu(!nav.classList.contains("menu-open")));
+navLinksEl?.addEventListener("click", (e) => {
+  if (e.target.closest("a")) setMenu(false);
+});
+
 /* ---------- sign-in panel: real school picker, real handoff to login.html ----------
    Picking a school navigates straight to login.html?school=<id> -- no intermediate
    student/coach step here, since that's an extra tap and an extra button that has

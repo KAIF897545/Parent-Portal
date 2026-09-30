@@ -44,7 +44,12 @@ button{font:inherit; color:inherit; cursor:pointer}
 .btn-ghost{background:transparent; color:var(--beige); border:1.5px solid var(--beige)}
 .btn-ghost:hover{background:rgba(255,255,255,.08); color:#fff}
 .progress{position:absolute; left:0; bottom:-1px; height:3px; width:100%; background:var(--gold); transform-origin:0 50%; transform:scaleX(0)}
-.nav-toggle{display:none}
+.nav-toggle{display:none; width:40px; height:40px; flex-direction:column; justify-content:center; align-items:center; gap:5px; background:transparent; border:none; border-radius:10px; cursor:pointer; flex-shrink:0}
+.nav-toggle:hover{background:rgba(255,255,255,.08)}
+.nav-toggle span{width:22px; height:2px; border-radius:2px; background:var(--beige); transition:transform .2s, opacity .2s}
+.nav.menu-open .nav-toggle span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav.menu-open .nav-toggle span:nth-child(2){opacity:0}
+.nav.menu-open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
 
 /* ---------- hero ---------- */
 .hero{padding:clamp(28px,4vw,56px) 0 clamp(32px,4vw,56px)}
@@ -249,6 +254,11 @@ button{font:inherit; color:inherit; cursor:pointer}
 }
 @media (max-width:760px){
   .nav-links a:not(.btn){display:none}
+  .nav-toggle{display:flex}
+  .nav-links{position:absolute; top:100%; left:0; right:0; flex-direction:column; align-items:stretch; gap:0; padding:8px 20px; background:var(--maroon-deep); border-bottom:1px solid var(--maroon-line); max-height:0; overflow:hidden; transition:max-height .25s ease}
+  .nav.menu-open .nav-links{max-height:220px}
+  .nav.menu-open .nav-links a:not(.btn){display:flex; height:52px; border-radius:0; border-bottom:1px solid rgba(255,255,255,.08)}
+  .nav.menu-open .nav-links a:last-child{border-bottom:none}
   .tabs{width:100%} .tabs button{flex:1; padding:0 8px}
   .cps{grid-template-columns:1fr}
   .panel{min-height:0}
