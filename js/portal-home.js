@@ -69,7 +69,6 @@ onScroll();
 // IntersectionObserver's target matching alike) -- match by element identity
 // here instead of relying on e.target.id.
 const spyTargets = {
-  inside: $(".inside"),
   devs: document.getElementById("devs"),
   hello: document.getElementById("hello"),
 };

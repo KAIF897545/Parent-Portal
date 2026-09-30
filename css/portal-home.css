@@ -3,7 +3,7 @@
   --beige:#ececda; --beige-2:#dedcc4; --paper:#f6f6ec; --sand:#cfccb2;
   --gold:#bd9e6e; --gold-hi:#d6bd8f; --ink:#280113; --muted:#6b4a56;
   --sq-light:#ececda; --sq-dark:#b8863f;
-  --display:'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
+  --display:'Fraunces', Georgia, 'Times New Roman', serif;
   --body:'Figtree', 'Helvetica Neue', system-ui, sans-serif;
   --r-sm:12px; --r-md:20px; --r-lg:32px;
   box-sizing:border-box;
