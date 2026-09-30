@@ -1,24 +1,24 @@
 :root {
-  --crimson: #b00f2e;
-  --crimson-dark: #8a0c22;
-  --near-black: #1a0c0e;
-  --cream: #f7f1e8;
-  --gold: #c9a961;
-  --gold-dark: #a3814d;
+  --crimson: #5c032b;
+  --crimson-dark: #40021e;
+  --near-black: #280113;
+  --cream: #ececda;
+  --gold: #bd9e6e;
+  --gold-dark: #8c6d3f;
   --white: #ffffff;
-  --border: rgba(26, 12, 14, 0.14);
+  --border: rgba(40, 1, 19, 0.14);
   --text: var(--near-black);
-  --text-muted: rgba(26, 12, 14, 0.62);
+  --text-muted: rgba(40, 1, 19, 0.62);
   --success: #2f6b3a;
   --radius: 10px;
-  --shadow: 0 8px 24px rgba(26, 12, 14, 0.12);
+  --shadow: 0 8px 24px rgba(40, 1, 19, 0.12);
   --font-heading: "Fraunces", Georgia, serif;
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   /* Fixed regardless of theme -- for text/gradients on a saturated crimson
      surface (--fixed-light) or a pale gold/mint surface (--fixed-dark),
      where the surface color barely changes between light and dark theme. */
-  --fixed-light: #f4f1e8;
-  --fixed-dark: #1a0c0e;
+  --fixed-light: #ececda;
+  --fixed-dark: #280113;
 }
 
 * {
@@ -85,7 +85,7 @@ a {
   border-radius: 50%;
   background: #fff;
   padding: 7px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(244, 241, 232, 0.14);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(236, 236, 218, 0.14);
 }
 
 .brand__logo img {
@@ -292,7 +292,7 @@ a {
 }
 
 .btn--secondary:hover {
-  background: rgba(176, 15, 46, 0.06);
+  background: rgba(92, 3, 43, 0.06);
 }
 
 body.portal-landing .btn--secondary {
@@ -300,7 +300,7 @@ body.portal-landing .btn--secondary {
 }
 
 body.portal-landing .btn--secondary:hover {
-  background: rgba(226, 55, 79, 0.14);
+  background: rgba(123, 24, 67, 0.14);
 }
 
 .btn--danger {
@@ -424,24 +424,24 @@ body.portal-landing .btn--secondary:hover {
    Overriding the shared custom properties here (instead of writing new rules)
    re-themes every component on this page for free: cards, borders, text. */
 body.portal-landing {
-  --cream: #14100e;
-  --white: rgba(244, 241, 232, 0.06);
-  --near-black: #f4f1e8;
+  --cream: #280113;
+  --white: rgba(236, 236, 218, 0.06);
+  --near-black: #ececda;
   --text: var(--near-black);
-  --text-muted: rgba(244, 241, 232, 0.74);
-  --border: rgba(244, 241, 232, 0.2);
-  --crimson: #e2374f;
-  --crimson-dark: #c92943;
+  --text-muted: rgba(236, 236, 218, 0.74);
+  --border: rgba(236, 236, 218, 0.2);
+  --crimson: #7b1843;
+  --crimson-dark: #a84571;
   --mint: #3ecf8e;
   --mint-dark: #29a86e;
   --success: var(--mint);
   --shadow: 0 20px 44px rgba(0, 0, 0, 0.55);
   position: relative;
   background:
-    radial-gradient(ellipse 800px 480px at 50% -10%, rgba(226, 55, 79, 0.3), transparent 60%),
-    radial-gradient(ellipse 620px 520px at 100% 100%, rgba(176, 15, 46, 0.16), transparent 65%),
-    repeating-linear-gradient(45deg, rgba(244, 241, 232, 0.025) 0px, rgba(244, 241, 232, 0.025) 1px, transparent 1px, transparent 26px),
-    repeating-linear-gradient(-45deg, rgba(244, 241, 232, 0.025) 0px, rgba(244, 241, 232, 0.025) 1px, transparent 1px, transparent 26px),
+    radial-gradient(ellipse 800px 480px at 50% -10%, rgba(123, 24, 67, 0.3), transparent 60%),
+    radial-gradient(ellipse 620px 520px at 100% 100%, rgba(92, 3, 43, 0.16), transparent 65%),
+    repeating-linear-gradient(45deg, rgba(236, 236, 218, 0.025) 0px, rgba(236, 236, 218, 0.025) 1px, transparent 1px, transparent 26px),
+    repeating-linear-gradient(-45deg, rgba(236, 236, 218, 0.025) 0px, rgba(236, 236, 218, 0.025) 1px, transparent 1px, transparent 26px),
     var(--cream);
   overflow-x: hidden;
 }
@@ -454,7 +454,7 @@ body.portal-landing::before {
   font-size: 32rem;
   line-height: 1;
   font-family: var(--font-heading);
-  color: rgba(244, 241, 232, 0.03);
+  color: rgba(236, 236, 218, 0.03);
   pointer-events: none;
   z-index: 0;
 }
@@ -542,7 +542,7 @@ body.portal-landing .brand__sub {
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 1.05rem;
-  box-shadow: 0 4px 12px rgba(176, 15, 46, 0.3);
+  box-shadow: 0 4px 12px rgba(123, 24, 67, 0.3);
 }
 
 .avatar-circle--sm {
@@ -641,7 +641,7 @@ body.portal-landing .brand__sub {
 
 .roster-row:hover {
   transform: translateX(2px);
-  box-shadow: 0 4px 12px rgba(26, 12, 14, 0.07);
+  box-shadow: 0 4px 12px rgba(40, 1, 19, 0.07);
 }
 
 .roster-row.is-present {
@@ -676,7 +676,7 @@ body.portal-landing .brand__sub {
   padding: 3px 10px;
   border-radius: 999px;
   color: var(--gold-dark);
-  background: rgba(201, 169, 97, 0.16);
+  background: rgba(189, 158, 110, 0.16);
   white-space: nowrap;
 }
 
@@ -971,7 +971,7 @@ body.portal-landing .brand__sub {
 
 .picker__item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(26, 12, 14, 0.1);
+  box-shadow: 0 6px 14px rgba(40, 1, 19, 0.1);
   border-color: var(--gold);
 }
 
@@ -993,7 +993,7 @@ body.portal-landing .brand__sub {
 
 .picker__item[aria-pressed="true"] {
   border-color: var(--crimson);
-  background: rgba(176, 15, 46, 0.06);
+  background: rgba(123, 24, 67, 0.06);
 }
 
 .picker__item[aria-pressed="true"] .avatar-circle {
@@ -1197,7 +1197,7 @@ body.portal-landing .brand__sub {
   padding: 12px;
   border: 1px dashed var(--gold-dark);
   border-radius: 8px;
-  background: rgba(201, 169, 97, 0.08);
+  background: rgba(189, 158, 110, 0.08);
 }
 
 .checkpoint.is-passed {
@@ -1297,7 +1297,7 @@ body.portal-landing .brand__sub {
   margin-right: 6px;
   padding: 1px 8px;
   border-radius: 999px;
-  background: rgba(201, 169, 97, 0.18);
+  background: rgba(189, 158, 110, 0.18);
   color: var(--gold-dark);
   font-size: 0.7rem;
   font-weight: 700;
@@ -1349,7 +1349,7 @@ body.portal-landing .brand__sub {
 @keyframes syllabus-flash {
   0%,
   30% {
-    background: rgba(201, 169, 97, 0.22);
+    background: rgba(189, 158, 110, 0.22);
   }
   100% {
     background: transparent;
@@ -1459,7 +1459,7 @@ body.portal-landing .brand__sub {
   align-items: center;
   padding: 2px 10px;
   border-radius: 999px;
-  background: rgba(201, 169, 97, 0.16);
+  background: rgba(189, 158, 110, 0.16);
   margin-left: 4px;
   vertical-align: middle;
 }
@@ -1498,12 +1498,12 @@ body.portal-landing .brand__sub {
 }
 
 .entry__tag--highlight {
-  background: rgba(201, 169, 97, 0.16);
+  background: rgba(189, 158, 110, 0.16);
   color: var(--gold-dark);
 }
 
 .entry__tag--focus {
-  background: rgba(176, 15, 46, 0.08);
+  background: rgba(123, 24, 67, 0.08);
   color: var(--crimson-dark);
 }
 
@@ -1640,12 +1640,12 @@ body.portal-landing .brand__sub {
   align-items: center;
   gap: 24px;
   flex-wrap: wrap;
-  background: linear-gradient(135deg, #241013, var(--fixed-dark) 70%);
+  background: linear-gradient(135deg, #40021e, var(--fixed-dark) 70%);
   border-radius: 16px;
   padding: 26px 28px;
   margin-bottom: 24px;
   color: var(--fixed-light);
-  box-shadow: 0 14px 32px rgba(26, 12, 14, 0.28);
+  box-shadow: 0 14px 32px rgba(40, 1, 19, 0.28);
   overflow: hidden;
   animation: fadeInUp 0.5s ease both;
 }
@@ -1658,7 +1658,7 @@ body.portal-landing .brand__sub {
   width: 180px;
   height: 180px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(201, 169, 97, 0.22), transparent 70%);
+  background: radial-gradient(circle, rgba(189, 158, 110, 0.22), transparent 70%);
   pointer-events: none;
 }
 
@@ -1723,7 +1723,7 @@ body.portal-landing .brand__sub {
 
 .badge:not(.is-locked):hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(26, 12, 14, 0.14);
+  box-shadow: 0 6px 14px rgba(40, 1, 19, 0.14);
 }
 
 .badge__mark {
@@ -1840,7 +1840,7 @@ body.portal-landing .brand__sub {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--crimson);
-  background: rgba(176, 15, 46, 0.08);
+  background: rgba(123, 24, 67, 0.08);
   border-radius: 999px;
   padding: 3px 10px;
   margin-bottom: 0;
@@ -1851,15 +1851,15 @@ body.portal-landing .brand__sub {
   align-items: center;
   padding: 5px 12px;
   border-radius: 999px;
-  background: rgba(201, 169, 97, 0.16);
-  border: 1px solid rgba(201, 169, 97, 0.4);
+  background: rgba(189, 158, 110, 0.16);
+  border: 1px solid rgba(189, 158, 110, 0.4);
 }
 
 .feedback-card__stars {
   color: var(--gold-dark);
   font-size: 1.3rem;
   letter-spacing: 3px;
-  text-shadow: 0 1px 2px rgba(201, 169, 97, 0.3);
+  text-shadow: 0 1px 2px rgba(189, 158, 110, 0.3);
 }
 
 .feedback-card__tag {
@@ -1893,12 +1893,12 @@ body.portal-landing .brand__sub {
 }
 
 .feedback-card__tag--highlight {
-  background: rgba(201, 169, 97, 0.16);
+  background: rgba(189, 158, 110, 0.16);
   color: var(--gold-dark);
 }
 
 .feedback-card__tag--focus {
-  background: rgba(176, 15, 46, 0.07);
+  background: rgba(123, 24, 67, 0.07);
   color: var(--crimson-dark);
   margin-top: 10px;
   margin-bottom: 0;
@@ -1946,7 +1946,7 @@ body.portal-landing .brand__sub {
 
 .unit-lite:hover {
   transform: translateX(2px);
-  box-shadow: 0 4px 12px rgba(26, 12, 14, 0.08);
+  box-shadow: 0 4px 12px rgba(40, 1, 19, 0.08);
 }
 
 .unit-lite__icon {
@@ -2247,12 +2247,12 @@ body.is-printing .print-only {
 body.portal-landing.is-printing {
   --cream: #ffffff;
   --white: #ffffff;
-  --near-black: #1a0c0e;
+  --near-black: #280113;
   --text: var(--near-black);
-  --text-muted: rgba(26, 12, 14, 0.62);
-  --border: rgba(26, 12, 14, 0.16);
-  --crimson: #b00f2e;
-  --crimson-dark: #8a0c22;
+  --text-muted: rgba(40, 1, 19, 0.62);
+  --border: rgba(40, 1, 19, 0.16);
+  --crimson: #5c032b;
+  --crimson-dark: #40021e;
   --success: #2f6b3a;
   --shadow: none;
   background: #fff !important;
@@ -2267,11 +2267,11 @@ body.is-printing .ring-card__mark {
 }
 
 body.is-printing .ring-card__ring svg circle:last-of-type {
-  stroke: #b00f2e !important;
+  stroke: #5c032b !important;
 }
 
 body.is-printing .ring-card__ring svg text {
-  fill: #1a0c0e !important;
+  fill: #280113 !important;
 }
 
 body.is-printing .ring-card,

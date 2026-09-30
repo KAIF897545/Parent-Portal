@@ -1,8 +1,8 @@
 :root{
-  --maroon:#6c0f20; --maroon-deep:#4a0a15; --maroon-line:#94394a; --site-bg:linear-gradient(115deg,#8e1126 0%,#72101f 42%,#4c0a16 78%,#2a0509 100%); --red:#b00f2e; --red-deep:#8c0b24; --rose:#dba3ad; --blush:#ecd0d5;
-  --beige:#efe1c6; --beige-2:#e2cfab; --paper:#fffaf1; --sand:#d3bf9c;
-  --gold:#e3b95c; --gold-hi:#f4d58f; --ink:#120808; --muted:#5a4a40;
-  --sq-light:#efe1c6; --sq-dark:#b8863f;
+  --maroon:#5c032b; --maroon-deep:#40021e; --maroon-line:#7b1843; --site-bg:linear-gradient(115deg,#7b1843 0%,#5c032b 42%,#40021e 78%,#280113 100%); --red:#7b1843; --red-deep:#40021e; --rose:rgba(236,236,218,.72); --blush:rgba(236,236,218,.85);
+  --beige:#ececda; --beige-2:#dedcc4; --paper:#f6f6ec; --sand:#cfccb2;
+  --gold:#bd9e6e; --gold-hi:#d6bd8f; --ink:#280113; --muted:#6b4a56;
+  --sq-light:#ececda; --sq-dark:#b8863f;
   --display:'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
   --body:'Figtree', 'Helvetica Neue', system-ui, sans-serif;
   --r-sm:12px; --r-md:20px; --r-lg:32px;
@@ -34,7 +34,7 @@ button{font:inherit; color:inherit; cursor:pointer}
 .nav-links{display:flex; align-items:center; gap:4px}
 .nav-links a{height:44px; padding:0 14px; display:flex; align-items:center; border-radius:99px; color:var(--beige); text-decoration:none; font-weight:600; font-size:15px; transition:background .15s}
 .nav-links a:hover{background:rgba(255,255,255,.08)}
-.nav-links a.active{background:rgba(227,185,92,.16); color:var(--gold-hi)}
+.nav-links a.active{background:rgba(189,158,110,.16); color:var(--gold-hi)}
 .btn{height:50px; padding:0 24px; border:none; border-radius:99px; display:inline-flex; align-items:center; justify-content:center; gap:10px; font-weight:800; font-size:16px; text-decoration:none; transition:transform .12s, filter .15s, background .15s}
 .btn:active{transform:scale(.97)}
 .btn-gold{background:var(--gold); color:var(--ink)}
@@ -53,7 +53,7 @@ button{font:inherit; color:inherit; cursor:pointer}
 .hero-grid{display:grid; grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr); gap:clamp(28px,4vw,72px); align-items:center}
 .hero-sub{margin:clamp(18px,2vw,28px) 0 0; font-size:clamp(18px,1.5vw,21px); line-height:1.5; color:var(--blush); max-width:36ch; opacity:0; animation:fade .8s .45s forwards}
 @keyframes fade{to{opacity:1}}
-.hero .panel{opacity:0; transform:translateY(16px); animation:panelIn .7s .25s cubic-bezier(.2,.7,.1,1) forwards; box-shadow:0 0 0 4px rgba(227,185,92,.55), 0 40px 80px -36px rgba(20,2,6,.85)}
+.hero .panel{opacity:0; transform:translateY(16px); animation:panelIn .7s .25s cubic-bezier(.2,.7,.1,1) forwards; box-shadow:0 0 0 4px rgba(189,158,110,.55), 0 40px 80px -36px rgba(20,2,6,.85)}
 @keyframes panelIn{to{opacity:1; transform:none}}
 @media (max-width:980px){.hero-grid{grid-template-columns:1fr}}
 .hero h1 .line{display:block; overflow:hidden; padding-bottom:.06em}
@@ -81,10 +81,10 @@ button{font:inherit; color:inherit; cursor:pointer}
 .field{display:flex; flex-direction:column; gap:6px; margin-bottom:14px}
 .field label{font-weight:700; font-size:14px}
 .input{height:54px; width:100%; padding:0 18px; border:1.5px solid var(--sand); border-radius:14px; background:var(--paper); font:inherit; font-size:16px; color:var(--ink); transition:border-color .15s, box-shadow .15s}
-.input:focus{outline:none; border-color:var(--red); box-shadow:0 0 0 4px rgba(176,15,46,.15)}
+.input:focus{outline:none; border-color:var(--red); box-shadow:0 0 0 4px rgba(123,24,67,.15)}
 .input.bad{border-color:#b3122c; box-shadow:0 0 0 4px rgba(179,18,44,.12)}
 .err{font-size:13.5px; font-weight:600; color:#9e0f28; min-height:0}
-.school{display:flex; align-items:center; gap:16px; width:100%; padding:16px 18px; margin-bottom:10px; border:1px solid #e0cfae; border-radius:var(--r-md); background:var(--paper); text-align:left; text-decoration:none; color:inherit; transition:transform .15s, box-shadow .15s, border-color .15s}
+.school{display:flex; align-items:center; gap:16px; width:100%; padding:16px 18px; margin-bottom:10px; border:1px solid #cfccb2; border-radius:var(--r-md); background:var(--paper); text-align:left; text-decoration:none; color:inherit; transition:transform .15s, box-shadow .15s, border-color .15s}
 .school:hover{transform:translateY(-2px); border-color:var(--sand); box-shadow:0 14px 28px -16px rgba(40,5,12,.45)}
 .badge{position:relative; width:54px; height:54px; flex-shrink:0; border-radius:16px; background:var(--red); color:var(--gold-hi); display:grid; place-items:center; font-family:var(--display); font-weight:800; font-size:17px; overflow:hidden}
 .badge img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:16px}
@@ -129,7 +129,7 @@ button{font:inherit; color:inherit; cursor:pointer}
 .explain .glyph{font-size:clamp(88px,9vw,132px); line-height:.8; color:var(--gold)}
 .explain h3{margin:0 0 12px; font-family:var(--display); font-weight:800; font-size:clamp(30px,3vw,42px); letter-spacing:-0.03em; line-height:1}
 .explain p{margin:0; color:var(--blush); font-size:18px; max-width:36ch}
-.demo{border-radius:28px; background:var(--paper); border:1px solid #e0cfae; padding:clamp(22px,3vw,36px); min-height:340px}
+.demo{border-radius:28px; background:var(--paper); border:1px solid #cfccb2; padding:clamp(22px,3vw,36px); min-height:340px}
 .demo-top{display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:14px}
 .demo-top strong{font-size:16px}
 .big{font-family:var(--display); font-weight:800; font-size:clamp(52px,5vw,72px); line-height:.9; letter-spacing:-0.04em; color:var(--red)}
@@ -188,7 +188,7 @@ button{font:inherit; color:inherit; cursor:pointer}
 .fb .who button{height:38px; padding:0 14px; border-radius:99px; border:1.5px solid var(--ink); background:transparent; font-weight:700; font-size:14px}
 .fb .who button[aria-pressed="true"]{background:var(--ink); color:var(--beige)}
 .fb textarea{width:100%; min-height:120px; padding:14px 16px; border-radius:14px; border:1.5px solid var(--sand); background:var(--paper); font:inherit; font-size:15px; resize:vertical; color:var(--ink)}
-.fb textarea:focus{outline:none; border-color:var(--red); box-shadow:0 0 0 4px rgba(176,15,46,.15)}
+.fb textarea:focus{outline:none; border-color:var(--red); box-shadow:0 0 0 4px rgba(123,24,67,.15)}
 .fb textarea.bad{border-color:#b3122c}
 @media (max-width:760px){
   .dgrid{grid-template-columns:1fr}

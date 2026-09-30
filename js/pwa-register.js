@@ -45,8 +45,8 @@ if ("serviceWorker" in navigator) {
         max-width: calc(100vw - 24px);
         padding: 10px 12px;
         border-radius: 999px;
-        background: #1a0c0e;
-        border: 1px solid rgba(244, 241, 232, 0.16);
+        background: #280113;
+        border: 1px solid rgba(236, 236, 218, 0.16);
         box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
         font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
       }
@@ -57,14 +57,14 @@ if ("serviceWorker" in navigator) {
         flex-shrink: 0;
       }
       .pwa-install-toast__text {
-        color: #f4f1e8;
+        color: #ececda;
         font-size: 13.5px;
         font-weight: 600;
         white-space: nowrap;
       }
       .pwa-install-toast__action {
         border: none;
-        background: #e2374f;
+        background: #7b1843;
         color: #fff;
         font-weight: 700;
         font-size: 13px;
@@ -73,17 +73,17 @@ if ("serviceWorker" in navigator) {
         cursor: pointer;
         white-space: nowrap;
       }
-      .pwa-install-toast__action:hover { background: #c92943; }
+      .pwa-install-toast__action:hover { background: #40021e; }
       .pwa-install-toast__dismiss {
         border: none;
         background: transparent;
-        color: rgba(244, 241, 232, 0.6);
+        color: rgba(236, 236, 218, 0.6);
         font-size: 18px;
         line-height: 1;
         cursor: pointer;
         padding: 4px 2px;
       }
-      .pwa-install-toast__dismiss:hover { color: #f4f1e8; }
+      .pwa-install-toast__dismiss:hover { color: #ececda; }
       @media (max-width: 420px) {
         .pwa-install-toast__text { display: none; }
       }
@@ -123,16 +123,16 @@ if ("serviceWorker" in navigator) {
       background: rgba(0,0,0,0.5); font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
     `;
     sheet.innerHTML = `
-      <div style="background:#1a0c0e; color:#f4f1e8; width:100%; max-width:420px;
+      <div style="background:#280113; color:#ececda; width:100%; max-width:420px;
                   border-radius:18px 18px 0 0; padding:20px 22px 26px; box-shadow:0 -12px 32px rgba(0,0,0,0.5);">
         <div style="font-weight:700; font-size:16px; margin-bottom:10px;">Install this app</div>
-        <div style="font-size:14px; line-height:1.5; color:rgba(244,241,232,0.85);">
+        <div style="font-size:14px; line-height:1.5; color:rgba(236,236,218,0.85);">
           Tap the <strong>Share</strong> icon
           <span aria-hidden="true">⬆️</span> in your browser's toolbar, then choose
           <strong>"Add to Home Screen"</strong>.
         </div>
         <button type="button" id="pwaIOSSheetClose"
-          style="margin-top:16px; width:100%; border:none; background:#e2374f; color:#fff;
+          style="margin-top:16px; width:100%; border:none; background:#7b1843; color:#fff;
                  font-weight:700; font-size:14px; padding:11px; border-radius:999px; cursor:pointer;">
           Got it
         </button>
