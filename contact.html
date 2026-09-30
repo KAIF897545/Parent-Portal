@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Contact — Maldives Chess Club</title>
+<meta name="description" content="Bring the Maldives Chess Club Student & Coach Portal to your school, or set up your own coaching account." />
+<meta name="theme-color" content="#5c032b" />
+<link rel="icon" href="assets/mcc-logo.jpg" type="image/jpeg" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="MCC Portal" />
+<script src="js/pwa-register.js" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Figtree:wght@400;500;600;700;800&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="css/portal-home.css" />
+</head>
+<body class="subpage">
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" href="portals.html" aria-label="Maldives Chess Club portal, home">
+      <span class="brand-mark"><img src="assets/mcc-logo.jpg" alt="" /></span>
+      <span class="brand-name">Maldives Chess Club<small>Student &amp; Coach Portal</small></span>
+    </a>
+    <nav class="nav-links" aria-label="Sections" id="navLinks">
+      <a href="about.html">About</a>
+      <a href="contact.html" class="active">Contact</a>
+    </nav>
+    <button type="button" class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="subhero wrap">
+    <h1 class="display">Get in touch.</h1>
+    <p>Whether you're a school looking to bring the portal to your students, or a coach running your own lessons &mdash; here's exactly how to get started.</p>
+  </section>
+
+  <section class="subsection wrap">
+    <div class="audience-grid">
+      <article class="audience-card">
+        <h2>I'm a school</h2>
+        <p>Email us with your school's name and the age groups you teach. We'll set up your school's portal and send login details for your coaches and students to sign in with.</p>
+        <a class="btn btn-maroon" href="mailto:info@maldiveschessclub.com?subject=Portal%20for%20my%20school">Email about a school portal</a>
+      </article>
+      <article class="audience-card">
+        <h2>I'm an independent coach</h2>
+        <p>Email us to get a private coaching account set up under our Private Tutoring program. You'll be able to register your own students and track their progress the same way a school would.</p>
+        <a class="btn btn-maroon" href="mailto:info@maldiveschessclub.com?subject=Independent%20coach%20account">Email about a coach account</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="subsection wrap">
+    <div class="contact">
+      <div>
+        <small>General enquiries</small>
+        <a class="big-link" href="mailto:info@maldiveschessclub.com">info@maldiveschessclub.com</a><br>
+        <button type="button" class="copy" data-copy="info@maldiveschessclub.com">Copy email</button>
+      </div>
+      <div>
+        <small>Call the club</small>
+        <a class="big-link" href="tel:+9609140545">+960 914 0545</a><br>
+        <button type="button" class="copy" data-copy="+960 914 0545">Copy number</button>
+      </div>
+      <div>
+        <small>Who can sign in</small>
+        <p style="margin:0; color:var(--blush); max-width:34ch">Students and coaches already in an MCC program. Other coaches and schools in the Maldives are welcome to get in touch.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="subfoot wrap">
+    <p>The home of chess in the Maldives. Conceived and built by Kaif Mausoom and Mohamed Farish.</p>
+    <a class="btn btn-gold" href="portals.html">Back to sign in</a>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/nav-basic.js" defer></script>
+<script>
+document.querySelectorAll(".copy").forEach((b) => {
+  b.addEventListener("click", async () => {
+    const label = b.textContent;
+    try {
+      await navigator.clipboard.writeText(b.dataset.copy);
+      b.textContent = "Copied";
+      setTimeout(() => (b.textContent = label), 1600);
+    } catch {
+      /* clipboard denied -- the value is already visible as a link, nothing more to do */
+    }
+  });
+});
+</script>
+</body>
+</html>

@@ -273,3 +273,26 @@ button{font:inherit; color:inherit; cursor:pointer}
   .reveal{opacity:1; transform:none}
   .sheet{height:auto} .sheet-pin{position:static; height:auto; padding-top:120px; padding-bottom:160px} .sheet .w{color:var(--ink)}
 }
+
+/* ---------- simple subpages: about.html, contact.html ---------- */
+body.subpage{background:var(--maroon) var(--site-bg) fixed}
+.subhero{padding:clamp(56px,9vw,120px) 0 clamp(36px,5vw,56px)}
+.subhero h1{margin:0; font-size:clamp(44px,7vw,84px); color:var(--beige)}
+.subhero p{margin:14px 0 0; font-size:clamp(17px,1.6vw,21px); line-height:1.55; color:var(--blush); max-width:56ch}
+.subsection{padding:clamp(32px,4vw,56px) 0}
+.subsection + .subsection{border-top:1px solid var(--maroon-line)}
+.audience-grid{display:grid; grid-template-columns:1fr 1fr; gap:28px}
+@media (max-width:760px){.audience-grid{grid-template-columns:1fr}}
+.audience-card{background:var(--beige); color:var(--ink); border-radius:var(--r-lg); padding:clamp(26px,3.5vw,38px); display:flex; flex-direction:column; gap:14px; box-shadow:0 30px 60px -30px rgba(20,2,6,.85)}
+.audience-card h2{margin:0; font-size:clamp(24px,2.4vw,30px)}
+.audience-card p{margin:0; font-size:16px; line-height:1.6; color:var(--muted)}
+.audience-card .btn{align-self:flex-start; margin-top:4px}
+.team-grid{display:grid; grid-template-columns:1fr 1fr; gap:28px}
+@media (max-width:760px){.team-grid{grid-template-columns:1fr}}
+.team-card{background:var(--beige); color:var(--ink); border-radius:var(--r-lg); padding:clamp(26px,3.5vw,34px); display:flex; gap:20px; align-items:flex-start; box-shadow:0 30px 60px -30px rgba(20,2,6,.85)}
+.team-card img{width:84px; height:84px; border-radius:50%; object-fit:cover; flex-shrink:0; border:4px solid var(--gold)}
+.team-card .role{display:block; font-size:13px; font-weight:700; color:var(--muted); margin-bottom:6px}
+.team-card h3{margin:0 0 8px; font-size:20px}
+.team-card p{margin:0; font-size:15px; line-height:1.55; color:var(--muted)}
+.subfoot{padding:clamp(32px,5vw,56px) 0; text-align:center}
+.subfoot p{margin:0 0 18px; color:var(--rose); font-size:14px}

@@ -64,25 +64,6 @@ function onScroll() {
 }
 addEventListener("scroll", onScroll, { passive: true });
 onScroll();
-// .inside/.hero are position:sticky, so their own ids moved to plain marker
-// spans just before them (sticky elements confuse native anchor-scrolling and
-// IntersectionObserver's target matching alike) -- match by element identity
-// here instead of relying on e.target.id.
-const spyTargets = {
-  devs: document.getElementById("devs"),
-  hello: document.getElementById("hello"),
-};
-const spy = new IntersectionObserver(
-  (es) => es.forEach((e) => {
-    if (!e.isIntersecting) return;
-    const key = Object.keys(spyTargets).find((k) => spyTargets[k] === e.target);
-    $$("[data-spy]").forEach((a) => a.classList.toggle("active", a.dataset.spy === key));
-  }),
-  { rootMargin: "-45% 0px -50% 0px" }
-);
-Object.values(spyTargets).forEach((el) => {
-  if (el) spy.observe(el);
-});
 
 // Mobile nav toggle -- .nav-links is hidden below 760px (see portal-home.css)
 // until .nav carries .menu-open, which also flips the button into an X.
