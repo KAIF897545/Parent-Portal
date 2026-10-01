@@ -95,11 +95,13 @@ passwordForm.addEventListener("submit", async (event) => {
     supabase.from("students").select("id").eq("id", uid).maybeSingle(),
   ]);
 
-  window.location.href = coachRow?.role === "admin"
-    ? "admin.html"
-    : coachRow
-    ? "coach.html"
-    : studentRow
-    ? "portal.html"
-    : "login.html";
+  window.location.replace(
+    coachRow?.role === "admin"
+      ? "admin.html"
+      : coachRow
+      ? "coach.html"
+      : studentRow
+      ? "portal.html"
+      : "login.html"
+  );
 });

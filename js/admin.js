@@ -59,7 +59,7 @@ function passwordBanner({ title, lines }) {
 async function init() {
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData?.session) {
-    window.location.href = "login.html";
+    window.location.replace("login.html");
     return;
   }
   state.accessToken = sessionData.session.access_token;
@@ -81,11 +81,11 @@ async function init() {
   }
   if (!coachRow || !coachRow.active) {
     await supabase.auth.signOut();
-    window.location.href = "login.html";
+    window.location.replace("login.html");
     return;
   }
   if (coachRow.role !== "admin") {
-    window.location.href = "coach.html";
+    window.location.replace("coach.html");
     return;
   }
 
@@ -142,7 +142,7 @@ function populateSchoolSelects() {
 
 el("signOutButton").addEventListener("click", async () => {
   await supabase.auth.signOut();
-  window.location.href = "login.html";
+  window.location.replace("login.html");
 });
 
 // --- Top-level tabs -----------------------------------------------------

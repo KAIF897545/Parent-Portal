@@ -129,7 +129,10 @@ studentForm.addEventListener("submit", async (event) => {
       return;
     }
 
-    window.location.href = studentRow.must_change_password ? "first-login.html" : "portal.html";
+    // .replace(), not .href = -- don't leave this sign-in page as a swipe-
+    // back target once the person is signed in, or a back gesture looks
+    // exactly like being logged out even though the session is still valid.
+    window.location.replace(studentRow.must_change_password ? "first-login.html" : "portal.html");
   } catch {
     setStudentMessage("Something went wrong. Try again.", "error");
   } finally {
@@ -235,7 +238,7 @@ coachForm.addEventListener("submit", async (event) => {
       return;
     }
 
-    window.location.href = coachRow.role === "admin" ? "admin.html" : "coach.html";
+    window.location.replace(coachRow.role === "admin" ? "admin.html" : "coach.html");
   } catch {
     setCoachMessage("Something went wrong. Try again.", "error");
   } finally {

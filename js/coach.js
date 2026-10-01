@@ -67,7 +67,7 @@ function todayKey() {
 async function init() {
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData?.session) {
-    window.location.href = "login.html";
+    window.location.replace("login.html");
     return;
   }
 
@@ -87,7 +87,7 @@ async function init() {
   }
   if (!coachRow || !coachRow.active) {
     await supabase.auth.signOut();
-    window.location.href = "login.html";
+    window.location.replace("login.html");
     return;
   }
 
@@ -1377,7 +1377,7 @@ el("tabSyllabus").addEventListener("click", () => {
 
 el("signOutButton").addEventListener("click", async () => {
   await supabase.auth.signOut();
-  window.location.href = "login.html";
+  window.location.replace("login.html");
 });
 
 init();

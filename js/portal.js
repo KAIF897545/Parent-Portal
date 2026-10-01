@@ -295,7 +295,7 @@ function renderUnits(unitList, tickSet, cpSet) {
 async function init() {
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData?.session) {
-    window.location.href = "login.html";
+    window.location.replace("login.html");
     return;
   }
   const uid = sessionData.session.user.id;
@@ -317,7 +317,7 @@ async function init() {
     // retry is safer than silently destroying a perfectly valid session.
     if (error.code === "PGRST116") {
       await supabase.auth.signOut();
-      window.location.href = "login.html";
+      window.location.replace("login.html");
       return;
     }
     setStatus("Couldn't load your account. Check your connection and try again.", "error");
@@ -325,13 +325,13 @@ async function init() {
   }
   if (!student) {
     await supabase.auth.signOut();
-    window.location.href = "login.html";
+    window.location.replace("login.html");
     return;
   }
 
   // Re-checked on every load, so the URL can't be pasted past first-login.
   if (student.must_change_password) {
-    window.location.href = "first-login.html";
+    window.location.replace("first-login.html");
     return;
   }
 
@@ -404,7 +404,7 @@ async function init() {
 
 document.getElementById("signOutButton").addEventListener("click", async () => {
   await supabase.auth.signOut();
-  window.location.href = "login.html";
+  window.location.replace("login.html");
 });
 
 window.addEventListener("beforeprint", () => document.body.classList.add("is-printing"));

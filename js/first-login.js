@@ -12,16 +12,23 @@ let identity = null;
 async function init() {
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData?.session) {
-    window.location.href = "login.html";
+    window.location.replace("login.html");
     return;
   }
 
   const { data, error } = await supabase.rpc("my_identity");
   const row = Array.isArray(data) ? data[0] : data;
 
-  if (error || !row || !row.student_code) {
+  if (error) {
+    // A real fetch error (network blip, Supabase hiccup) isn't evidence
+    // this isn't a student account -- don't bounce to sign-in over it.
+    loadingMessage.textContent = "Couldn't load your account. Check your connection and try again.";
+    loadingMessage.className = "form-message form-message--error";
+    return;
+  }
+  if (!row || !row.student_code) {
     // Not a student account (e.g. a coach landed here) — nowhere useful to go but sign in again.
-    window.location.href = "login.html";
+    window.location.replace("login.html");
     return;
   }
 
@@ -46,7 +53,7 @@ document.getElementById("confirmContinue").addEventListener("click", () => {
 
 document.getElementById("notMeButton").addEventListener("click", async () => {
   await supabase.auth.signOut();
-  window.location.href = "login.html";
+  window.location.replace("login.html");
 });
 
 // --- Screen 2: password rules ---
@@ -124,5 +131,5 @@ passwordForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  window.location.href = "portal.html";
+  window.location.replace("portal.html");
 });
