@@ -13,6 +13,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="MCC Portal" />
 <script src="js/pwa-register.js" defer></script>
+<script>
+(function () {
+  try {
+    var isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    if (isPWA && !sessionStorage.getItem("mccSplashShown")) {
+      document.documentElement.classList.add("pwa-launch");
+    }
+  } catch (e) {}
+})();
+</script>
 <meta property="og:site_name" content="Maldives Chess Club" />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Maldives Chess Club — Student & Coach Portal" />
@@ -28,6 +38,10 @@
 <link rel="stylesheet" href="css/portal-home.css" />
 </head>
 <body>
+
+<div class="pwa-splash" id="pwaSplash" aria-hidden="true">
+  <img src="assets/mcc-logo.jpg" alt="" class="pwa-splash__logo" />
+</div>
 
 <header class="nav" id="nav">
   <div class="wrap">

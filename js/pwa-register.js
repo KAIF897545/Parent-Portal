@@ -175,3 +175,18 @@ if ("serviceWorker" in navigator) {
     });
   }
 })();
+
+// Launch splash: a brief logo animation on a true PWA cold launch (standalone
+// mode), gated by sessionStorage so it plays once per session, not on every
+// page. The "pwa-launch" class is set synchronously by an inline <head>
+// script before paint, so by the time this (deferred) code runs the splash
+// is already on screen -- this just times its exit.
+(function pwaSplash() {
+  const el = document.getElementById("pwaSplash");
+  if (!el || !document.documentElement.classList.contains("pwa-launch")) return;
+  sessionStorage.setItem("mccSplashShown", "1");
+  setTimeout(() => {
+    el.classList.add("pwa-splash--hide");
+    setTimeout(() => el.remove(), 550);
+  }, 700);
+})();

@@ -293,6 +293,14 @@ body.subpage{background:var(--maroon) var(--site-bg) fixed}
 .nav-signin{height:44px; padding:0 20px; font-size:14px; flex-shrink:0; margin-left:4px}
 @media (max-width:760px){.nav-links .nav-signin{display:none}}
 
+/* ---------- PWA launch splash (standalone mode only, once per session) ---------- */
+.pwa-splash{display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:var(--maroon) var(--site-bg) fixed; opacity:1; transition:opacity .5s ease}
+html.pwa-launch .pwa-splash{display:flex}
+.pwa-splash.pwa-splash--hide{opacity:0; pointer-events:none}
+.pwa-splash__logo{width:84px; height:84px; border-radius:50%; object-fit:cover; opacity:0; transform:scale(.7); box-shadow:0 0 0 4px var(--gold), 0 24px 60px -12px rgba(0,0,0,.6); animation:pwaSplashIn .5s cubic-bezier(.2,.8,.2,1) .1s forwards}
+@keyframes pwaSplashIn{to{opacity:1; transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.pwa-splash__logo{animation:none; opacity:1; transform:none}}
+
 /* ---------- contact.html: light content area between the dark nav/footer ---------- */
 body.contact-page{background:var(--beige)}
 .contact-main{background:var(--beige); color:var(--ink)}
