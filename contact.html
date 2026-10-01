@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Contact — Maldives Chess Club</title>
-<meta name="description" content="Bring the Maldives Chess Club Student & Coach Portal to your school, or set up your own coaching account." />
+<meta name="description" content="Bring the Maldives Chess Club Student & Coach Portal to your school, set up an independent coaching account, or find out how the portal works." />
 <meta name="theme-color" content="#5c032b" />
 <link rel="icon" href="assets/mcc-logo.jpg" type="image/jpeg" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -32,6 +32,7 @@
     <nav class="nav-links" aria-label="Sections" id="navLinks">
       <a href="about.html">About</a>
       <a href="contact.html" class="active">Contact</a>
+      <a href="portals.html" class="btn btn-gold nav-signin">Sign in</a>
     </nav>
     <button type="button" class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks">
       <span></span><span></span><span></span>
@@ -41,41 +42,186 @@
 
 <main>
   <section class="subhero wrap">
+    <span class="eyebrow">Contact</span>
     <h1 class="display">Get in touch.</h1>
-    <p>Whether you're a school looking to bring the portal to your students, or a coach running your own lessons &mdash; here's exactly how to get started.</p>
+    <p>Whether you're a school, an independent coach, or already signed up as a student or parent &mdash; here's exactly what to do next.</p>
+    <nav class="jump" aria-label="Jump to section">
+      <a href="#school">For schools</a>
+      <a href="#coach">For independent coaches</a>
+      <a href="#how">How the portal works</a>
+      <a href="#students">Already a student?</a>
+      <a href="#faq">FAQ</a>
+    </nav>
   </section>
 
   <section class="subsection wrap">
     <div class="audience-grid">
-      <article class="audience-card">
-        <h2>I'm a school</h2>
-        <p>Email us with your school's name and the age groups you teach. We'll set up your school's portal and send login details for your coaches and students to sign in with.</p>
-        <a class="btn btn-maroon" href="mailto:info@maldiveschessclub.com?subject=Portal%20for%20my%20school">Email about a school portal</a>
+      <article class="path-card" id="school">
+        <div class="path-top">
+          <span class="path-icon" aria-hidden="true">&#9823;</span>
+          <span class="path-tag">For schools</span>
+        </div>
+        <h2>Bring the portal to your students</h2>
+        <p>We'll set up a portal for your school so every coach and student has their own sign-in, with progress and feedback tracked per student.</p>
+        <ol class="path-steps">
+          <li><span class="n">1</span> Email us your school's name and the age groups you teach.</li>
+          <li><span class="n">2</span> We set up your school's portal and coach accounts.</li>
+          <li><span class="n">3</span> Your coaches register their students from their own dashboard.</li>
+          <li><span class="n">4</span> Everyone signs in at <a href="portals.html">portals.html</a> going forward.</li>
+        </ol>
+        <ul class="path-check">
+          <li>School name and island</li>
+          <li>Age groups / year levels you teach</li>
+          <li>Roughly how many students</li>
+          <li>A contact person's name and phone number</li>
+        </ul>
+        <div class="path-actions">
+          <a class="btn btn-maroon" href="mailto:info@maldiveschessclub.com?subject=Portal%20for%20my%20school&body=School%20name%3A%0AIsland%3A%0AAge%20groups%20we%20teach%3A%0AApprox.%20number%20of%20students%3A%0AContact%20name%20and%20phone%3A%0A">Email about a school portal</a>
+          <button type="button" class="btn btn-ghost-dark" data-copy-template="school">Copy email template</button>
+        </div>
       </article>
-      <article class="audience-card">
-        <h2>I'm an independent coach</h2>
-        <p>Email us to get a private coaching account set up under our Private Tutoring program. You'll be able to register your own students and track their progress the same way a school would.</p>
-        <a class="btn btn-maroon" href="mailto:info@maldiveschessclub.com?subject=Independent%20coach%20account">Email about a coach account</a>
+
+      <article class="path-card" id="coach">
+        <div class="path-top">
+          <span class="path-icon" aria-hidden="true">&#9816;</span>
+          <span class="path-tag">For independent coaches</span>
+        </div>
+        <h2>Run your own coaching account</h2>
+        <p>Get a private coaching account so you can register your own students and track their progress, the same way a school would.</p>
+        <ol class="path-steps">
+          <li><span class="n">1</span> Email us your name and where you coach.</li>
+          <li><span class="n">2</span> We set up your coach account.</li>
+          <li><span class="n">3</span> You register your students from your own dashboard.</li>
+          <li><span class="n">4</span> Everyone signs in at <a href="portals.html">portals.html</a> going forward.</li>
+        </ol>
+        <ul class="path-check">
+          <li>Your name and phone number</li>
+          <li>Where you coach (island, school, or independently)</li>
+          <li>Roughly how many students</li>
+          <li>Whether you already track progress another way</li>
+        </ul>
+        <div class="path-actions">
+          <a class="btn btn-maroon" href="mailto:info@maldiveschessclub.com?subject=Independent%20coach%20account&body=Name%3A%0AIsland%3A%0AWhere%20I%20coach%3A%0AApprox.%20number%20of%20students%3A%0APhone%3A%0A">Email about a coach account</a>
+          <button type="button" class="btn btn-ghost-dark" data-copy-template="coach">Copy email template</button>
+        </div>
       </article>
     </div>
   </section>
 
-  <section class="subsection wrap">
-    <div class="contact">
+  <section class="subsection wrap" id="how">
+    <h2 class="display" style="font-size:clamp(36px,4.5vw,56px); margin:0 0 40px; color:var(--beige)">How the portal works.</h2>
+    <div class="flow">
+      <div class="flow-step">
+        <span class="n">1</span>
+        <h3>Syllabus</h3>
+        <p>Every unit a student works through, broken into clear modules.</p>
+      </div>
+      <div class="flow-step">
+        <span class="n">2</span>
+        <h3>Lessons</h3>
+        <p>Coaches run sessions and mark what's been covered.</p>
+      </div>
+      <div class="flow-step">
+        <span class="n">3</span>
+        <h3>Checkpoints</h3>
+        <p>Progress is tracked unit by unit, visible any time.</p>
+      </div>
+      <div class="flow-step">
+        <span class="n">4</span>
+        <h3>Feedback</h3>
+        <p>Monthly notes from the coach, written for the student and their parents.</p>
+      </div>
+    </div>
+    <div class="roles-wrap">
+      <div class="roles">
+        <div class="role">
+          <span class="path-icon" aria-hidden="true">&#9823;</span>
+          <div>
+            <h3>Students &amp; parents</h3>
+            <p>Sign in to see progress through the syllabus, monthly coach feedback, and a printable progress report.</p>
+          </div>
+        </div>
+        <div class="role">
+          <span class="path-icon" aria-hidden="true">&#9816;</span>
+          <div>
+            <h3>Coaches</h3>
+            <p>Mark syllabus progress after each lesson and leave monthly feedback for every student on their roster.</p>
+          </div>
+        </div>
+        <div class="role">
+          <span class="path-icon" aria-hidden="true">&#9814;</span>
+          <div>
+            <h3>Schools &amp; independent coaches</h3>
+            <p>Get your own portal set up once, then manage your own coaches and students from there.</p>
+          </div>
+        </div>
+      </div>
+      <div class="mock" aria-hidden="true">
+        <div class="mock-top"><strong>Opening principles</strong><span>Module 2</span></div>
+        <div class="mock-bar"><i></i></div>
+        <ul class="mock-list">
+          <li class="done">Control the centre</li>
+          <li class="done">Develop knights before bishops</li>
+          <li>Castle early</li>
+        </ul>
+        <div class="note"><b>Coach feedback &mdash; this month</b>Good progress on opening principles. Next month we'll start on basic tactics.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="subsection wrap" id="students">
+    <div class="strip">
       <div>
+        <h2 class="display">Already a student or parent?</h2>
+        <p>You don't need to email us &mdash; if your school or coach has already set up your account, just sign in.</p>
+      </div>
+      <a class="btn btn-gold" href="portals.html">Sign in</a>
+    </div>
+  </section>
+
+  <section class="subsection wrap">
+    <h2 class="display" style="font-size:clamp(30px,3.6vw,44px); margin:0 0 28px; color:var(--beige)">Other ways to reach us.</h2>
+    <div class="tiles">
+      <div class="tile">
         <small>General enquiries</small>
-        <a class="big-link" href="mailto:info@maldiveschessclub.com">info@maldiveschessclub.com</a><br>
+        <a class="big-link" href="mailto:info@maldiveschessclub.com">info@maldiveschessclub.com</a>
         <button type="button" class="copy" data-copy="info@maldiveschessclub.com">Copy email</button>
       </div>
-      <div>
+      <div class="tile">
         <small>Call the club</small>
-        <a class="big-link" href="tel:+9609140545">+960 914 0545</a><br>
+        <a class="big-link" href="tel:+9609140545">+960 914 0545</a>
         <button type="button" class="copy" data-copy="+960 914 0545">Copy number</button>
       </div>
-      <div>
-        <small>Who can sign in</small>
-        <p style="margin:0; color:var(--blush); max-width:34ch">Students and coaches already in an MCC program. Other coaches and schools in the Maldives are welcome to get in touch.</p>
+      <div class="tile">
+        <small>Follow the club</small>
+        <a class="big-link" href="https://maldiveschessclub.com">maldiveschessclub.com</a>
       </div>
+    </div>
+  </section>
+
+  <section class="subsection wrap" id="faq">
+    <h2 class="display" style="font-size:clamp(30px,3.6vw,44px); margin:0 0 28px; color:var(--beige)">Frequently asked.</h2>
+    <div class="faq">
+      <details>
+        <summary>Who can actually sign in right now?</summary>
+        <p>Students and coaches already in an MCC program, plus any school or coach we've set up a portal for. If that's not you yet, use the school or coach path above and we'll sort it out.</p>
+      </details>
+      <details>
+        <summary>Do I need to install an app?</summary>
+        <p>No &mdash; it's a website that works in any browser. You can optionally add it to your home screen for an app-like shortcut, but it's never required.</p>
+      </details>
+      <details>
+        <summary>Is there a cost?</summary>
+        <p>It depends on your program and setup. Email us with a bit of context and we'll walk you through it directly rather than guessing here.</p>
+      </details>
+      <details>
+        <summary>I'm not sure if I need a school account or a coach account.</summary>
+        <p>If you teach chess under a school's name, that's a school account. If you coach independently, under your own name, that's a coach account. Not sure either way &mdash; just email us and we'll point you in the right direction.</p>
+      </details>
+      <details>
+        <summary>What happens after I email you?</summary>
+        <p>We'll reply directly by email to confirm details and get your account set up, then send sign-in details for whoever needs them.</p>
+      </details>
     </div>
   </section>
 
@@ -88,19 +234,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/nav-basic.js" defer></script>
-<script>
-document.querySelectorAll(".copy").forEach((b) => {
-  b.addEventListener("click", async () => {
-    const label = b.textContent;
-    try {
-      await navigator.clipboard.writeText(b.dataset.copy);
-      b.textContent = "Copied";
-      setTimeout(() => (b.textContent = label), 1600);
-    } catch {
-      /* clipboard denied -- the value is already visible as a link, nothing more to do */
-    }
-  });
-});
-</script>
+<script src="js/contact.js" defer></script>
 </body>
 </html>
