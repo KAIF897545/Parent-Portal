@@ -413,9 +413,9 @@ function onCards() {
     }
     if (!reduce) {
       const depth = next ? dcards.length - 1 - i : 0;
-      const sc = 1 - k * (0.07 + 0.015 * depth);
-      c.style.transform = `translateY(${-k * 10}px) scale(${sc})`;
-      c.style.filter = `brightness(${1 - k * 0.32}) saturate(${1 - k * 0.25})`;
+      const sc = 1 - k * (0.14 + 0.025 * depth);
+      c.style.transform = `translateY(${-k * 24}px) scale(${sc})`;
+      c.style.filter = `brightness(${1 - k * 0.45}) saturate(${1 - k * 0.4}) blur(${k * 1.2}px)`;
     }
   });
   rail.forEach((b, i) => b.setAttribute("aria-current", i === active ? "true" : "false"));
