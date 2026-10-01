@@ -306,7 +306,7 @@ body.subpage{background:var(--maroon) var(--site-bg) fixed}
 /* ---------- contact.html: light content area between the dark nav/footer ---------- */
 body.contact-page{background:var(--beige)}
 .contact-main{background:var(--beige); color:var(--ink)}
-.c-hero{padding:clamp(48px,7vw,80px) 0 clamp(40px,5vw,56px); display:grid; grid-template-columns:1.1fr .9fr; gap:clamp(28px,4vw,56px); align-items:center}
+.c-hero{padding-top:clamp(48px,7vw,80px); padding-bottom:clamp(40px,5vw,56px); display:grid; grid-template-columns:1.1fr .9fr; gap:clamp(28px,4vw,56px); align-items:center}
 .c-hero h1{margin:0; font-family:var(--display); font-weight:700; font-size:clamp(34px,5.2vw,56px); line-height:1.05; letter-spacing:-0.02em; color:var(--maroon-deep); max-width:14ch}
 .c-student-note{margin-top:20px; color:var(--muted); max-width:52ch; font-size:16px; line-height:1.6}
 .c-student-note a{color:var(--maroon); font-weight:700; text-underline-offset:3px}
@@ -334,7 +334,7 @@ body.contact-page{background:var(--beige)}
 .c-faq-list details[open] summary::after{transform:rotate(45deg)}
 .c-faq-list p{padding:0 0 22px; margin:0; color:var(--muted); max-width:62ch}
 
-.c-reach{padding:clamp(40px,5vw,52px) 0; display:flex; justify-content:space-between; align-items:baseline; gap:16px 40px; flex-wrap:wrap}
+.c-reach{padding-top:clamp(40px,5vw,52px); padding-bottom:clamp(40px,5vw,52px); display:flex; justify-content:space-between; align-items:baseline; gap:16px 40px; flex-wrap:wrap}
 .c-lines{display:flex; gap:12px 36px; flex-wrap:wrap}
 .c-lines a{font-family:var(--display); font-size:22px; font-weight:600; color:var(--maroon); text-decoration:none}
 .c-lines a:hover{text-decoration:underline; text-underline-offset:4px}
