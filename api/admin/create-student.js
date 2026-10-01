@@ -2,7 +2,7 @@
 // { schoolId, fullName, groupId?, moduleId, studentCode, email }
 //
 // Creates the student's auth account and her students row. The admin
-// picks the student ID directly (at least 8 characters) rather than one
+// picks the student ID directly (at least 7 characters) rather than one
 // being generated — it doubles as the starting password until the
 // student sets their own on first sign-in. Email is required too:
 // students sign in with it directly (supabase.auth.signInWithPassword),
