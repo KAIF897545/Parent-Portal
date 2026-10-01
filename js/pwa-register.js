@@ -23,7 +23,6 @@ if ("serviceWorker" in navigator) {
   }
 
   if (isStandalone()) return; // already installed, nothing to offer
-  if (localStorage.getItem(DISMISS_KEY)) return; // user dismissed it before
 
   let deferredPrompt = null;
   let toastEl = null;
@@ -113,7 +112,7 @@ if ("serviceWorker" in navigator) {
     document.body.appendChild(toastEl);
   }
 
-  function showIOSInstructions() {
+  function showInstallInstructions() {
     if (document.getElementById("pwaIOSSheet")) return;
     const sheet = document.createElement("div");
     sheet.id = "pwaIOSSheet";
@@ -122,15 +121,14 @@ if ("serviceWorker" in navigator) {
       align-items: flex-end; justify-content: center;
       background: rgba(0,0,0,0.5); font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
     `;
+    const text = isIOS()
+      ? `Tap the <strong>Share</strong> icon <span aria-hidden="true">⬆️</span> in your browser's toolbar, then choose <strong>"Add to Home Screen"</strong>.`
+      : `Look for <strong>Install app</strong> or <strong>Add to Home Screen</strong> in your browser's menu (usually the ⋮ or ≡ icon).`;
     sheet.innerHTML = `
       <div style="background:#280113; color:#ececda; width:100%; max-width:420px;
                   border-radius:18px 18px 0 0; padding:20px 22px 26px; box-shadow:0 -12px 32px rgba(0,0,0,0.5);">
         <div style="font-weight:700; font-size:16px; margin-bottom:10px;">Install this app</div>
-        <div style="font-size:14px; line-height:1.5; color:rgba(236,236,218,0.85);">
-          Tap the <strong>Share</strong> icon
-          <span aria-hidden="true">⬆️</span> in your browser's toolbar, then choose
-          <strong>"Add to Home Screen"</strong>.
-        </div>
+        <div style="font-size:14px; line-height:1.5; color:rgba(236,236,218,0.85);">${text}</div>
         <button type="button" id="pwaIOSSheetClose"
           style="margin-top:16px; width:100%; border:none; background:#7b1843; color:#fff;
                  font-weight:700; font-size:14px; padding:11px; border-radius:999px; cursor:pointer;">
@@ -146,20 +144,33 @@ if ("serviceWorker" in navigator) {
     });
   }
 
+  // Shared by the toast's action button and the permanent nav link: use the
+  // captured native prompt if we have one, otherwise fall back to manual
+  // instructions (always the case on iOS, which never fires beforeinstallprompt).
+  async function triggerInstall() {
+    if (deferredPrompt) {
+      const p = deferredPrompt;
+      deferredPrompt = null;
+      p.prompt();
+      await p.userChoice;
+    } else {
+      showInstallInstructions();
+    }
+  }
+
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    showToast({
-      label: "Install",
-      onAction: async () => {
-        if (toastEl) toastEl.remove();
-        toastEl = null;
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = null;
-      },
-    });
+    if (!localStorage.getItem(DISMISS_KEY)) {
+      showToast({
+        label: "Install",
+        onAction: async () => {
+          if (toastEl) toastEl.remove();
+          toastEl = null;
+          await triggerInstall();
+        },
+      });
+    }
   });
 
   window.addEventListener("appinstalled", () => {
@@ -168,10 +179,22 @@ if ("serviceWorker" in navigator) {
     localStorage.setItem(DISMISS_KEY, "1");
   });
 
-  if (isIOS() && !isStandalone()) {
+  if (isIOS() && !localStorage.getItem(DISMISS_KEY)) {
     // iOS never fires beforeinstallprompt -- offer manual instructions instead.
     window.addEventListener("load", () => {
-      showToast({ label: "Install", onAction: showIOSInstructions });
+      showToast({ label: "Install", onAction: showInstallInstructions });
+    });
+  }
+
+  // Permanent "Add to Home Screen" nav link -- always available (not gated
+  // by the toast's dismiss state), so people who dismissed the popup once
+  // can still find a way to install later.
+  const navBtn = document.getElementById("navInstall");
+  if (navBtn) {
+    navBtn.style.display = "";
+    navBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      triggerInstall();
     });
   }
 })();
