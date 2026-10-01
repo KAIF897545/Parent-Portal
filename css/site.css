@@ -469,6 +469,32 @@ body.portal-landing .brand__sub {
   font-weight: 600;
 }
 
+/* Student/parent dashboard (portal.html): a light "paper" theme instead
+   of the dark portal-landing default, matching a reference design the
+   user shared. Same re-theme-via-variables trick as portal-landing
+   itself, layered on top of it -- scoped to just this page via the
+   extra class, so login/coach/admin keep the dark theme untouched. The
+   watermark glyph and the dark-tuned radial glow + diagonal hairline
+   background are specifically designed for a dark surface, so both are
+   swapped out here rather than left showing through a light one. */
+body.portal-landing.portal-light {
+  --cream: #f2eee3;
+  --white: #fbf9f2;
+  --near-black: #2a0e18;
+  --text: var(--near-black);
+  --text-muted: rgba(40, 1, 19, 0.58);
+  --border: #e2dacb;
+  --crimson: #6e1239;
+  --crimson-dark: #4f0c28;
+  --success: #2f6b3a;
+  --shadow: 0 10px 28px rgba(40, 1, 19, 0.08);
+  background: var(--cream);
+}
+
+body.portal-landing.portal-light::before {
+  display: none;
+}
+
 
 @media (max-width: 480px) {
   body.portal-landing::before {
@@ -1677,6 +1703,12 @@ body.portal-landing .brand__sub {
   line-height: 1.14;
   letter-spacing: -0.02em;
   max-width: 22ch;
+  /* .p-hero is intentionally a dark card regardless of the page's own
+     theme (same as the old ring-card it replaces) -- the generic
+     h1,h2,h3{color:var(--near-black)} rule would otherwise win over the
+     inherited var(--fixed-light) from .p-hero and go near-invisible
+     against this dark background under the light portal-light theme. */
+  color: var(--fixed-light);
 }
 
 .p-hero__gold {
