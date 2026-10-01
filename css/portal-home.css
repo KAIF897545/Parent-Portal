@@ -262,7 +262,6 @@ button{font:inherit; color:inherit; cursor:pointer}
   .tabs{width:100%} .tabs button{flex:1; padding:0 8px}
   .cps{grid-template-columns:1fr}
   .panel{min-height:0}
-  .brand-name small{display:none}
   .sheet{margin-top:28vh}
 }
 @media (prefers-reduced-motion:reduce){
