@@ -23,7 +23,7 @@ button{font:inherit; color:inherit; cursor:pointer}
 .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
 
 /* ---------- nav ---------- */
-.nav{position:sticky; top:env(safe-area-inset-top,0px); z-index:50; background:rgba(116,16,33,.9); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid transparent; transition:border-color .2s, background .2s}
+.nav{position:sticky; top:env(safe-area-inset-top,0px); z-index:50; background:var(--maroon-deep); border-bottom:1px solid transparent; transition:border-color .2s, background .2s}
 .nav.scrolled{border-color:var(--maroon-line); background:var(--maroon-deep)}
 .nav .wrap{height:76px; display:flex; align-items:center; justify-content:space-between; gap:16px}
 .brand{display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--beige)}
