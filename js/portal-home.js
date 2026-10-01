@@ -166,7 +166,7 @@ stmt.innerHTML =
     .join(" ") +
   (sigText ? ` <span class="sig">${sigText.split(/\s+/).map((w) => `<span class="w">${esc(w)}</span>`).join(" ")}</span>` : "");
 const words = $$(".w", stmt);
-const navH = () => nav.offsetHeight;
+const navH = () => nav.getBoundingClientRect().bottom;
 function pinHero() {
   hero.style.top = Math.min(navH(), innerHeight - hero.offsetHeight) + "px";
 }
@@ -398,7 +398,7 @@ if (tabsEl) tabsEl.addEventListener("click", () => requestAnimationFrame(pinInsi
 /* ---------- developer cards: stack on scroll ---------- */
 const dcards = $$(".dcard"),
   rail = $$(".rail [data-go]");
-document.documentElement.style.setProperty("--navh", nav.offsetHeight + "px");
+document.documentElement.style.setProperty("--navh", nav.getBoundingClientRect().bottom + "px");
 function onCards() {
   let active = 0;
   dcards.forEach((c, i) => {
@@ -422,7 +422,7 @@ function onCards() {
 }
 addEventListener("scroll", onCards, { passive: true });
 addEventListener("resize", () => {
-  document.documentElement.style.setProperty("--navh", nav.offsetHeight + "px");
+  document.documentElement.style.setProperty("--navh", nav.getBoundingClientRect().bottom + "px");
   onCards();
 });
 onCards();
