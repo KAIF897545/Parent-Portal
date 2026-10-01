@@ -10,7 +10,7 @@
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 *,*::before,*::after{box-sizing:inherit}
-html{scroll-behavior:smooth; scroll-padding-top:calc(88px + env(safe-area-inset-top,0px))}
+html{scroll-behavior:smooth; scroll-padding-top:calc(88px + env(safe-area-inset-top,0px)); background:var(--maroon-deep)}
 body{margin:0; background:var(--maroon) var(--site-bg) fixed; color:var(--beige); font-family:var(--body); font-size:17px; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden; overflow-x:clip}
 html{overflow-x:clip}
 img{max-width:100%}
@@ -301,7 +301,7 @@ body.subpage{background:var(--maroon) var(--site-bg) fixed}
   .team-card img{width:64px; height:64px}
 }
 .nav-signin{height:44px; padding:0 20px; font-size:14px; flex-shrink:0; margin-left:4px}
-@media (max-width:760px){.nav-signin{display:none}}
+@media (max-width:760px){.nav-links .nav-signin{display:none}}
 
 /* ---------- contact.html: light content area between the dark nav/footer ---------- */
 body.contact-page{background:var(--beige)}
