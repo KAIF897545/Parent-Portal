@@ -107,15 +107,15 @@ button{font:inherit; color:inherit; cursor:pointer}
 .hint{font-size:14px; color:var(--muted); margin:14px 0 0}
 
 /* ---------- hero + sheet curtain ---------- */
-.hero{position:sticky; top:76px; z-index:1; min-height:calc(100vh - var(--navh,76px)); min-height:calc(100svh - var(--navh,76px)); display:flex; flex-direction:column; justify-content:center; transform-origin:50% 0; will-change:transform}
+.hero{position:sticky; top:calc(env(safe-area-inset-top,0px) + 76px); z-index:1; min-height:calc(100vh - env(safe-area-inset-top,0px) - 76px); min-height:calc(100svh - env(safe-area-inset-top,0px) - 76px); display:flex; flex-direction:column; justify-content:center; transform-origin:50% 0; will-change:transform}
 .stack{position:relative; z-index:2}
 .sheet{position:relative; height:230vh; margin-top:12vh; background:var(--beige); color:var(--ink); border-radius:clamp(28px,4vw,56px) clamp(28px,4vw,56px) 0 0; box-shadow:0 -30px 60px -30px rgba(10,0,2,.55)}
-.sheet-pin{position:sticky; top:76px; height:calc(100vh - 76px); display:flex; align-items:center; justify-content:center; padding:0 clamp(20px,5vw,64px)}
+.sheet-pin{position:sticky; top:calc(env(safe-area-inset-top,0px) + 76px); height:calc(100vh - env(safe-area-inset-top,0px) - 76px); display:flex; align-items:center; justify-content:center; padding:0 clamp(20px,5vw,64px)}
 .sheet p{margin:0; max-width:900px; font-family:var(--display); font-weight:600; font-size:clamp(30px,3.7vw,56px); line-height:1.14; letter-spacing:-0.035em}
 .sheet .w{color:#cdb996; transition:color .25s ease}
 .sheet .w.lit{color:var(--ink)}
 .sheet .sig{white-space:nowrap}
-.rest{position:relative; background:var(--maroon) var(--site-bg) fixed; border-radius:clamp(28px,4vw,56px) clamp(28px,4vw,56px) 0 0; margin-top:calc(-100vh + var(--navh,76px)); margin-top:calc(-100svh + var(--navh,76px)); padding-top:clamp(14px,2vw,28px); box-shadow:0 -30px 60px -30px rgba(10,0,2,.55)}
+.rest{position:relative; background:var(--maroon) var(--site-bg) fixed; border-radius:clamp(28px,4vw,56px) clamp(28px,4vw,56px) 0 0; margin-top:calc(-100vh + env(safe-area-inset-top,0px) + 76px); margin-top:calc(-100svh + env(safe-area-inset-top,0px) + 76px); padding-top:clamp(14px,2vw,28px); box-shadow:0 -30px 60px -30px rgba(10,0,2,.55)}
 .rest .inside{margin-bottom:0}
 /* ---------- inside ---------- */
 .inside{margin:0 clamp(8px,2.2vw,32px); background:var(--beige); color:var(--ink); border-radius:clamp(24px,3vw,44px); padding:clamp(32px,4vw,60px) 0}
@@ -158,13 +158,13 @@ button{font:inherit; color:inherit; cursor:pointer}
 .devs{padding:clamp(56px,6vw,96px) 0 clamp(24px,3vw,48px)}
 .devs h2{margin:0 0 clamp(24px,3vw,40px); font-size:clamp(48px,6vw,84px)}
 .dgrid{display:grid; grid-template-columns:76px minmax(0,1fr); gap:clamp(16px,2.4vw,32px); align-items:start}
-.rail{position:sticky; top:calc(var(--navh,76px) + 40px); display:flex; flex-direction:column; gap:12px}
+.rail{position:sticky; top:calc(env(safe-area-inset-top,0px) + 76px + 40px); display:flex; flex-direction:column; gap:12px}
 .rail button{width:64px; height:64px; border-radius:18px; border:2px solid transparent; background:rgba(239,225,198,.12); color:var(--beige); font-family:var(--display); font-weight:800; font-size:19px; display:grid; place-items:center; opacity:.55; transition:opacity .2s, transform .2s, background .2s, border-color .2s}
 .rail button:hover{opacity:.85}
 .rail button[aria-current="true"]{opacity:1; transform:scale(1.08); border-color:var(--gold)}
 .rail .r0{background:var(--red); color:#fff} .rail .r1{background:var(--ink); color:var(--gold)} .rail .r2{background:var(--gold); color:var(--ink)} .rail .r3{background:var(--beige); color:var(--red)}
 .dcards{display:flex; flex-direction:column}
-.dcard{position:sticky; top:calc(var(--navh,76px) + 32px + var(--i) * 52px); display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr); min-height:380px; margin-bottom:20vh; background:var(--paper); color:var(--ink); border-radius:28px; overflow:hidden; box-shadow:0 -18px 40px -12px rgba(10,0,2,.55), 0 30px 60px -30px rgba(10,0,2,.7); transform-origin:50% 0; will-change:transform, filter; transition:box-shadow .3s}
+.dcard{position:sticky; top:calc(env(safe-area-inset-top,0px) + 76px + 32px + var(--i) * 52px); display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr); min-height:380px; margin-bottom:20vh; background:var(--paper); color:var(--ink); border-radius:28px; overflow:hidden; box-shadow:0 -18px 40px -12px rgba(10,0,2,.55), 0 30px 60px -30px rgba(10,0,2,.7); transform-origin:50% 0; will-change:transform, filter; transition:box-shadow .3s}
 .dcard:last-child{margin-bottom:0}
 .dcard--quote{grid-template-columns:1fr; min-height:0}
 .dtext{padding:clamp(24px,3vw,40px); display:flex; flex-direction:column; gap:14px}
@@ -191,7 +191,7 @@ button{font:inherit; color:inherit; cursor:pointer}
 @media (max-width:760px){
   .dgrid{grid-template-columns:1fr}
   .rail{display:none}
-  .dcard{grid-template-columns:1fr; min-height:0; margin-bottom:18vh; top:calc(var(--navh,76px) + 12px + var(--i) * 30px)}
+  .dcard{grid-template-columns:1fr; min-height:0; margin-bottom:18vh; top:calc(env(safe-area-inset-top,0px) + 76px + 12px + var(--i) * 30px)}
   .dvis{order:-1; min-height:190px; padding:24px}
 }
 
@@ -213,7 +213,7 @@ button{font:inherit; color:inherit; cursor:pointer}
 .story-stack{position:relative}
 .story-stack > .inside{position:sticky; z-index:1}
 .story{position:relative; z-index:2; height:230vh; margin-top:clamp(32px,4vw,64px); background:var(--ink); border-radius:clamp(28px,4vw,56px) clamp(28px,4vw,56px) 0 0; box-shadow:0 -30px 60px -30px rgba(10,0,2,.7)}
-.story-pin{position:sticky; top:var(--navh,76px); height:calc(100vh - var(--navh,76px)); height:calc(100svh - var(--navh,76px)); overflow:hidden; border-radius:inherit}
+.story-pin{position:sticky; top:calc(env(safe-area-inset-top,0px) + 76px); height:calc(100vh - env(safe-area-inset-top,0px) - 76px); height:calc(100svh - env(safe-area-inset-top,0px) - 76px); overflow:hidden; border-radius:inherit}
 .story-kicker{position:absolute; left:0; right:0; top:4.5%; z-index:2; margin:0; text-align:center; font-family:var(--display); font-weight:800; font-size:clamp(28px,3.4vw,52px); letter-spacing:-0.035em; color:var(--beige); padding:0 20px; pointer-events:none}
 .story-kicker span{color:var(--gold)}
 .story-frame{position:absolute; inset:0; clip-path:inset(16% 22% 10% 22% round 28px); will-change:clip-path}

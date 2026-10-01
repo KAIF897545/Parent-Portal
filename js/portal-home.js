@@ -398,7 +398,6 @@ if (tabsEl) tabsEl.addEventListener("click", () => requestAnimationFrame(pinInsi
 /* ---------- developer cards: stack on scroll ---------- */
 const dcards = $$(".dcard"),
   rail = $$(".rail [data-go]");
-document.documentElement.style.setProperty("--navh", nav.getBoundingClientRect().bottom + "px");
 function onCards() {
   let active = 0;
   dcards.forEach((c, i) => {
@@ -421,10 +420,7 @@ function onCards() {
   rail.forEach((b, i) => b.setAttribute("aria-current", i === active ? "true" : "false"));
 }
 addEventListener("scroll", onCards, { passive: true });
-addEventListener("resize", () => {
-  document.documentElement.style.setProperty("--navh", nav.getBoundingClientRect().bottom + "px");
-  onCards();
-});
+addEventListener("resize", onCards);
 onCards();
 rail.forEach((b) =>
   b.addEventListener("click", () => {
