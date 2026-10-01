@@ -166,25 +166,17 @@ button{font:inherit; color:inherit; cursor:pointer}
 .dcards{display:flex; flex-direction:column}
 .dcard{position:sticky; top:calc(var(--navh,76px) + 32px + var(--i) * 52px); display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr); min-height:380px; margin-bottom:20vh; background:var(--paper); color:var(--ink); border-radius:28px; overflow:hidden; box-shadow:0 -18px 40px -12px rgba(10,0,2,.55), 0 30px 60px -30px rgba(10,0,2,.7); transform-origin:50% 0; will-change:transform, filter; transition:box-shadow .3s}
 .dcard:last-child{margin-bottom:0}
+.dcard--quote{grid-template-columns:1fr; min-height:0}
 .dtext{padding:clamp(24px,3vw,40px); display:flex; flex-direction:column; gap:14px}
+.dcard__head{display:flex; align-items:center; gap:14px}
+.dcard__avatar{width:52px; height:52px; flex-shrink:0; border-radius:50%; background:var(--beige-2); color:var(--red); border:3px solid var(--gold); display:grid; place-items:center; font-family:var(--display); font-weight:800; font-size:17px; letter-spacing:-0.02em}
 .dlabel{font-size:14px; font-weight:700; color:var(--muted)}
-.dtext h3{margin:0; font-family:var(--display); font-weight:700; font-size:clamp(30px,3.2vw,46px); line-height:1.02; letter-spacing:-0.03em}
+.dtext h3{margin:0; font-family:var(--display); font-weight:700; font-size:clamp(30px,3.2vw,46px); line-height:1.02; letter-spacing:-0.03em; color:var(--ink)}
 .dtext p{margin:0; font-size:17px; line-height:1.6; color:#3d302a; max-width:46ch}
 .dtext .btn-line{margin-top:auto; align-self:flex-start; height:42px; padding:0 18px; border-radius:99px; border:1.5px solid var(--ink); background:transparent; color:var(--ink); font-weight:700; font-size:14px; text-decoration:none; display:inline-flex; align-items:center}
 .dtext .btn-line:hover{background:var(--ink); color:var(--beige)}
 .dvis{position:relative; display:flex; align-items:center; justify-content:center; padding:32px; overflow:hidden}
-.dvis.red{background:#000; color:#fff}
-.dvis.ink{background:#000; color:var(--beige)}
-.dvis.gold{background:var(--gold); color:var(--ink)}
-.dvis.beige{background:var(--beige-2); color:var(--ink)}
-.dvis .mega{position:absolute; right:-4%; bottom:-14%; font-size:clamp(220px,24vw,340px); line-height:1; opacity:.16}
-.dvis.red .mega, .dvis.ink .mega, .dvis.red .quote-mark, .dvis.ink .quote-mark{display:none}
-.portrait{position:relative; width:clamp(150px,15vw,200px); aspect-ratio:1; border-radius:50%; display:grid; place-items:center; overflow:hidden; font-family:var(--display); font-weight:800; font-size:clamp(52px,5vw,72px); letter-spacing:-0.04em}
-.portrait img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 35%; border-radius:50%}
-.portrait img.fit-farish{object-position:center 22%}
-.dvis.red .portrait{background:#fff; color:var(--red); border:6px solid var(--gold)}
-.dvis.ink .portrait{background:var(--gold); color:var(--ink); border:6px solid var(--red)}
-.quote-mark{position:absolute; left:28px; top:10px; font-family:var(--display); font-weight:800; font-size:140px; line-height:1; opacity:.35}
+.dvis .mega{position:absolute; right:-4%; bottom:-14%; font-size:clamp(220px,24vw,340px); line-height:1; opacity:.1; color:var(--ink)}
 .road{position:relative; list-style:none; margin:0; padding:0; width:100%; max-width:340px; display:flex; flex-direction:column; gap:10px}
 .road li{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-radius:14px; background:rgba(255,255,255,.55); font-weight:700; font-size:15px}
 .chip{flex-shrink:0; font-size:12px; font-weight:800; padding:5px 10px; border-radius:99px; background:var(--ink); color:var(--gold)}
@@ -201,7 +193,6 @@ button{font:inherit; color:inherit; cursor:pointer}
   .rail{display:none}
   .dcard{grid-template-columns:1fr; min-height:0; margin-bottom:18vh; top:calc(var(--navh,76px) + 12px + var(--i) * 30px)}
   .dvis{order:-1; min-height:190px; padding:24px}
-  .portrait{width:120px; font-size:44px}
 }
 
 /* ---------- footer ---------- */
