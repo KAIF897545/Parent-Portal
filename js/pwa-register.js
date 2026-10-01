@@ -176,17 +176,44 @@ if ("serviceWorker" in navigator) {
   }
 })();
 
-// Launch splash: a brief logo animation on a true PWA cold launch (standalone
-// mode), gated by sessionStorage so it plays once per session, not on every
-// page. The "pwa-launch" class is set synchronously by an inline <head>
-// script before paint, so by the time this (deferred) code runs the splash
-// is already on screen -- this just times its exit.
+// Launch splash: a brief logo + title animation on a true PWA cold launch
+// (standalone mode), gated by sessionStorage so it plays once per session,
+// not on every page. The "pwa-launch" class is set synchronously by an
+// inline <head> script before paint, so by the time this (deferred) code
+// runs the splash is already on screen -- this just times its exit and
+// plays a short chime.
 (function pwaSplash() {
   const el = document.getElementById("pwaSplash");
   if (!el || !document.documentElement.classList.contains("pwa-launch")) return;
   sessionStorage.setItem("mccSplashShown", "1");
+
+  // Small synthesized two-note chime -- no audio file needed. Browsers
+  // (especially iOS) can block audio that isn't tied to a direct user
+  // gesture, so this may not always be audible; it fails silently if so.
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (Ctx) {
+      const ctx = new Ctx();
+      const now = ctx.currentTime;
+      [660, 880].forEach((freq, i) => {
+        const start = now + i * 0.14;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.18, start + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.35);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.4);
+      });
+      setTimeout(() => ctx.close(), 900);
+    }
+  } catch (e) {}
+
   setTimeout(() => {
     el.classList.add("pwa-splash--hide");
-    setTimeout(() => el.remove(), 550);
-  }, 700);
+    setTimeout(() => el.remove(), 650);
+  }, 2400);
 })();
