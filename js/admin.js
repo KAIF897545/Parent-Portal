@@ -72,7 +72,14 @@ async function init() {
     .eq("id", uid)
     .single();
 
-  if (error || !coachRow || !coachRow.active) {
+  if (error && error.code !== "PGRST116") {
+    // A real fetch error (network blip, Supabase hiccup) -- not evidence
+    // the account is gone, so don't sign out over it. Let the user retry
+    // rather than silently destroying a valid session.
+    setStatus("Couldn't load your account. Check your connection and try again.", "error");
+    return;
+  }
+  if (!coachRow || !coachRow.active) {
     await supabase.auth.signOut();
     window.location.href = "login.html";
     return;

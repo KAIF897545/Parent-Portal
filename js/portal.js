@@ -309,8 +309,21 @@ async function init() {
     .eq("id", uid)
     .single();
 
-  if (error || !student) {
-    // Not a student account, or the row is gone — nowhere useful but sign-in.
+  if (error) {
+    // PGRST116 from .single() means zero rows -- the account genuinely no
+    // longer exists, so there's nowhere useful but sign-in. Any other error
+    // (network blip, Supabase hiccup, a PWA reconnecting after being
+    // backgrounded) is transient -- staying signed in and letting the user
+    // retry is safer than silently destroying a perfectly valid session.
+    if (error.code === "PGRST116") {
+      await supabase.auth.signOut();
+      window.location.href = "login.html";
+      return;
+    }
+    setStatus("Couldn't load your account. Check your connection and try again.", "error");
+    return;
+  }
+  if (!student) {
     await supabase.auth.signOut();
     window.location.href = "login.html";
     return;

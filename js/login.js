@@ -116,7 +116,14 @@ studentForm.addEventListener("submit", async (event) => {
       .eq("id", signInData.user.id)
       .single();
 
-    if (studentError || !studentRow || !studentRow.active) {
+    if (studentError && studentError.code !== "PGRST116") {
+      // A real fetch error right after a correct password -- not evidence
+      // the account is inactive, just a transient failure. Don't sign out
+      // or claim the account is inactive over it.
+      setStudentMessage("Something went wrong. Try again.", "error");
+      return;
+    }
+    if (!studentRow || !studentRow.active) {
       setStudentMessage("This account is not active. Ask your coach for help.", "error");
       await supabase.auth.signOut();
       return;
@@ -215,7 +222,14 @@ coachForm.addEventListener("submit", async (event) => {
       .eq("id", signInData.user.id)
       .single();
 
-    if (coachError || !coachRow || !coachRow.active) {
+    if (coachError && coachError.code !== "PGRST116") {
+      // A real fetch error right after a correct password -- not evidence
+      // the account is inactive, just a transient failure. Don't sign out
+      // or claim the account is inactive over it.
+      setCoachMessage("Something went wrong. Try again.", "error");
+      return;
+    }
+    if (!coachRow || !coachRow.active) {
       setCoachMessage("This account is not active. Contact the administrator.", "error");
       await supabase.auth.signOut();
       return;
