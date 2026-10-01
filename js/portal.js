@@ -14,19 +14,6 @@ function setStatus(text, kind) {
   box.className = kind ? `form-message form-message--${kind}` : "form-message";
 }
 
-function ringSvg(pct) {
-  const r = 52;
-  const c = 2 * Math.PI * r;
-  const off = c * (1 - pct / 100);
-  const crimson = getComputedStyle(document.documentElement).getPropertyValue("--crimson").trim() || "#5c032b";
-  return `<svg width="130" height="130" viewBox="0 0 130 130" role="img" aria-label="${pct} percent of this module signed off">
-    <circle cx="65" cy="65" r="${r}" fill="none" stroke="rgba(236,236,218,.22)" stroke-width="11"/>
-    <circle cx="65" cy="65" r="${r}" fill="none" stroke="${crimson}" stroke-width="11" stroke-linecap="round"
-      stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 65 65)"/>
-    <text x="65" y="72" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="28" fill="#ececda">${pct}%</text>
-  </svg>`;
-}
-
 function moduleTotals(unitList, tickSet) {
   let done = 0;
   let total = 0;
@@ -37,56 +24,153 @@ function moduleTotals(unitList, tickSet) {
   return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
 }
 
-function renderRing(student, unitList, tickSet, cpSet) {
-  const prog = moduleTotals(unitList, tickSet);
-  const cpTotal = unitList.filter((u) => u.checkpoint).length;
-  const cpDone = unitList.filter((u) => u.checkpoint && cpSet.has(u.checkpoint.id)).length;
+// A unit counts as done if its checkpoint is passed (when it has one), or
+// if every item in it is ticked (when it doesn't) -- checkpoints are a
+// formally-assessed pass, not just casual ticking, so they take priority.
+function isUnitDone(u, tickSet, cpSet) {
+  if (u.checkpoint) return cpSet.has(u.checkpoint.id);
+  return u.items.length > 0 && u.items.every((it) => tickSet.has(it.id));
+}
 
-  const card = document.getElementById("ringCard");
+// One status per unit, in order: everything before the first not-done unit
+// is "done", that first one is "now", everything after is "next". Shared by
+// the path stepper and the topics table so both agree on the same student's
+// current position.
+function unitStatuses(unitList, tickSet, cpSet) {
+  const doneFlags = unitList.map((u) => isUnitDone(u, tickSet, cpSet));
+  const currentIndex = doneFlags.findIndex((d) => !d);
+  return unitList.map((_, i) => {
+    if (currentIndex === -1) return "done";
+    if (i < currentIndex) return "done";
+    if (i === currentIndex) return "now";
+    return "next";
+  });
+}
+
+function renderHero(student, unitList, tickSet, cpSet, feedback) {
+  const prog = moduleTotals(unitList, tickSet);
+  const statuses = unitStatuses(unitList, tickSet, cpSet);
+  const nowIndex = statuses.indexOf("now");
+  const currentUnit = nowIndex === -1 ? null : unitList[nowIndex];
+  const topicsTotal = unitList.length;
+  const topicsDone = statuses.filter((s) => s === "done").length;
+
+  const firstName = (student.full_name || "").split(" ")[0] || student.full_name;
+
+  const headline = currentUnit
+    ? `${escapeHtml(firstName)} is now learning <span class="p-hero__gold">${escapeHtml(currentUnit.name)}.</span>`
+    : `${escapeHtml(firstName)} has completed every topic in this module.`;
+
+  const lede = currentUnit
+    ? `${escapeHtml(firstName)} has finished ${topicsDone} of ${topicsTotal} topics in this module. Their coach signs off each skill once they can show it at the board.`
+    : `Every topic in this module is signed off. Ask the coach about moving up to the next one.`;
+
+  const now = new Date();
+  const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  // Only count a rating as "this month's effort" if the feedback row is
+  // actually for the current calendar month -- otherwise this stat would
+  // silently show a stale rating from whenever feedback was last written.
+  const thisMonthFeedback = (feedback || []).find((f) => String(f.month).slice(0, 7) === thisMonthKey && f.rating);
+  const monthName = now.toLocaleDateString("en-GB", { month: "long" });
+  const effortStat = thisMonthFeedback
+    ? `<div class="p-stat__stars" role="img" aria-label="Effort ${thisMonthFeedback.rating} out of 5">${"★".repeat(
+        thisMonthFeedback.rating
+      )}${"☆".repeat(5 - thisMonthFeedback.rating)}</div>`
+    : `<div class="p-stat__num">—</div>`;
+
+  const card = document.getElementById("pHero");
   card.hidden = false;
   card.innerHTML = `
-    <span class="ring-card__mark" aria-hidden="true">♞</span>
-    <div class="ring-card__ring">${ringSvg(prog.pct)}</div>
-    <div class="ring-card__text">
-      <div class="mod">${escapeHtml(student.module?.name ?? "")}</div>
-      <div class="sub">Module ${student.module?.number ?? ""}</div>
-      <div class="ring-card__counts">
-        <div><span>Signed off</span><b>${prog.done} of ${prog.total}</b></div>
-        <div><span>Checkpoints</span><b>${cpDone} of ${cpTotal}</b></div>
-      </div>
+    <p class="p-hero__module">Module ${student.module?.number ?? ""}: ${escapeHtml(student.module?.name ?? "")}</p>
+    <h2 class="p-hero__headline">${headline}</h2>
+    <p class="p-hero__lede">${lede}</p>
+    <div class="p-hero__stats">
+      <div class="p-stat"><div class="p-stat__num">${prog.done}<small> / ${prog.total}</small></div><div class="p-stat__label">Skills signed off</div></div>
+      <div class="p-stat"><div class="p-stat__num">${topicsDone}<small> / ${topicsTotal}</small></div><div class="p-stat__label">Topics complete</div></div>
+      <div class="p-stat"><div class="p-stat__num">${prog.pct}%</div><div class="p-stat__label">Through this module</div></div>
+      <div class="p-stat">${effortStat}<div class="p-stat__label">${escapeHtml(monthName)} effort</div></div>
     </div>`;
 }
 
-function renderBadges(unitList, cpSet) {
-  const withCheckpoint = unitList.filter((u) => u.checkpoint);
-  const earned = withCheckpoint.filter((u) => cpSet.has(u.checkpoint.id)).length;
-  const summary = document.getElementById("badgeSummary");
-  if (summary) summary.textContent = `${earned} of ${withCheckpoint.length} earned`;
+function renderPath(unitList, tickSet, cpSet) {
+  const statuses = unitStatuses(unitList, tickSet, cpSet);
+  const doneCount = statuses.filter((s) => s === "done").length;
+  const summary = document.getElementById("pathSummary");
+  if (summary) summary.textContent = `${doneCount} of ${unitList.length} complete`;
 
-  document.getElementById("badgeRow").innerHTML = unitList
-    .map((u, i) => {
-      const got = u.checkpoint && cpSet.has(u.checkpoint.id);
-      const shortLabel = (u.number.split(".")[1] || "?").trim();
-      return `<span class="badge${got ? "" : " is-locked"}" style="animation-delay:${i * 40}ms">
-        <span class="badge__mark">${got ? "✓" : escapeHtml(shortLabel)}</span>
-        ${escapeHtml(u.name)}
-      </span>`;
-    })
-    .join("");
+  const nowIndex = statuses.indexOf("now");
+  const progressIndex = nowIndex === -1 ? unitList.length - 1 : nowIndex;
+  const doneWidth = unitList.length > 1 ? (Math.max(progressIndex, 0) / (unitList.length - 1)) * 88.9 : 0;
+
+  const pathList = document.getElementById("pathList");
+  if (pathList) {
+    pathList.style.setProperty("--done-width", `${doneWidth}%`);
+    pathList.innerHTML = unitList
+      .map((u, i) => {
+        const s = statuses[i];
+        const label = s === "done" ? "Complete" : s === "now" ? "Learning now" : "Coming up";
+        return `<li class="p-step p-step--${s}">
+          <span class="p-step__node">${s === "done" ? "✓" : i + 1}</span>
+          <span class="p-step__name">${escapeHtml(u.name)}<span class="visually-hidden">, ${label}</span></span>
+        </li>`;
+      })
+      .join("");
+  }
+
+  const segments = document.getElementById("pathSegments");
+  if (segments) {
+    segments.innerHTML = unitList.map((_, i) => `<i class="p-segment p-segment--${statuses[i]}"></i>`).join("");
+  }
 }
 
-function renderNextUp(unitList, tickSet) {
-  const next = [];
-  outer: for (const u of unitList) {
-    for (const it of u.items) {
-      if (next.length >= 3) break outer;
-      if (!tickSet.has(it.id)) next.push(it.description);
-    }
+function renderCurrentTopic(unitList, tickSet, cpSet) {
+  const statuses = unitStatuses(unitList, tickSet, cpSet);
+  const nowIndex = statuses.indexOf("now");
+  const box = document.getElementById("currentTopic");
+
+  if (nowIndex === -1) {
+    box.innerHTML = `<p class="p-current__label">Module complete</p>
+      <h2 class="h2 p-current__title">Every topic is signed off</h2>
+      <p class="p-current__intro">Ask the coach about moving up to the next module.</p>`;
+    return;
   }
-  const box = document.getElementById("nextUp");
-  box.innerHTML = next.length
-    ? `<h3>Working towards</h3><ol>${next.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ol>`
-    : `<h3>Module complete</h3><p class="field__hint">Everything in this module is signed off. Ask your coach about moving up.</p>`;
+
+  const unit = unitList[nowIndex];
+  const total = unit.items.length;
+  const done = unit.items.filter((it) => tickSet.has(it.id)).length;
+
+  const skills = unit.items
+    .map((it, i) => {
+      const isDone = tickSet.has(it.id);
+      return `<li class="p-skill">
+        <span class="p-skill__n">${i + 1}</span>
+        <span class="p-skill__text">${escapeHtml(it.description)}</span>
+        <span class="p-skill__pill${isDone ? " is-done" : ""}">${isDone ? "Signed off" : "Practising"}</span>
+      </li>`;
+    })
+    .join("");
+
+  // Prefer the real take-home-assignment text written for the next skill
+  // they haven't signed off yet; fall back to any item in the unit that has
+  // one, since not every item necessarily has assignments text.
+  const tipItem =
+    unit.items.find((it) => !tickSet.has(it.id) && it.assignments) || unit.items.find((it) => it.assignments);
+  const tip = tipItem
+    ? `<div class="p-tip">
+        <div class="p-tip__icon" aria-hidden="true">♞</div>
+        <div>
+          <strong>Try this at home</strong>
+          <p>${escapeHtml(tipItem.assignments)}</p>
+        </div>
+      </div>`
+    : "";
+
+  box.innerHTML = `
+    <p class="p-current__label">Topic ${nowIndex + 1} of ${unitList.length}, learning now</p>
+    <h2 class="h2 p-current__title">${escapeHtml(unit.name)}</h2>
+    <p class="p-current__intro">${done} of ${total} skills signed off so far.</p>
+    <ol class="p-skills">${skills}</ol>
+    ${tip}`;
 }
 
 function renderFeedbackCal() {
@@ -107,38 +191,35 @@ function renderFeedbackList() {
   if (rows.length) {
     box.innerHTML = rows
       .map((f, i) => {
-        const stars = f.rating
-          ? `<div class="feedback-card__rating" aria-label="${f.rating} out of 5 stars">
-              <span class="feedback-card__stars">${"★".repeat(f.rating)}${"☆".repeat(5 - f.rating)}</span>
-            </div>`
-          : "";
         const highlight = f.highlight
-          ? `<div class="feedback-card__tag feedback-card__tag--highlight">
-              <span class="feedback-card__tag-icon" aria-hidden="true">🏆</span>
-              <div class="feedback-card__tag-body">
-                <span class="feedback-card__tag-label">This month's highlight</span>
-                <span>${escapeHtml(f.highlight)}</span>
-              </div>
+          ? `<div class="feedback-card__highlight">
+              <div class="feedback-card__highlight-label">Highlight of the month</div>
+              <p>${escapeHtml(f.highlight)}</p>
             </div>`
           : "";
-        const nextFocus = f.next_focus
-          ? `<div class="feedback-card__tag feedback-card__tag--focus">
-              <span class="feedback-card__tag-icon" aria-hidden="true">🎯</span>
-              <div class="feedback-card__tag-body">
-                <span class="feedback-card__tag-label">Next month's target</span>
-                <span>${escapeHtml(f.next_focus)}</span>
-              </div>
+        const effort = f.rating
+          ? `<div class="feedback-card__effort">
+              <span>Effort</span>
+              <span class="feedback-card__stars" aria-label="${f.rating} out of 5">${"★".repeat(f.rating)}${"☆".repeat(
+                5 - f.rating
+              )}</span>
+            </div>`
+          : "";
+        const goal = f.next_focus
+          ? `<div class="feedback-card__block">
+              <div class="feedback-card__block-label feedback-card__block-label--goal">Goal for next month</div>
+              <p>${escapeHtml(f.next_focus)}</p>
             </div>`
           : "";
         return `<div class="feedback-card" style="animation-delay:${i * 60}ms">
-          <div class="feedback-card__top">
-            <div class="feedback-card__month">${formatMonth(f.month)}</div>
-            ${stars}
-          </div>
+          <div class="feedback-card__month">${formatMonth(f.month)}</div>
           ${highlight}
-          <div class="feedback-card__label">Feedback</div>
-          <div class="feedback-card__text">${escapeHtml(f.body)}</div>
-          ${nextFocus}
+          ${effort}
+          <div class="feedback-card__block">
+            <div class="feedback-card__block-label">How they're doing</div>
+            <p>${escapeHtml(f.body)}</p>
+          </div>
+          ${goal}
           <div class="feedback-card__when">Written ${formatDate(f.created_at)}</div>
         </div>`;
       })
@@ -186,22 +267,26 @@ document.getElementById("feedbackCal")?.addEventListener("click", (e) => {
   }
 });
 
-function renderUnits(unitList, tickSet) {
+function renderUnits(unitList, tickSet, cpSet) {
   const overall = moduleTotals(unitList, tickSet);
   const summary = document.getElementById("unitSummary");
   if (summary) summary.textContent = `${overall.done} of ${overall.total} signed off`;
+
+  const statuses = unitStatuses(unitList, tickSet, cpSet);
+  const label = { done: "Complete", now: "Learning now", next: "Coming up" };
 
   document.getElementById("unitList").innerHTML = unitList
     .map((u, i) => {
       const total = u.items.length;
       const done = u.items.filter((it) => tickSet.has(it.id)).length;
-      const full = total > 0 && done === total;
       const pct = total ? Math.round((done / total) * 100) : 0;
-      return `<div class="unit-lite${full ? " is-full" : ""}" style="animation-delay:${i * 40}ms">
-        <span class="unit-lite__icon">${full ? "✓" : i + 1}</span>
-        <span class="unit-lite__name">${escapeHtml(u.name)}</span>
+      const s = statuses[i];
+      return `<div class="p-topic p-topic--${s}" style="animation-delay:${i * 40}ms">
+        <span class="p-topic__n">${String(i + 1).padStart(2, "0")}</span>
+        <span class="p-topic__name">${escapeHtml(u.name)}</span>
+        <span class="p-topic__status">${label[s]}</span>
         <span class="track track--mini"><span class="track__bar" style="width:${pct}%"></span></span>
-        <span class="unit-lite__count">${done}/${total}</span>
+        <span class="p-topic__count">${done}/${total}</span>
       </div>`;
     })
     .join("");
@@ -273,7 +358,7 @@ async function init() {
     unitIds.length
       ? supabase
           .from("items")
-          .select("id, unit_id, description, pass_standard, is_checkpoint, sort_order")
+          .select("id, unit_id, description, pass_standard, is_checkpoint, sort_order, assignments")
           .in("unit_id", unitIds)
           .order("sort_order")
       : Promise.resolve({ data: [] }),
@@ -297,11 +382,11 @@ async function init() {
     checkpoint: (items || []).find((it) => it.unit_id === u.id && it.is_checkpoint) || null,
   }));
 
-  renderRing(student, unitList, tickSet, cpSet);
-  renderBadges(unitList, cpSet);
-  renderNextUp(unitList, tickSet);
+  renderHero(student, unitList, tickSet, cpSet, feedback || []);
+  renderPath(unitList, tickSet, cpSet);
+  renderCurrentTopic(unitList, tickSet, cpSet);
   renderFeedback(feedback || []);
-  renderUnits(unitList, tickSet);
+  renderUnits(unitList, tickSet, cpSet);
 }
 
 document.getElementById("signOutButton").addEventListener("click", async () => {

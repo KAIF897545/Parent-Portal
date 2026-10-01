@@ -42,19 +42,23 @@
 
   <div id="status" class="form-message" role="status" aria-live="polite"></div>
 
-  <section class="ring-card" id="ringCard" hidden></section>
+  <section class="p-hero" id="pHero" hidden></section>
 
-  <h2 class="section-title">Checkpoints<span class="section-title__sub" id="badgeSummary"></span></h2>
-  <div class="badges" id="badgeRow"></div>
+  <h2 class="section-title">The path through this module<span class="section-title__sub" id="pathSummary"></span></h2>
+  <div class="p-segments" id="pathSegments" aria-hidden="true"></div>
+  <ol class="p-path" id="pathList"></ol>
 
-  <div class="next-up" id="nextUp"></div>
+  <div class="p-split">
+    <section class="p-current" id="currentTopic"></section>
+    <section class="p-report">
+      <h2 class="section-title">Coach's report<span class="section-title__sub" id="feedbackSummary"></span></h2>
+      <div id="feedbackCal"></div>
+      <div id="feedbackList"></div>
+    </section>
+  </div>
 
-  <h2 class="section-title">From your coach<span class="section-title__sub" id="feedbackSummary"></span></h2>
-  <div id="feedbackCal"></div>
-  <div id="feedbackList"></div>
-
-  <h2 class="section-title">Where you are<span class="section-title__sub" id="unitSummary"></span></h2>
-  <div class="unit-list" id="unitList"></div>
+  <h2 class="section-title">All topics in this module<span class="section-title__sub" id="unitSummary"></span></h2>
+  <div class="p-topics" id="unitList"></div>
 </div>
 
 <script type="module" src="js/portal.js"></script>
