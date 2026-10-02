@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Coach dashboard</title>
 <meta name="description" content="Track attendance, progress, and feedback for your Maldives Chess Club students." />
-<meta name="theme-color" content="#5c032b" />
+<meta name="theme-color" content="#fbf6ec" />
 <link rel="icon" href="assets/mcc-logo.jpg" type="image/jpeg" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
@@ -16,115 +16,122 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link
-  href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
+  href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Figtree:wght@400;500;600;700&display=swap"
   rel="stylesheet"
 />
 <link rel="stylesheet" href="css/site.css" />
+<link rel="stylesheet" href="css/coach.css" />
 </head>
-<body class="portal-landing">
+<body class="portal-landing portal-light coach-page has-savebar">
 <div class="page page--wide">
-  <header class="appbar">
-    <div class="appbar__brand">
-      <div class="appbar__logo"><img src="assets/mcc-logo.jpg" alt="" /></div>
-      <div class="appbar__names">
-        <h1>Club dashboard</h1>
-        <p class="appbar__meta" id="roleLine">Loading…</p>
-      </div>
+  <header class="site" id="siteHeader">
+    <div class="crest" aria-hidden="true"><img src="assets/mcc-logo.jpg" alt="" /></div>
+    <div class="who">
+      <h1>Club dashboard</h1>
+      <p id="roleLine">Loading…</p>
     </div>
-    <div class="appbar__actions">
-      <label class="visually-hidden" for="schoolSelect">School</label>
-      <select id="schoolSelect" aria-label="School"></select>
-      <button type="button" class="btn btn--secondary" id="signOutButton">Sign out</button>
-    </div>
+    <button type="button" class="signout" id="signOutButton">Sign out</button>
   </header>
+  <label class="visually-hidden" for="schoolSelect">School</label>
+  <select id="schoolSelect" class="school-select" aria-label="School" hidden></select>
 
   <div id="status" class="form-message" role="status" aria-live="polite"></div>
 
-  <div class="tabs" role="tablist" aria-label="Dashboard sections">
-    <button type="button" class="tab" id="tabToday" role="tab" aria-selected="true" aria-controls="panelToday">Attendance</button>
-    <button type="button" class="tab" id="tabProgress" role="tab" aria-selected="false" aria-controls="panelProgress">Progress</button>
-    <button type="button" class="tab" id="tabSyllabus" role="tab" aria-selected="false" aria-controls="panelSyllabus">Syllabus</button>
-  </div>
+  <nav class="seg main" role="tablist" aria-label="Dashboard sections" id="mainTabs">
+    <button type="button" id="tabToday" role="tab" aria-selected="true" aria-controls="panelToday">Attendance</button>
+    <button type="button" id="tabProgress" role="tab" aria-selected="false" aria-controls="panelProgress">Progress</button>
+    <button type="button" id="tabSyllabus" role="tab" aria-selected="false" aria-controls="panelSyllabus">Syllabus</button>
+  </nav>
 
-  <section id="panelToday" class="tabpanel">
-    <div class="attendance-layout">
-      <aside class="card cal-card" aria-label="Choose a session date">
-        <div class="cal-head">
-          <div class="cal-head__title">
-            <span class="cal-title" id="calTitle"></span>
-            <span class="cal-subtitle" id="calSubtitle"></span>
-          </div>
-          <div>
-            <button type="button" class="icon-btn" id="calPrev" aria-label="Previous month">&lsaquo;</button>
-            <button type="button" class="icon-btn" id="calNext" aria-label="Next month">&rsaquo;</button>
-          </div>
-        </div>
-        <div class="cal-dow" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-        <div class="cal-days" id="calDays"></div>
-        <div class="cal-legend">
-          <span><b class="cal-legend__mark">&check;5</b> present count</span>
-          <span><i class="cal-legend__dot"></i> unsaved changes</span>
-        </div>
-        <button type="button" class="btn btn--secondary btn--xs" id="calToday" style="margin-top: 12px; width: 100%">
-          Jump to today
-        </button>
-      </aside>
-
-      <div class="attendance-main">
-        <div class="session-head">
-          <p class="session-date" id="sessionDate"></p>
-          <p class="status-line" id="attStatus"></p>
-        </div>
-
-        <div class="toolbar">
-          <span class="hint">Tick students, then save.</span>
-          <label class="visually-hidden" for="attGroupFilter">Group</label>
-          <select id="attGroupFilter" aria-label="Filter by group"><option value="">All groups</option></select>
-          <button type="button" class="btn btn--secondary btn--xs" id="markAllPresent">Mark everyone present</button>
-        </div>
-
-        <ul class="roster-list" id="attendanceList"></ul>
-
-        <div class="savebar">
-          <p class="field__hint" id="saveNote">No changes to save</p>
-          <div class="savebar__actions">
-            <button type="button" class="btn btn--secondary btn--xs" id="discardAttendance" hidden>Discard</button>
-            <button type="button" class="btn btn--primary btn--xs" id="saveAttendance" disabled>Save attendance</button>
-          </div>
-        </div>
-
-        <div id="attendanceLogWrap" hidden>
-          <h3 class="section-title" style="margin-top: 28px">History for this date</h3>
-          <div id="attendanceLogList"></div>
-        </div>
+  <section id="panelToday">
+    <div class="date-row">
+      <button type="button" class="arrow" id="attPrev" aria-label="Previous day">&lsaquo;</button>
+      <div class="date-main">
+        <label>
+          <h2 class="serif" id="sessionDate"></h2>
+          <input type="date" id="attDatePicker" aria-label="Pick a session date" />
+        </label>
+        <span class="status todo" id="attStatus">Not recorded yet</span>
       </div>
+      <button type="button" class="arrow" id="attNext" aria-label="Next day">&rsaquo;</button>
+    </div>
+    <button type="button" class="today-link" id="attTodayLink" hidden>Back to today</button>
+
+    <div class="controls">
+      <select id="attGroupFilter" aria-label="Filter by group"><option value="">All groups</option></select>
+      <button type="button" class="all-btn" id="markAllPresent">Mark everyone present</button>
+    </div>
+
+    <ul class="list" id="attendanceList"></ul>
+
+    <div id="attendanceLogWrap" class="att-history" hidden>
+      <h3 class="serif">History for this date</h3>
+      <ul class="notes" id="attendanceLogList"></ul>
     </div>
   </section>
 
-  <section id="panelProgress" class="tabpanel" hidden>
-    <h2 class="section-title">Mark progress</h2>
-    <p class="field__hint" style="margin: -8px 0 16px;">
-      Every coach at this school can open any student here, not only their own class — filters just narrow the list.
-    </p>
-    <div class="toolbar">
-      <label class="visually-hidden" for="groupFilter">Group</label>
+  <section id="panelProgress" hidden>
+    <div class="section-head">
+      <h2 class="serif">Mark progress</h2>
+      <p>You can open any student at this school. Filters only narrow the list.</p>
+    </div>
+    <div class="controls">
       <select id="groupFilter" aria-label="Filter by group"><option value="">All groups</option></select>
-      <label class="visually-hidden" for="searchFilter">Search</label>
-      <input type="search" id="searchFilter" placeholder="Search name or student ID" />
+      <input class="field" id="searchFilter" type="search" placeholder="Search name or student ID" aria-label="Search students" />
     </div>
-    <div class="picker" id="studentPicker"></div>
-    <div id="checklistWrap"></div>
+    <ul class="list" id="studentPicker"></ul>
   </section>
 
-  <section id="panelSyllabus" class="tabpanel" hidden>
-    <h2 class="section-title">Syllabus</h2>
-    <p class="field__hint" style="margin: -8px 0 16px;">
-      The full teaching reference, module by module — how to teach each item, how to check it, puzzles to use, and assignments to give.
-    </p>
+  <section id="panelSyllabus" hidden>
+    <div class="section-head">
+      <h2 class="serif">Syllabus</h2>
+      <p>The full teaching reference, module by module: how to teach each item, how to check it, puzzles to use, and assignments to give.</p>
+    </div>
     <div class="module-tabs" id="syllabusModuleTabs"></div>
     <div id="syllabusUnits"></div>
   </section>
+
+  <section id="panelStudent" hidden>
+    <div class="topbar">
+      <button type="button" class="back" id="studentBack">&lsaquo; All students</button>
+      <span class="spacer"></span>
+      <span class="pos" id="studentPos"></span>
+      <button type="button" class="arrow" id="studentPrevBtn" aria-label="Previous student">&lsaquo;</button>
+      <button type="button" class="arrow" id="studentNextBtn" aria-label="Next student">&rsaquo;</button>
+    </div>
+
+    <div class="s-head">
+      <span class="avatar" id="studentAvatar" aria-hidden="true"></span>
+      <div>
+        <h2 class="serif" id="studentName"></h2>
+        <p id="studentMeta"></p>
+      </div>
+    </div>
+
+    <nav class="seg s-tabs" role="tablist" id="studentTabs">
+      <button type="button" role="tab" data-pane="checklist" aria-selected="true">Checklist</button>
+      <button type="button" role="tab" data-pane="feedback" aria-selected="false">Feedback <span class="dot" id="fbDueDot" hidden title="Feedback due this month"></span></button>
+      <button type="button" role="tab" data-pane="notes" aria-selected="false">Coach notes</button>
+    </nav>
+
+    <div id="pane-checklist"></div>
+    <div id="pane-feedback" hidden></div>
+    <div id="pane-notes" hidden></div>
+  </section>
 </div>
+
+<div class="savebar" id="attSavebar" hidden>
+  <div class="savebar-inner">
+    <div class="count">
+      <strong id="attCountText">0 of 0</strong> present
+      <div class="bar"><span id="attBarFill"></span></div>
+    </div>
+    <button type="button" class="discard" id="discardAttendance" hidden>Discard</button>
+    <button type="button" class="save" id="saveAttendance" disabled>Save attendance</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script type="module" src="js/coach.js"></script>
 </body>

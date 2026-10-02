@@ -1,13 +1,5 @@
 import { supabase } from "./supabase.js";
-import {
-  escapeHtml,
-  formatDate,
-  formatMonth,
-  formatDateTime,
-  maldivesDateParts,
-  initials,
-  feedbackCalendarHtml,
-} from "./utils.js";
+import { escapeHtml, formatDate, formatMonth, formatDateTime, maldivesDateParts, initials } from "./utils.js";
 
 const el = (id) => document.getElementById(id);
 
@@ -21,25 +13,27 @@ const state = {
   selectedStudent: null,
   curriculum: [],
   moduleId: null,
-  openUnits: new Set(),
-  notePane: "feedback",
+  openUnits: new Set(), // units manually forced OPEN, overriding the auto open-while-incomplete default
+  closedUnits: new Set(), // units manually forced CLOSED, overriding the default
+  openTips: new Set(), // item/checkpoint ids with their inline "Tip" box expanded
+  autosaveNote: "Ticks save as you go.",
+  studentPane: "checklist", // "checklist" | "feedback" | "notes", within the student detail page
   feedback: [],
   notes: [],
-  fbCalYear: null, // set lazily from the selected student's most recent feedback
-  fbSelectedMonth: null, // "YYYY-MM" filter for the history list, or null for all
+  fbMonthCursor: null, // "YYYY-MM" currently shown in the feedback month-switcher
   fbEditingId: null, // feedback row id currently loaded into the form, or null for "new"
   ntEditingId: null, // coach_notes row id currently loaded into the form, or null for "new"
   syllabusModuleId: null,
   syllabusOpenUnits: new Set(),
   syllabusOpenItems: new Set(),
-  syllabusScrollTo: null, // item id to scroll to + flash-highlight after the next syllabus render
   rosterTicks: new Map(), // student_id -> Map(item_id -> {on, coachName})
   rosterCps: new Map(), // student_id -> Map(item_id -> {on, evidence, coachName})
   rosterFeedbackMonths: new Map(), // student_id -> [month, ...]
 
-  attCalendarMonth: null, // Date, first-of-month, local
+  cameFromList: false, // true once the student page was reached by tapping a row / prev / next, for real back-button support
+  listScroll: null, // scrollY captured when leaving the progress list, restored when returning to it
+
   attSelectedDate: null, // "YYYY-MM-DD"
-  attMonthCounts: new Map(), // "YYYY-MM-DD" -> present count, for the visible month
   attSavedByDate: new Map(), // "YYYY-MM-DD" -> Map(student_id -> {coachName, markedAt}), lazily filled per date visited
   attDrafts: new Map(), // "YYYY-MM-DD" -> Set(student_id), only for dates with unsaved edits
   attLog: [], // attendance_log rows for the selected date, newest first
@@ -48,6 +42,22 @@ const state = {
 function setStatus(text, kind) {
   el("status").textContent = text;
   el("status").className = kind ? `form-message form-message--${kind}` : "form-message";
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = el("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+const TICK_SVG =
+  '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+
+function groupName(groupId) {
+  return state.groups.find((g) => g.id === groupId)?.name || "";
 }
 
 function thisMonthKey() {
@@ -125,6 +135,7 @@ function populateSchoolSelect() {
     sel.value = state.coach.school_id;
     sel.hidden = true;
   } else {
+    sel.hidden = false;
     sel.value = state.schools[0]?.id ?? "";
   }
 }
@@ -164,7 +175,6 @@ async function loadCurriculum() {
 
 async function onSchoolChange() {
   state.selectedStudent = null;
-  el("checklistWrap").innerHTML = "";
   setStatus("");
 
   await loadGroups();
@@ -173,8 +183,16 @@ async function onSchoolChange() {
   const ids = state.students.map((s) => s.id);
   await Promise.all([loadRosterProgress(ids), loadRosterFeedbackMonths(ids)]);
 
-  renderPicker();
+  renderProgressList();
   await initAttendanceTab();
+
+  // The student we were looking at may belong to a school we've just
+  // switched away from -- fall back to the list rather than show stale data.
+  if (location.hash.startsWith("#student/")) {
+    location.hash = "progress";
+  } else {
+    route();
+  }
 }
 
 async function loadGroups() {
@@ -252,6 +270,14 @@ async function loadRosterFeedbackMonths(studentIds) {
   state.rosterFeedbackMonths = map;
 }
 
+// Shared by the progress list's due/done badge and the Feedback tab's dot,
+// so the two can never disagree about whether this month is covered.
+function feedbackDueForStudent(studentId) {
+  const months = state.rosterFeedbackMonths.get(studentId) || [];
+  const ym = thisMonthKey();
+  return !months.some((m) => String(m).slice(0, 7) === ym);
+}
+
 // --- Attendance tab ---------------------------------------------------------
 //
 // A row in `attendance` for (student_id, session_date) means present; no row
@@ -280,7 +306,7 @@ function attSavedIds(dateKey) {
 
 // A date only ever gets a draft after its saved set has been fetched (you
 // have to select a date, which loads it, before you can tick anyone in it),
-// so every dirty date is also a cached one — dirty-checking never needs to
+// so every dirty date is also a cached one -- dirty-checking never needs to
 // fetch a date that isn't currently on screen.
 function attDraftFor(dateKey) {
   return state.attDrafts.get(dateKey) || attSavedIds(dateKey);
@@ -295,10 +321,9 @@ function attIsDirty(dateKey) {
   return false;
 }
 
-// Filters the roster shown while marking attendance by group, so the
-// "Active students"/"Present" stat cards (whole-school context) stay
-// separate from the roster list and "Mark everyone present" (which only
-// need to act on the group currently in view).
+// Filters the roster shown while marking attendance by group, so "Mark
+// everyone present"/"Clear all" (which only need to act on the group
+// currently in view) stays independent of the whole-school student list.
 function filteredAttendanceStudents() {
   const group = el("attGroupFilter").value;
   return group ? state.students.filter((s) => s.group_id === group) : state.students;
@@ -306,31 +331,12 @@ function filteredAttendanceStudents() {
 
 async function initAttendanceTab() {
   const t = todayKey();
-  state.attCalendarMonth = new Date(parseKey(t).getFullYear(), parseKey(t).getMonth(), 1);
   state.attSelectedDate = t;
-  state.attMonthCounts = new Map();
   state.attSavedByDate = new Map();
   state.attDrafts = new Map();
   state.attLog = [];
-
-  await Promise.all([loadAttendanceMonth(), loadAttendanceDate(t)]);
-  renderAttendanceTab();
-}
-
-async function loadAttendanceMonth() {
-  const start = new Date(state.attCalendarMonth.getFullYear(), state.attCalendarMonth.getMonth(), 1);
-  const end = new Date(state.attCalendarMonth.getFullYear(), state.attCalendarMonth.getMonth() + 1, 0);
-  const { data, error } = await supabase.rpc("attendance_month_counts", {
-    p_school_id: state.schoolId,
-    p_start: ymd(start),
-    p_end: ymd(end),
-  });
-
-  if (error) {
-    setStatus("Couldn't load the calendar. Refresh to try again.", "error");
-    return;
-  }
-  state.attMonthCounts = new Map((data || []).map((r) => [r.session_date, Number(r.present_count)]));
+  await loadAttendanceDate(t);
+  renderSession();
 }
 
 async function loadAttendanceDate(dateKey) {
@@ -361,52 +367,10 @@ async function loadAttendanceDate(dateKey) {
   state.attLog = logRows || [];
 }
 
-function renderAttendanceTab() {
-  renderCalendar();
+async function goToAttDate(dateKey) {
+  state.attSelectedDate = dateKey;
+  if (!state.attSavedByDate.has(dateKey)) await loadAttendanceDate(dateKey);
   renderSession();
-}
-
-function renderCalendar() {
-  const month = state.attCalendarMonth;
-  el("calTitle").textContent = month.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-
-  const sessionDays = state.attMonthCounts.size;
-  const totalPresent = [...state.attMonthCounts.values()].reduce((sum, n) => sum + n, 0);
-  el("calSubtitle").textContent = sessionDays
-    ? `${sessionDays} session${sessionDays === 1 ? "" : "s"} · ${totalPresent} present marks`
-    : "No sessions recorded yet";
-
-  const firstOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
-  const offset = (firstOfMonth.getDay() + 6) % 7; // grid starts on Monday
-  const start = new Date(firstOfMonth);
-  start.setDate(1 - offset);
-
-  const today = todayKey();
-  let html = "";
-  for (let i = 0; i < 42; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    const key = ymd(d);
-    const isFuture = key > today;
-    const count = state.attMonthCounts.get(key) || 0;
-    const classes = ["cal-day"];
-    if (d.getMonth() !== month.getMonth()) classes.push("is-other");
-    if (key === today) classes.push("is-today");
-    if (attIsDirty(key)) classes.push("is-draft");
-
-    const label =
-      d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }) +
-      (count ? `, ${count} present` : "");
-
-    html += `<button type="button" class="${classes.join(" ")}" data-cal-day="${key}" ${isFuture ? "disabled" : ""}
-      aria-pressed="${key === state.attSelectedDate}" aria-label="${label}">
-      <span>${d.getDate()}</span><span class="cal-day__mark">${count ? `✓${count}` : ""}</span>
-    </button>`;
-  }
-  el("calDays").innerHTML = html;
-
-  const nextMonth = new Date(month.getFullYear(), month.getMonth() + 1, 1);
-  el("calNext").disabled = ymd(nextMonth) > today;
 }
 
 function renderSession() {
@@ -423,22 +387,27 @@ function renderSession() {
     month: "long",
   });
   el("sessionDate").textContent = (isToday ? "Today, " : "") + dateLabel;
-
-  const statusEl = el("attStatus");
-  if (isDirty) {
-    statusEl.textContent = "Unsaved changes";
-    statusEl.className = "status-line status-line--dirty";
-  } else if (state.attLog.length) {
-    const last = state.attLog[0];
-    const { date, time } = maldivesDateParts(last.created_at);
-    statusEl.textContent = `Last change by ${last.coach?.name || "—"}, ${date} at ${time}`;
-    statusEl.className = "status-line";
-  } else {
-    statusEl.textContent = "Not recorded yet";
-    statusEl.className = "status-line";
-  }
+  el("attDatePicker").max = todayKey();
+  el("attDatePicker").value = dateKey;
+  el("attNext").disabled = dateKey >= todayKey();
+  el("attTodayLink").hidden = isToday;
 
   const rosterStudents = filteredAttendanceStudents();
+  const presentCount = rosterStudents.filter((s) => draftSet.has(s.id)).length;
+
+  const statusEl = el("attStatus");
+  const hasSaved = state.attLog.length > 0 || savedIds.size > 0;
+  if (isDirty) {
+    statusEl.textContent = "Changes not saved";
+    statusEl.className = "status edited";
+  } else if (hasSaved) {
+    statusEl.textContent = `Saved: ${presentCount} present, ${rosterStudents.length - presentCount} absent`;
+    statusEl.className = "status saved";
+  } else {
+    statusEl.textContent = "Not recorded yet";
+    statusEl.className = "status todo";
+  }
+  el("saveAttendance").textContent = hasSaved && isDirty ? "Save changes" : "Save attendance";
 
   el("attendanceList").innerHTML = rosterStudents.length
     ? rosterStudents
@@ -446,41 +415,37 @@ function renderSession() {
           const on = draftSet.has(s.id);
           const was = savedIds.has(s.id);
           const info = savedMap.get(s.id);
-          const changeTag =
-            on !== was ? `<span class="roster-row__changetag">${on ? "Adding" : "Removing"}</span>` : "";
           const markedLine =
             on && was && info
-              ? `<span class="roster-row__marked">Marked by ${escapeHtml(info.coachName)}, ${formatDateTime(
+              ? `<span class="meta meta--marked">Marked by ${escapeHtml(info.coachName)}, ${formatDateTime(
                   info.markedAt
                 )}</span>`
               : "";
-          return `<li class="roster-row${on ? " is-present" : ""}" style="animation-delay:${i * 25}ms">
-            <span class="avatar-circle avatar-circle--sm" aria-hidden="true">${escapeHtml(initials(s.full_name))}</span>
-            <span class="roster-row__name">${escapeHtml(s.full_name)}
-              <span class="roster-row__sub">${escapeHtml(s.student_code)}</span>
+          const grp = groupName(s.group_id);
+          return `<li><button type="button" class="row" data-att="${s.id}" aria-pressed="${on}">
+            <span class="avatar" aria-hidden="true">${escapeHtml(initials(s.full_name))}</span>
+            <span class="info">
+              <span class="name">${escapeHtml(s.full_name)}</span>
+              <span class="meta">${grp ? `${escapeHtml(grp)} · ` : ""}${escapeHtml(s.student_code)}</span>
               ${markedLine}
-            </span>${changeTag}
-            <button type="button" class="attend-btn" data-att="${s.id}" aria-pressed="${on}"
-              aria-label="Mark ${escapeHtml(s.full_name)} present">✓</button>
-          </li>`;
+            </span>
+            <span class="tick" aria-hidden="true">${TICK_SVG}</span>
+          </button></li>`;
         })
         .join("")
-    : `<p class="empty-state">${
-        state.students.length ? "No students in that group." : "No active students at this school yet."
-      }</p>`;
+    : `<li class="empty">${
+        state.students.length ? "No students in this group." : "No active students at this school yet."
+      }</li>`;
 
-  const presentShownFiltered = rosterStudents.filter((s) => draftSet.has(s.id)).length;
-  el("markAllPresent").hidden = rosterStudents.length > 0 && presentShownFiltered === rosterStudents.length;
+  const allPresent = rosterStudents.length > 0 && presentCount === rosterStudents.length;
+  el("markAllPresent").textContent = allPresent ? "Clear all" : "Mark everyone present";
+  el("markAllPresent").setAttribute("aria-pressed", String(allPresent));
 
-  const added = [...draftSet].filter((id) => !savedIds.has(id));
-  const removed = [...savedIds].filter((id) => !draftSet.has(id));
-  el("saveNote").textContent = isDirty
-    ? [added.length && `${added.length} to add`, removed.length && `${removed.length} to remove`]
-        .filter(Boolean)
-        .join(", ")
-    : "No changes to save";
+  el("attCountText").textContent = `${presentCount} of ${rosterStudents.length}`;
+  el("attBarFill").style.width = rosterStudents.length ? `${Math.round((presentCount / rosterStudents.length) * 100)}%` : "0%";
   el("saveAttendance").disabled = !isDirty;
   el("discardAttendance").hidden = !isDirty;
+  syncSavebarVisibility();
 
   el("attendanceLogWrap").hidden = state.attLog.length === 0;
   el("attendanceLogList").innerHTML = state.attLog
@@ -488,39 +453,43 @@ function renderSession() {
       const name = l.student?.full_name || "—";
       const code = l.student?.student_code;
       const verb = l.action === "added" ? "marked" : "removed";
-      return `<div class="entry"><div class="entry__body">${escapeHtml(l.coach?.name || "—")} ${verb} ${escapeHtml(
-        name
-      )}${code ? ` (${escapeHtml(code)})` : ""} · ${formatDateTime(l.created_at)}</div></div>`;
+      return `<li><div>${escapeHtml(l.coach?.name || "—")} ${verb} ${escapeHtml(name)}${
+        code ? ` (${escapeHtml(code)})` : ""
+      }</div><div class="by">${formatDateTime(l.created_at)}</div></li>`;
     })
     .join("");
 }
 
-el("calDays").addEventListener("click", async (e) => {
-  const btn = e.target.closest("[data-cal-day]");
-  if (!btn || btn.disabled) return;
-  state.attSelectedDate = btn.getAttribute("data-cal-day");
-  await loadAttendanceDate(state.attSelectedDate);
-  renderAttendanceTab();
+// The save bar belongs to the Attendance tab only.
+function syncSavebarVisibility() {
+  const onAttendance = currentView() === "today";
+  const hasRoster = filteredAttendanceStudents().length > 0;
+  el("attSavebar").hidden = !(onAttendance && hasRoster);
+  document.body.classList.toggle("has-savebar", onAttendance && hasRoster);
+}
+
+el("attPrev").addEventListener("click", () => {
+  const d = parseKey(state.attSelectedDate);
+  d.setDate(d.getDate() - 1);
+  goToAttDate(ymd(d));
 });
 
-el("calPrev").addEventListener("click", async () => {
-  state.attCalendarMonth.setMonth(state.attCalendarMonth.getMonth() - 1);
-  await loadAttendanceMonth();
-  renderCalendar();
+el("attNext").addEventListener("click", () => {
+  if (state.attSelectedDate >= todayKey()) return;
+  const d = parseKey(state.attSelectedDate);
+  d.setDate(d.getDate() + 1);
+  goToAttDate(ymd(d));
 });
 
-el("calNext").addEventListener("click", async () => {
-  state.attCalendarMonth.setMonth(state.attCalendarMonth.getMonth() + 1);
-  await loadAttendanceMonth();
-  renderCalendar();
-});
+el("attTodayLink").addEventListener("click", () => goToAttDate(todayKey()));
 
-el("calToday").addEventListener("click", async () => {
-  const t = todayKey();
-  state.attCalendarMonth = new Date(parseKey(t).getFullYear(), parseKey(t).getMonth(), 1);
-  state.attSelectedDate = t;
-  await Promise.all([loadAttendanceMonth(), loadAttendanceDate(t)]);
-  renderAttendanceTab();
+el("attDatePicker").addEventListener("change", (e) => {
+  const v = e.target.value;
+  if (!v || v > todayKey()) {
+    e.target.value = state.attSelectedDate;
+    return;
+  }
+  goToAttDate(v);
 });
 
 el("attendanceList").addEventListener("click", (e) => {
@@ -532,22 +501,25 @@ el("attendanceList").addEventListener("click", (e) => {
   if (draft.has(id)) draft.delete(id);
   else draft.add(id);
   state.attDrafts.set(dateKey, draft);
-  renderAttendanceTab();
+  renderSession();
 });
 
 el("markAllPresent").addEventListener("click", () => {
   const dateKey = state.attSelectedDate;
   const draft = new Set(attDraftFor(dateKey));
-  filteredAttendanceStudents().forEach((s) => draft.add(s.id));
+  const rosterStudents = filteredAttendanceStudents();
+  const allPresent = rosterStudents.length > 0 && rosterStudents.every((s) => draft.has(s.id));
+  if (allPresent) rosterStudents.forEach((s) => draft.delete(s.id));
+  else rosterStudents.forEach((s) => draft.add(s.id));
   state.attDrafts.set(dateKey, draft);
-  renderAttendanceTab();
+  renderSession();
 });
 
 el("attGroupFilter").addEventListener("change", renderSession);
 
 el("discardAttendance").addEventListener("click", () => {
   state.attDrafts.delete(state.attSelectedDate);
-  renderAttendanceTab();
+  renderSession();
 });
 
 el("saveAttendance").addEventListener("click", async () => {
@@ -574,9 +546,10 @@ el("saveAttendance").addEventListener("click", async () => {
   }
 
   state.attDrafts.delete(dateKey);
-  await Promise.all([loadAttendanceDate(dateKey), loadAttendanceMonth()]);
-  renderAttendanceTab();
-  setStatus("Attendance saved.", "success");
+  await loadAttendanceDate(dateKey);
+  renderSession();
+  const presentNow = attSavedIds(dateKey).size;
+  toast(`Attendance saved: ${presentNow} present`);
 });
 
 window.addEventListener("beforeunload", (e) => {
@@ -589,14 +562,14 @@ window.addEventListener("beforeunload", (e) => {
   }
 });
 
-// --- Progress tab: filters + picker ---------------------------------------
+// --- Progress tab: filters + list ------------------------------------------
 
 function filteredStudents() {
   const group = el("groupFilter").value;
   const q = el("searchFilter").value.trim().toLowerCase();
   return state.students.filter((s) => {
     if (group && s.group_id !== group) return false;
-    if (q && !(`${s.full_name} ${s.student_code}`.toLowerCase().includes(q))) return false;
+    if (q && !`${s.full_name} ${s.student_code}`.toLowerCase().includes(q)) return false;
     return true;
   });
 }
@@ -619,67 +592,45 @@ function studentModuleStats(studentId, moduleId) {
   return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
 }
 
-function feedbackDueForStudent(studentId) {
-  const months = state.rosterFeedbackMonths.get(studentId) || [];
-  const ym = thisMonthKey();
-  return !months.some((m) => String(m).slice(0, 7) === ym);
-}
-
-function renderPicker() {
+function renderProgressList() {
   const list = filteredStudents();
 
   el("studentPicker").innerHTML = list.length
     ? list
-        .map((s, i) => {
+        .map((s) => {
           const stats = studentModuleStats(s.id, s.current_module_id);
           const due = feedbackDueForStudent(s.id);
-          return `<button type="button" class="picker__item" data-student="${s.id}" aria-pressed="${
-            state.selectedStudent === s.id
-          }" style="animation-delay:${i * 20}ms">
-            <span class="avatar-circle avatar-circle--sm" aria-hidden="true">${escapeHtml(
-              initials(s.full_name)
-            )}</span>
-            <span class="picker__item-text">${escapeHtml(s.full_name)}
-              <small>${escapeHtml(s.student_code)} · ${moduleLabel(s.current_module_id)} ${stats.pct}%${
-            due ? ' · <span class="picker__due">summary due</span>' : ""
-          }</small>
+          const badge = due
+            ? '<span class="badge due">Feedback due</span>'
+            : '<span class="badge done">Feedback done</span>';
+          return `<li><button type="button" class="row" data-student="${s.id}">
+            <span class="avatar" aria-hidden="true">${escapeHtml(initials(s.full_name))}</span>
+            <span class="info">
+              <span class="name">${escapeHtml(s.full_name)}</span>
+              <span class="meta">${moduleLabel(s.current_module_id)}: ${stats.done} of ${stats.total} · ${escapeHtml(
+            s.student_code
+          )}</span>
+              <span class="mini-bar"><span style="width:${stats.pct}%"></span></span>
             </span>
-          </button>`;
+            ${badge}
+            <span class="chev" aria-hidden="true">&rsaquo;</span>
+          </button></li>`;
         })
         .join("")
-    : `<p class="empty-state">No students match those filters.</p>`;
-
-  if (state.selectedStudent && !list.some((s) => s.id === state.selectedStudent)) {
-    state.selectedStudent = null;
-    el("checklistWrap").innerHTML = "";
-  }
+    : `<li class="empty">No students match those filters.</li>`;
 }
 
 ["groupFilter", "searchFilter"].forEach((id) => {
-  el(id).addEventListener("input", renderPicker);
-  el(id).addEventListener("change", renderPicker);
+  el(id).addEventListener("input", renderProgressList);
+  el(id).addEventListener("change", renderProgressList);
 });
 
-el("studentPicker").addEventListener("click", async (e) => {
+el("studentPicker").addEventListener("click", (e) => {
   const btn = e.target.closest("[data-student]");
   if (!btn) return;
-  const id = btn.getAttribute("data-student");
-  const student = state.students.find((s) => s.id === id);
-  if (!student) return;
-
-  state.selectedStudent = id;
-  state.moduleId = student.current_module_id;
-  state.openUnits = new Set();
-  state.notePane = "feedback";
-  state.fbCalYear = null;
-  state.fbSelectedMonth = null;
-  state.fbEditingId = null;
-  state.ntEditingId = null;
-  renderPicker();
-
-  el("checklistWrap").innerHTML = '<p class="form-message">Loading…</p>';
-  await loadStudentNotes(id);
-  renderChecklist();
+  state.listScroll = window.scrollY;
+  state.cameFromList = true;
+  location.hash = `student/${btn.getAttribute("data-student")}`;
 });
 
 async function loadStudentNotes(studentId) {
@@ -700,33 +651,114 @@ async function loadStudentNotes(studentId) {
   state.notes = nt || [];
 }
 
-// --- Progress tab: checklist ------------------------------------------------
+// --- Student detail page ----------------------------------------------------
 
-function renderChecklist() {
-  const student = state.students.find((s) => s.id === state.selectedStudent);
+async function openStudentPage(id) {
+  const student = state.students.find((s) => s.id === id);
   if (!student) {
-    el("checklistWrap").innerHTML = "";
+    // Direct/stale link to a student that doesn't exist (or isn't active)
+    // on the currently-selected school -- send back to the list instead.
+    location.hash = "progress";
     return;
   }
+
+  const isNewStudent = state.selectedStudent !== id;
+  state.selectedStudent = id;
+
+  if (isNewStudent) {
+    state.moduleId = student.current_module_id;
+    state.openUnits = new Set();
+    state.closedUnits = new Set();
+    state.openTips = new Set();
+    state.autosaveNote = "Ticks save as you go.";
+    state.studentPane = "checklist";
+    state.fbMonthCursor = null;
+    state.fbEditingId = null;
+    state.ntEditingId = null;
+    renderStudentHead(student);
+    el("pane-checklist").innerHTML = '<p class="form-message">Loading…</p>';
+    await loadStudentNotes(id);
+  }
+
+  renderStudentHead(student);
+  showStudentPane(state.studentPane);
+}
+
+function renderStudentHead(student) {
+  el("studentAvatar").textContent = initials(student.full_name);
+  el("studentName").textContent = student.full_name;
+  el("studentMeta").textContent = `${groupName(student.group_id) || "No group"} · ${student.student_code}`;
+
+  const list = filteredStudents();
+  const idx = list.findIndex((s) => s.id === student.id);
+  el("studentPos").textContent = idx >= 0 ? `${idx + 1} of ${list.length}` : "";
+  el("studentPrevBtn").disabled = idx <= 0;
+  el("studentNextBtn").disabled = idx < 0 || idx >= list.length - 1;
+
+  el("fbDueDot").hidden = !feedbackDueForStudent(student.id);
+}
+
+function showStudentPane(pane) {
+  state.studentPane = pane;
+  ["checklist", "feedback", "notes"].forEach((p) => {
+    el("studentTabs").querySelector(`[data-pane="${p}"]`).setAttribute("aria-selected", String(p === pane));
+    el(`pane-${p}`).hidden = p !== pane;
+  });
+
+  const student = state.students.find((s) => s.id === state.selectedStudent);
+  if (!student) return;
+  if (pane === "checklist") renderChecklistPane(student);
+  else if (pane === "feedback") renderFeedbackPane(student);
+  else renderNotesPane(student);
+}
+
+el("studentTabs").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-pane]");
+  if (!btn) return;
+  showStudentPane(btn.getAttribute("data-pane"));
+});
+
+el("studentBack").addEventListener("click", () => {
+  if (state.cameFromList) history.back();
+  else location.hash = "progress";
+});
+
+function stepStudent(dir) {
+  const list = filteredStudents();
+  const idx = list.findIndex((s) => s.id === state.selectedStudent);
+  const next = list[idx + dir];
+  if (!next) return;
+  state.cameFromList = true;
+  location.replace(`#student/${next.id}`);
+}
+
+el("studentPrevBtn").addEventListener("click", () => stepStudent(-1));
+el("studentNextBtn").addEventListener("click", () => stepStudent(1));
+
+// --- Student detail: Checklist pane -----------------------------------------
+
+function renderChecklistPane(student) {
   const mod =
     state.curriculum.find((m) => m.id === state.moduleId) ||
     state.curriculum.find((m) => m.id === student.current_module_id);
   if (!mod) {
-    el("checklistWrap").innerHTML = "";
+    el("pane-checklist").innerHTML = "";
     return;
   }
-  const stats = studentModuleStats(student.id, mod.id);
 
-  const tabs = state.curriculum
-    .map(
-      (m) =>
-        `<button type="button" class="module-tab" data-module="${m.id}" aria-selected="${m.id === mod.id}">
-          Module ${m.number} · ${escapeHtml(m.name)}${m.id === student.current_module_id ? " ★" : ""}
-        </button>`
-    )
+  const modsHtml = state.curriculum
+    .map((m) => {
+      const s = studentModuleStats(student.id, m.id);
+      const complete = s.total > 0 && s.done === s.total;
+      const isCurrent = m.id === student.current_module_id;
+      const tag = complete ? "✓ Done" : isCurrent ? '<span class="now">Current</span>' : `${s.done}/${s.total}`;
+      return `<button type="button" class="mod" role="tab" data-module="${m.id}" aria-selected="${m.id === mod.id}">
+        <small><span>Module ${m.number}</span><span>${tag}</span></small>
+        <strong>${escapeHtml(m.name)}</strong>
+        <span class="mini-bar"><span style="width:${s.pct}%"></span></span>
+      </button>`;
+    })
     .join("");
-
-  const unitsHtml = mod.units.map((u) => renderUnit(student, u)).join("");
 
   const groupOptions =
     '<option value="">No group</option>' +
@@ -737,19 +769,21 @@ function renderChecklist() {
       )
       .join("");
 
-  el("checklistWrap").innerHTML = `
-    <div class="checklist-head">
-      <span class="avatar-circle avatar-circle--sm" aria-hidden="true">${escapeHtml(initials(student.full_name))}</span>
-      <span class="checklist-head__name">${escapeHtml(student.full_name)}</span>
-      <label class="visually-hidden" for="checklistGroupSelect">Group</label>
-      <select id="checklistGroupSelect" class="checklist-head__group" aria-label="Group">${groupOptions}</select>
-      <span class="track"><span class="track__bar" style="width:${stats.pct}%"></span></span>
-      <span class="checklist-head__pct">${stats.done}/${stats.total}</span>
+  const unitsHtml = mod.units.map((u) => renderUnit(student, u)).join("");
+
+  el("pane-checklist").innerHTML = `
+    <div class="group-row">
+      <label for="checklistGroupSelect">Group</label>
+      <select id="checklistGroupSelect" aria-label="Group">${groupOptions}</select>
     </div>
-    ${notesPaneHtml(student)}
-    <div class="module-tabs">${tabs}</div>
+    <div class="mods" role="tablist">${modsHtml}</div>
     ${unitsHtml}
+    <p class="autosaved">${escapeHtml(state.autosaveNote)}</p>
   `;
+}
+
+function tipBoxHtml(item) {
+  return `<div class="tip">${escapeHtml(item.how_to_teach || "No teaching note written yet for this item.")}</div>`;
 }
 
 function renderUnit(student, unit) {
@@ -757,266 +791,306 @@ function renderUnit(student, unit) {
   const cps = state.rosterCps.get(student.id) || new Map();
   const done = unit.items.filter((it) => ticks.has(it.id)).length;
   const total = unit.items.length;
-  const pct = total ? Math.round((done / total) * 100) : 0;
-  const open = state.openUnits.has(unit.id);
+  const cp = unit.checkpoint;
+  const cpMark = cp ? cps.get(cp.id) : null;
+  const unitComplete = total > 0 && done === total && (!cp || !!cpMark);
+
+  // Open while unfinished, collapsed once complete -- unless the coach has
+  // manually forced it either way.
+  let open;
+  if (state.closedUnits.has(unit.id)) open = false;
+  else if (state.openUnits.has(unit.id)) open = true;
+  else open = !unitComplete;
 
   const rows = unit.items
     .map((it) => {
       const mark = ticks.get(it.id);
-      return `<div class="curriculum-item${mark ? " is-done" : ""}">
-        <button type="button" class="curriculum-item__check" data-tick="${it.id}" ${mark ? "disabled" : ""}
-          aria-label="Mark item done">✓</button>
-        <span class="curriculum-item__text">${escapeHtml(it.description)}
-          <span class="curriculum-item__pass">Pass: ${escapeHtml(it.pass_standard)}</span>
-        </span>
-        <button type="button" class="syllabus-jump" data-syllabus-link="${unit.id}:${it.id}"
-          aria-label="Open this item in the syllabus" title="Open in syllabus">📖</button>
-        <span class="curriculum-item__meta">${
-          mark ? `${escapeHtml(mark.coachName)}<br>${formatDate(mark.on)}` : "not marked"
-        }</span>
-      </div>`;
+      const tipOpen = state.openTips.has(it.id);
+      return `<li><div class="item">
+        <button type="button" class="row" data-tick-row="${it.id}" aria-pressed="${!!mark}">
+          <span class="tick" aria-hidden="true">${TICK_SVG}</span>
+          <span class="info">
+            <span class="crit">${escapeHtml(it.description)}</span>
+            <span class="pass">Pass: ${escapeHtml(it.pass_standard)}</span>
+            ${
+              mark
+                ? `<span class="when">Passed ${formatDate(mark.on)} · ${escapeHtml(mark.coachName)}</span>`
+                : '<span class="when none">Not marked</span>'
+            }
+          </span>
+        </button>
+        <button type="button" class="tip-btn" data-tip="${it.id}" aria-expanded="${tipOpen}">Tip</button>
+      </div>${tipOpen ? tipBoxHtml(it) : ""}</li>`;
     })
     .join("");
 
-  const cp = unit.checkpoint;
-  const cpMark = cp ? cps.get(cp.id) : null;
+  const cpTipOpen = cp ? state.openTips.has(cp.id) : false;
   const cpHtml = cp
     ? `<div class="checkpoint${cpMark ? " is-passed" : ""}">
-        <h4>Checkpoint
-          <button type="button" class="syllabus-jump syllabus-jump--inline" data-syllabus-link="${unit.id}:${cp.id}"
-            aria-label="Open this checkpoint in the syllabus" title="Open in syllabus">📖</button>
-        </h4>
+        <div class="checkpoint__head">
+          <span class="checkpoint__title">${cpMark ? "✓ " : ""}Checkpoint</span>
+          <button type="button" class="tip-btn" data-tip="${cp.id}" aria-expanded="${cpTipOpen}">Tip</button>
+        </div>
+        ${cpTipOpen ? tipBoxHtml(cp) : ""}
         <p>${escapeHtml(cp.pass_standard)}</p>
         ${
           cpMark
-            ? `<div class="checkpoint__done">Passed · ${escapeHtml(cpMark.coachName)} · ${formatDate(cpMark.on)}<br>
+            ? `<div class="checkpoint__done">Passed ${formatDate(cpMark.on)} · ${escapeHtml(cpMark.coachName)}<br>
                 Evidence: ${escapeHtml(cpMark.evidence)}</div>`
             : `<div class="checkpoint__form">
-                <input type="text" data-ev="${cp.id}" placeholder="Evidence: what you observed">
-                <button type="button" class="btn btn--primary btn--xs" data-passcp="${cp.id}">Mark passed</button>
+                <input type="text" class="field" data-ev="${cp.id}" placeholder="Evidence: what you observed">
+                <button type="button" class="btn-primary sm" data-passcp="${cp.id}">Mark passed</button>
               </div>`
         }
       </div>`
     : "";
 
   return `<div class="unit">
-    <button type="button" class="unit__head" data-unit="${unit.id}">
-      <span class="unit__name">${escapeHtml(unit.number)} — ${escapeHtml(unit.name)}</span>
-      <span class="track track--mini"><span class="track__bar" style="width:${pct}%"></span></span>
-      <span class="unit__count">${done}/${total}</span>
+    <button type="button" class="unit-head" data-unit="${unit.id}" aria-expanded="${open}">
+      <h3><span class="num">${escapeHtml(unit.number)}</span> ${escapeHtml(unit.name)}</h3>
+      <span class="frac${unitComplete ? " full" : ""}">${unitComplete ? "✓ " : ""}${done}/${total}</span>
+      <span class="caret" aria-hidden="true">›</span>
     </button>
-    <div class="unit__body" ${open ? "" : "hidden"}>${rows}${cpHtml}</div>
+    ${open ? `<ul class="items">${rows}</ul>${cpHtml}` : ""}
   </div>`;
 }
 
-function notesPaneHtml(student) {
-  const showing = state.notePane;
-  const due = feedbackDueForStudent(student.id);
-
-  if (state.fbCalYear == null) {
-    state.fbCalYear = state.feedback.length
-      ? Number(String(state.feedback[0].month).slice(0, 4))
-      : new Date().getFullYear();
-  }
-  if (!state.feedback.length) state.fbSelectedMonth = null;
-
-  const starRow = (value) =>
-    [1, 2, 3, 4, 5]
-      .map(
-        (n) =>
-          `<button type="button" class="star-picker__star${n <= value ? " is-filled" : ""}" data-star="${n}"
-            aria-label="${n} star${n > 1 ? "s" : ""}">&#9733;</button>`
-      )
-      .join("");
-
-  const editingEntry = state.fbEditingId ? state.feedback.find((f) => f.id === state.fbEditingId) : null;
-  const formMonth = editingEntry ? String(editingEntry.month).slice(0, 7) : thisMonthKey();
-  const formRating = editingEntry ? editingEntry.rating || 0 : 0;
-  const editingNote = state.ntEditingId ? state.notes.find((n) => n.id === state.ntEditingId) : null;
-
-  const form =
-    showing === "feedback"
-      ? `<textarea id="fbText" placeholder="Monthly summary for ${escapeHtml(
-          student.full_name
-        )}. They will read this, so write it to them.">${
-          editingEntry ? escapeHtml(editingEntry.body) : ""
-        }</textarea>
-        <div class="fb-extra">
-          <label class="fb-extra__label">Effort &amp; growth this month</label>
-          <div class="star-picker" id="fbRating" data-value="${formRating}">${starRow(formRating)}</div>
-        </div>
-        <div class="fb-extra">
-          <label class="fb-extra__label" for="fbHighlight">This month's highlight (optional)</label>
-          <input type="text" id="fbHighlight" class="fb-extra__input" maxlength="120"
-            value="${editingEntry ? escapeHtml(editingEntry.highlight || "") : ""}"
-            placeholder="e.g. Won their first practice game">
-        </div>
-        <div class="fb-extra">
-          <label class="fb-extra__label" for="fbFocus">Next month's target (optional)</label>
-          <input type="text" id="fbFocus" class="fb-extra__input" maxlength="120"
-            value="${editingEntry ? escapeHtml(editingEntry.next_focus || "") : ""}"
-            placeholder="e.g. Opening principles and simple tactics">
-        </div>
-        <div class="notes__row">
-          <input type="month" id="fbMonth" value="${formMonth}">
-          <button type="button" class="btn btn--primary btn--xs" id="fbSave">${
-            editingEntry ? "Update feedback" : "Save feedback"
-          }</button>
-          ${editingEntry ? '<button type="button" class="btn btn--secondary btn--xs" id="fbCancelEdit">Cancel</button>' : ""}
-          <span class="notes__hint">Visible to the student</span>
-        </div>`
-      : `<textarea id="ntText" placeholder="Note for other coaches. The student never sees this.">${
-          editingNote ? escapeHtml(editingNote.body) : ""
-        }</textarea>
-        <div class="notes__row">
-          <button type="button" class="btn btn--primary btn--xs" id="ntSave">${
-            editingNote ? "Update note" : "Save note"
-          }</button>
-          ${editingNote ? '<button type="button" class="btn btn--secondary btn--xs" id="ntCancelEdit">Cancel</button>' : ""}
-          <span class="notes__hint">Coaches only</span>
-        </div>`;
-
-  const visibleFeedback = state.fbSelectedMonth
-    ? state.feedback.filter((f) => String(f.month).slice(0, 7) === state.fbSelectedMonth)
-    : state.feedback;
-
-  const feedbackCal =
-    showing === "feedback" && state.feedback.length
-      ? feedbackCalendarHtml(state.feedback, state.fbCalYear, state.fbSelectedMonth)
-      : "";
-
-  const feedbackEmptyMsg = state.fbSelectedMonth
-    ? `No feedback for ${formatMonth(`${state.fbSelectedMonth}-01`)}.`
-    : "No feedback written yet.";
-
-  const history =
-    showing === "feedback"
-      ? visibleFeedback.length
-        ? visibleFeedback
-            .map(
-              (f) => `<div class="entry">
-                <div class="entry__meta">${formatMonth(f.month)} · ${escapeHtml(f.coach?.name || "—")} · ${formatDate(
-                f.created_at
-              )}${
-                f.rating
-                  ? ` <span class="entry__rating" aria-label="${f.rating} out of 5 stars"><span class="entry__stars">${"★".repeat(
-                      f.rating
-                    )}${"☆".repeat(5 - f.rating)}</span></span>`
-                  : ""
-              }</div>
-                ${
-                  f.highlight
-                    ? `<div class="entry__tag entry__tag--highlight"><b>This month's highlight:</b> ${escapeHtml(
-                        f.highlight
-                      )}</div>`
-                    : ""
-                }
-                <div class="entry__label">Feedback</div>
-                <div class="entry__body">${escapeHtml(f.body)}</div>
-                ${
-                  f.next_focus
-                    ? `<div class="entry__tag entry__tag--focus"><b>Next month's target:</b> ${escapeHtml(
-                        f.next_focus
-                      )}</div>`
-                    : ""
-                }
-                <div class="entry__actions">
-                  <button type="button" class="btn btn--secondary btn--xs" data-fbedit="${f.id}">Edit</button>
-                  <button type="button" class="btn btn--danger btn--xs" data-fbdelete="${f.id}">Delete</button>
-                </div>
-              </div>`
-            )
-            .join("")
-        : `<div class="entry"><div class="entry__meta">${escapeHtml(feedbackEmptyMsg)}</div></div>`
-      : state.notes.length
-      ? state.notes
-          .map(
-            (n) => `<div class="entry">
-              <div class="entry__meta">${escapeHtml(n.coach?.name || "—")} · ${formatDate(n.created_at)}</div>
-              <div class="entry__body">${escapeHtml(n.body)}</div>
-              <div class="entry__actions">
-                <button type="button" class="btn btn--secondary btn--xs" data-ntedit="${n.id}">Edit</button>
-                <button type="button" class="btn btn--danger btn--xs" data-ntdelete="${n.id}">Delete</button>
-              </div>
-            </div>`
-          )
-          .join("")
-      : '<div class="entry"><div class="entry__meta">No notes yet.</div></div>';
-
-  return `<div class="notes">
-    <div class="tabs" role="tablist" aria-label="Notes">
-      <button type="button" class="tab" data-notetab="feedback" role="tab" aria-selected="${showing === "feedback"}">
-        Feedback${due ? ' <span class="due-flag">· due</span>' : ""}
-      </button>
-      <button type="button" class="tab" data-notetab="notes" role="tab" aria-selected="${showing === "notes"}">
-        Notes for instructors
-      </button>
-    </div>
-    ${form}
-    ${feedbackCal}
-    <div class="notes__history">${history}</div>
-  </div>`;
-}
-
-el("checklistWrap").addEventListener("click", async (e) => {
+el("pane-checklist").addEventListener("click", async (e) => {
   const student = state.students.find((s) => s.id === state.selectedStudent);
   if (!student) return;
 
-  const syllabusLink = e.target.closest("[data-syllabus-link]");
-  if (syllabusLink) {
-    const [unitId, itemId] = syllabusLink.getAttribute("data-syllabus-link").split(":");
-    const mod = state.curriculum.find((m) => m.units.some((u) => u.id === unitId));
-    const unit = mod?.units.find((u) => u.id === unitId);
-    const item = unit && [...unit.items, unit.checkpoint].find((it) => it && it.id === itemId);
-    if (unit && item) openSyllabusItem(unit, item);
+  const tipBtn = e.target.closest("[data-tip]");
+  if (tipBtn) {
+    const id = tipBtn.getAttribute("data-tip");
+    if (state.openTips.has(id)) state.openTips.delete(id);
+    else state.openTips.add(id);
+    renderChecklistPane(student);
     return;
   }
 
-  const noteTab = e.target.closest("[data-notetab]");
-  if (noteTab) {
-    state.notePane = noteTab.getAttribute("data-notetab");
-    renderChecklist();
+  const modBtn = e.target.closest("[data-module]");
+  if (modBtn) {
+    state.moduleId = modBtn.getAttribute("data-module");
+    renderChecklistPane(student);
     return;
   }
 
-  const fbCalMonth = e.target.closest("[data-fbcal-month]");
-  if (fbCalMonth && !fbCalMonth.disabled) {
-    const key = fbCalMonth.getAttribute("data-fbcal-month");
-    state.fbSelectedMonth = state.fbSelectedMonth === key ? null : key;
-    renderChecklist();
+  const unitHead = e.target.closest("[data-unit]");
+  if (unitHead) {
+    const id = unitHead.getAttribute("data-unit");
+    const isOpen = unitHead.getAttribute("aria-expanded") === "true";
+    if (isOpen) {
+      state.openUnits.delete(id);
+      state.closedUnits.add(id);
+    } else {
+      state.closedUnits.delete(id);
+      state.openUnits.add(id);
+    }
+    renderChecklistPane(student);
     return;
   }
 
-  if (e.target.closest("[data-fbcal-clear]")) {
-    state.fbSelectedMonth = null;
-    renderChecklist();
+  const tickRow = e.target.closest("[data-tick-row]");
+  if (tickRow) {
+    const itemId = tickRow.getAttribute("data-tick-row");
+    const ticks = state.rosterTicks.get(student.id);
+    if (ticks && ticks.has(itemId)) return; // ticks are insert-only; already marked
+    const { error } = await supabase
+      .from("item_ticks")
+      .insert({ student_id: student.id, item_id: itemId, marked_by: state.coach.id });
+    if (error) {
+      setStatus("Couldn't save that tick. Try again.", "error");
+      return;
+    }
+    if (!state.rosterTicks.has(student.id)) state.rosterTicks.set(student.id, new Map());
+    state.rosterTicks.get(student.id).set(itemId, { on: todayKey(), coachName: state.coach.name });
+    state.autosaveNote = "Saved just now.";
+    renderStudentHead(student);
+    renderChecklistPane(student);
     return;
   }
 
-  const fbCalPrev = e.target.closest("[data-fbcal-prev]");
-  if (fbCalPrev && !fbCalPrev.disabled) {
-    state.fbCalYear -= 1;
-    renderChecklist();
+  const passCp = e.target.closest("[data-passcp]");
+  if (passCp) {
+    const itemId = passCp.getAttribute("data-passcp");
+    const input = el("pane-checklist").querySelector(`[data-ev="${itemId}"]`);
+    const evidence = input.value.trim();
+    if (!evidence) {
+      input.focus();
+      return;
+    }
+    passCp.disabled = true;
+    const { error } = await supabase
+      .from("checkpoint_passes")
+      .insert({ student_id: student.id, item_id: itemId, evidence, marked_by: state.coach.id });
+    passCp.disabled = false;
+    if (error) {
+      setStatus("Couldn't save the checkpoint. Try again.", "error");
+      return;
+    }
+    if (!state.rosterCps.has(student.id)) state.rosterCps.set(student.id, new Map());
+    state.rosterCps.get(student.id).set(itemId, { on: todayKey(), evidence, coachName: state.coach.name });
+    renderChecklistPane(student);
+  }
+});
+
+el("pane-checklist").addEventListener("change", async (e) => {
+  const groupSelect = e.target.closest("#checklistGroupSelect");
+  if (!groupSelect) return;
+  const student = state.students.find((s) => s.id === state.selectedStudent);
+  if (!student) return;
+
+  const newGroupId = groupSelect.value || null;
+  const previousGroupId = student.group_id;
+  groupSelect.disabled = true;
+  const { error } = await supabase.from("students").update({ group_id: newGroupId }).eq("id", student.id);
+  groupSelect.disabled = false;
+  if (error) {
+    setStatus("Couldn't change that student's group. Try again.", "error");
+    groupSelect.value = previousGroupId || "";
+    return;
+  }
+  student.group_id = newGroupId;
+  // If the active group filter would now hide the student we just reassigned,
+  // widen it back to "All groups" so the Progress list doesn't silently drop them.
+  const groupFilterEl = el("groupFilter");
+  if (groupFilterEl.value && groupFilterEl.value !== newGroupId) {
+    groupFilterEl.value = "";
+  }
+  renderProgressList();
+  renderStudentHead(student);
+  toast("Group updated");
+});
+
+// --- Student detail: Feedback pane ------------------------------------------
+
+function starsHtml(value) {
+  return [1, 2, 3, 4, 5]
+    .map(
+      (n) =>
+        `<button type="button" class="star${n <= value ? " on" : ""}" data-star="${n}" role="radio"
+          aria-checked="${n === value}" aria-label="${n} of 5">★</button>`
+    )
+    .join("");
+}
+
+function feedbackEntryHtml(f) {
+  return `<li>
+    <div><strong>${escapeHtml(f.coach?.name || "—")}</strong>, ${formatDate(f.created_at)}${
+    f.rating
+      ? `<span class="entry-stars" aria-label="${f.rating} out of 5 stars">${"★".repeat(f.rating)}${"☆".repeat(
+          5 - f.rating
+        )}</span>`
+      : ""
+  }</div>
+    ${
+      f.highlight || f.next_focus
+        ? `<div class="entry-tags">
+            ${f.highlight ? `<div class="hl"><b>Highlight:</b> ${escapeHtml(f.highlight)}</div>` : ""}
+            ${f.next_focus ? `<div class="tg"><b>Next month's target:</b> ${escapeHtml(f.next_focus)}</div>` : ""}
+          </div>`
+        : ""
+    }
+    <div class="body" style="margin-top:8px">${escapeHtml(f.body)}</div>
+    <div class="entry-actions">
+      <button type="button" class="act" data-fbedit="${f.id}">Edit</button>
+      <button type="button" class="act act--danger" data-fbdelete="${f.id}">Delete</button>
+    </div>
+  </li>`;
+}
+
+function renderFeedbackPane(student) {
+  if (!state.fbMonthCursor) {
+    state.fbMonthCursor = state.feedback.length ? String(state.feedback[0].month).slice(0, 7) : thisMonthKey();
+  }
+  const cursor = state.fbMonthCursor;
+  const monthEntries = state.feedback.filter((f) => String(f.month).slice(0, 7) === cursor);
+  const editingEntry = state.fbEditingId ? state.feedback.find((f) => f.id === state.fbEditingId) : null;
+  const canGoNext = cursor < thisMonthKey();
+  const latest = monthEntries[0];
+  const firstName = student.full_name.split(" ")[0];
+  const rating = editingEntry ? editingEntry.rating || 0 : 0;
+
+  let statusText = "Not written yet.";
+  let statusCls = "f-status";
+  if (editingEntry) statusText = "Editing this entry.";
+  else if (latest) {
+    statusText = `Saved ${formatDate(latest.created_at)}. Visible to the student.`;
+    statusCls = "f-status ok";
+  }
+
+  el("pane-feedback").innerHTML = `
+    <div class="card">
+      <div class="month-row">
+        <button type="button" class="arrow" id="fbMonthPrev" aria-label="Previous month">&lsaquo;</button>
+        <h3 class="serif">${escapeHtml(formatMonth(`${cursor}-01`))}</h3>
+        <button type="button" class="arrow" id="fbMonthNext" aria-label="Next month" ${canGoNext ? "" : "disabled"}>&rsaquo;</button>
+      </div>
+      <p class="vis-note">The student reads this, so write it to them.</p>
+
+      <label class="f-label first" for="fbText">Monthly summary</label>
+      <textarea id="fbText" placeholder="How did ${escapeHtml(firstName)} do this month? Write it to them.">${
+        editingEntry ? escapeHtml(editingEntry.body) : ""
+      }</textarea>
+
+      <span class="f-label">Effort and growth this month</span>
+      <div class="stars" id="fbRating" data-value="${rating}" role="radiogroup" aria-label="Effort and growth">${starsHtml(
+    rating
+  )}</div>
+
+      <label class="f-label" for="fbHighlight">This month's highlight <span>(optional)</span></label>
+      <input class="field" id="fbHighlight" maxlength="120"
+        value="${editingEntry ? escapeHtml(editingEntry.highlight || "") : ""}"
+        placeholder="E.g. Won their first practice game">
+
+      <label class="f-label" for="fbFocus">Next month's target <span>(optional)</span></label>
+      <input class="field" id="fbFocus" maxlength="120"
+        value="${editingEntry ? escapeHtml(editingEntry.next_focus || "") : ""}"
+        placeholder="E.g. Opening principles and simple tactics">
+
+      <div class="f-actions">
+        <button type="button" class="btn-primary" id="fbSave">${editingEntry ? "Update feedback" : "Save feedback"}</button>
+        ${editingEntry ? '<button type="button" class="btn-ghost" id="fbCancelEdit">Cancel</button>' : ""}
+        <span class="${statusCls}" id="fbSaveNote">${statusText}</span>
+      </div>
+    </div>
+    ${monthEntries.length ? `<ul class="notes">${monthEntries.map(feedbackEntryHtml).join("")}</ul>` : ""}
+  `;
+}
+
+el("pane-feedback").addEventListener("click", async (e) => {
+  const student = state.students.find((s) => s.id === state.selectedStudent);
+  if (!student) return;
+
+  if (e.target.closest("#fbMonthPrev")) {
+    const [y, m] = state.fbMonthCursor.split("-").map(Number);
+    const d = new Date(y, m - 2, 1);
+    state.fbEditingId = null;
+    state.fbMonthCursor = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    renderFeedbackPane(student);
     return;
   }
 
-  const fbCalNext = e.target.closest("[data-fbcal-next]");
-  if (fbCalNext && !fbCalNext.disabled) {
-    state.fbCalYear += 1;
-    renderChecklist();
+  const nextBtn = e.target.closest("#fbMonthNext");
+  if (nextBtn && !nextBtn.disabled) {
+    const [y, m] = state.fbMonthCursor.split("-").map(Number);
+    const d = new Date(y, m, 1);
+    state.fbEditingId = null;
+    state.fbMonthCursor = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    renderFeedbackPane(student);
     return;
   }
 
   if (e.target.closest("#fbCancelEdit")) {
     state.fbEditingId = null;
-    renderChecklist();
+    renderFeedbackPane(student);
     return;
   }
 
   const fbEditBtn = e.target.closest("[data-fbedit]");
   if (fbEditBtn) {
     state.fbEditingId = fbEditBtn.getAttribute("data-fbedit");
-    renderChecklist();
+    renderFeedbackPane(student);
     return;
   }
 
@@ -1038,23 +1112,26 @@ el("checklistWrap").addEventListener("click", async (e) => {
     if (state.fbEditingId === id) state.fbEditingId = null;
     await loadStudentNotes(student.id);
     await loadRosterFeedbackMonths(state.students.map((s) => s.id));
-    renderPicker();
-    renderChecklist();
+    renderProgressList();
+    renderStudentHead(student);
+    renderFeedbackPane(student);
     return;
   }
 
-  // Handled with direct DOM updates, not a re-render, so clicking a star
+  // Handled with a direct DOM update, not a re-render, so clicking a star
   // doesn't wipe whatever the coach has already typed into the textarea
   // or the highlight/focus fields in the same form.
   const starBtn = e.target.closest("[data-star]");
   if (starBtn) {
     const value = Number(starBtn.getAttribute("data-star"));
-    const row = starBtn.closest(".star-picker");
+    const row = starBtn.closest(".stars");
     const already = Number(row.dataset.value) === value;
     const next = already ? 0 : value; // click the same star again to clear
     row.dataset.value = String(next);
     row.querySelectorAll("[data-star]").forEach((btn) => {
-      btn.classList.toggle("is-filled", Number(btn.getAttribute("data-star")) <= next);
+      const n = Number(btn.getAttribute("data-star"));
+      btn.classList.toggle("on", n <= next);
+      btn.setAttribute("aria-checked", String(n === next));
     });
     return;
   }
@@ -1065,7 +1142,7 @@ el("checklistWrap").addEventListener("click", async (e) => {
       el("fbText").focus();
       return;
     }
-    const monthDate = `${el("fbMonth").value}-01`;
+    const monthDate = `${state.fbMonthCursor}-01`;
     const ratingValue = Number(el("fbRating")?.dataset.value) || null;
     const highlight = el("fbHighlight")?.value.trim() || null;
     const nextFocus = el("fbFocus")?.value.trim() || null;
@@ -1098,21 +1175,63 @@ el("checklistWrap").addEventListener("click", async (e) => {
       state.rosterFeedbackMonths.get(student.id).push(monthDate);
     }
     await loadStudentNotes(student.id);
-    renderPicker();
-    renderChecklist();
-    return;
+    renderProgressList();
+    renderStudentHead(student);
+    renderFeedbackPane(student);
+    toast("Feedback saved");
   }
+});
+
+// --- Student detail: Notes pane ---------------------------------------------
+
+function renderNotesPane(student) {
+  const editingNote = state.ntEditingId ? state.notes.find((n) => n.id === state.ntEditingId) : null;
+
+  const list = state.notes.length
+    ? state.notes
+        .map(
+          (n) => `<li>
+            <div class="body">${escapeHtml(n.body)}</div>
+            <div class="by">${escapeHtml(n.coach?.name || "—")}, ${formatDate(n.created_at)}</div>
+            <div class="entry-actions">
+              <button type="button" class="act" data-ntedit="${n.id}">Edit</button>
+              <button type="button" class="act act--danger" data-ntdelete="${n.id}">Delete</button>
+            </div>
+          </li>`
+        )
+        .join("")
+    : '<li class="empty">No notes yet.</li>';
+
+  el("pane-notes").innerHTML = `
+    <div class="card">
+      <label class="f-label first" for="ntText">${editingNote ? "Edit note" : "Add a note"}</label>
+      <p class="vis-note vis-note--left">Only coaches see these. Use them for handovers between instructors.</p>
+      <textarea id="ntText" placeholder="E.g. Gets frustrated after losses, give them a quick win to start the session.">${
+        editingNote ? escapeHtml(editingNote.body) : ""
+      }</textarea>
+      <div class="f-actions">
+        <button type="button" class="btn-primary" id="ntSave">${editingNote ? "Update note" : "Add note"}</button>
+        ${editingNote ? '<button type="button" class="btn-ghost" id="ntCancelEdit">Cancel</button>' : ""}
+      </div>
+    </div>
+    <ul class="notes">${list}</ul>
+  `;
+}
+
+el("pane-notes").addEventListener("click", async (e) => {
+  const student = state.students.find((s) => s.id === state.selectedStudent);
+  if (!student) return;
 
   if (e.target.closest("#ntCancelEdit")) {
     state.ntEditingId = null;
-    renderChecklist();
+    renderNotesPane(student);
     return;
   }
 
   const ntEditBtn = e.target.closest("[data-ntedit]");
   if (ntEditBtn) {
     state.ntEditingId = ntEditBtn.getAttribute("data-ntedit");
-    renderChecklist();
+    renderNotesPane(student);
     return;
   }
 
@@ -1130,7 +1249,7 @@ el("checklistWrap").addEventListener("click", async (e) => {
     }
     if (state.ntEditingId === id) state.ntEditingId = null;
     await loadStudentNotes(student.id);
-    renderChecklist();
+    renderNotesPane(student);
     return;
   }
 
@@ -1152,96 +1271,9 @@ el("checklistWrap").addEventListener("click", async (e) => {
     }
     state.ntEditingId = null;
     await loadStudentNotes(student.id);
-    renderChecklist();
-    return;
+    renderNotesPane(student);
+    toast(editingId ? "Note updated" : "Note added");
   }
-
-  const unitHead = e.target.closest("[data-unit]");
-  if (unitHead) {
-    const id = unitHead.getAttribute("data-unit");
-    if (state.openUnits.has(id)) state.openUnits.delete(id);
-    else state.openUnits.add(id);
-    renderChecklist();
-    return;
-  }
-
-  const modTab = e.target.closest("[data-module]");
-  if (modTab) {
-    state.moduleId = modTab.getAttribute("data-module");
-    renderChecklist();
-    return;
-  }
-
-  const tick = e.target.closest("[data-tick]");
-  if (tick && !tick.disabled) {
-    const itemId = tick.getAttribute("data-tick");
-    tick.disabled = true;
-    const { error } = await supabase
-      .from("item_ticks")
-      .insert({ student_id: student.id, item_id: itemId, marked_by: state.coach.id });
-    if (error) {
-      tick.disabled = false;
-      setStatus("Couldn't save that tick. Try again.", "error");
-      return;
-    }
-    if (!state.rosterTicks.has(student.id)) state.rosterTicks.set(student.id, new Map());
-    state.rosterTicks.get(student.id).set(itemId, { on: todayKey(), coachName: state.coach.name });
-    renderPicker();
-    renderChecklist();
-    return;
-  }
-
-  const passCp = e.target.closest("[data-passcp]");
-  if (passCp) {
-    const itemId = passCp.getAttribute("data-passcp");
-    const input = el("checklistWrap").querySelector(`[data-ev="${itemId}"]`);
-    const evidence = input.value.trim();
-    if (!evidence) {
-      input.focus();
-      return;
-    }
-    passCp.disabled = true;
-    const { error } = await supabase
-      .from("checkpoint_passes")
-      .insert({ student_id: student.id, item_id: itemId, evidence, marked_by: state.coach.id });
-    passCp.disabled = false;
-    if (error) {
-      setStatus("Couldn't save the checkpoint. Try again.", "error");
-      return;
-    }
-    if (!state.rosterCps.has(student.id)) state.rosterCps.set(student.id, new Map());
-    state.rosterCps.get(student.id).set(itemId, { on: todayKey(), evidence, coachName: state.coach.name });
-    renderPicker();
-    renderChecklist();
-  }
-});
-
-el("checklistWrap").addEventListener("change", async (e) => {
-  const groupSelect = e.target.closest("#checklistGroupSelect");
-  if (!groupSelect) return;
-  const student = state.students.find((s) => s.id === state.selectedStudent);
-  if (!student) return;
-
-  const newGroupId = groupSelect.value || null;
-  const previousGroupId = student.group_id;
-  groupSelect.disabled = true;
-  const { error } = await supabase.from("students").update({ group_id: newGroupId }).eq("id", student.id);
-  groupSelect.disabled = false;
-  if (error) {
-    setStatus("Couldn't change that student's group. Try again.", "error");
-    groupSelect.value = previousGroupId || "";
-    return;
-  }
-  student.group_id = newGroupId;
-  // If the active group filter would now hide the student we just reassigned,
-  // widen it back to "All groups" instead of letting renderPicker() silently
-  // clear the selection and wipe the checklist out from under the coach.
-  const groupFilterEl = el("groupFilter");
-  if (groupFilterEl.value && groupFilterEl.value !== newGroupId) {
-    groupFilterEl.value = "";
-  }
-  renderPicker();
-  setStatus("Group updated.", "success");
 });
 
 // --- Syllabus tab: read-only teaching reference -----------------------------
@@ -1271,18 +1303,6 @@ function renderSyllabus() {
     .join("");
 
   el("syllabusUnits").innerHTML = mod.units.map((u) => renderSyllabusUnit(u)).join("");
-
-  if (state.syllabusScrollTo) {
-    const targetId = state.syllabusScrollTo;
-    state.syllabusScrollTo = null;
-    requestAnimationFrame(() => {
-      const node = document.querySelector(`[data-syllabus-item="${targetId}"]`);
-      if (!node) return;
-      node.scrollIntoView({ behavior: "smooth", block: "center" });
-      node.classList.add("is-target");
-      setTimeout(() => node.classList.remove("is-target"), 2000);
-    });
-  }
 }
 
 function renderSyllabusUnit(unit) {
@@ -1322,15 +1342,6 @@ function renderSyllabusItem(item) {
   </div>`;
 }
 
-function openSyllabusItem(unit, item) {
-  state.syllabusModuleId = unit.module_id;
-  state.syllabusOpenUnits.add(unit.id);
-  state.syllabusOpenItems.add(item.id);
-  state.syllabusScrollTo = item.id;
-  selectTab("syllabus");
-  renderSyllabus();
-}
-
 el("syllabusModuleTabs").addEventListener("click", (e) => {
   const btn = e.target.closest("[data-syllabus-module]");
   if (!btn) return;
@@ -1357,22 +1368,69 @@ el("syllabusUnits").addEventListener("click", (e) => {
   }
 });
 
-// --- Top-level tabs ---------------------------------------------------------
+// --- Top-level routing (hash-based) -----------------------------------------
+//
+// #today | #progress | #syllabus select a main tab; #student/<id> opens the
+// student detail page as its own "screen" with real browser history, so the
+// phone/browser back button and swipe-back gesture both work naturally.
 
-function selectTab(name) {
-  el("tabToday").setAttribute("aria-selected", String(name === "today"));
-  el("tabProgress").setAttribute("aria-selected", String(name === "progress"));
-  el("tabSyllabus").setAttribute("aria-selected", String(name === "syllabus"));
-  el("panelToday").hidden = name !== "today";
-  el("panelProgress").hidden = name !== "progress";
-  el("panelSyllabus").hidden = name !== "syllabus";
+function currentView() {
+  const raw = location.hash.slice(1);
+  if (raw.startsWith("student/")) return "student";
+  return ["today", "progress", "syllabus"].includes(raw) ? raw : "today";
 }
 
-el("tabToday").addEventListener("click", () => selectTab("today"));
-el("tabProgress").addEventListener("click", () => selectTab("progress"));
+function route() {
+  const raw = location.hash.slice(1);
+  const studentMatch = raw.match(/^student\/(.+)$/);
+
+  if (studentMatch) {
+    el("siteHeader").hidden = true;
+    el("schoolSelect").hidden = true;
+    el("mainTabs").hidden = true;
+    el("panelStudent").hidden = false;
+    el("panelToday").hidden = true;
+    el("panelProgress").hidden = true;
+    el("panelSyllabus").hidden = true;
+    syncSavebarVisibility();
+    openStudentPage(decodeURIComponent(studentMatch[1]));
+    window.scrollTo(0, 0);
+    return;
+  }
+
+  el("siteHeader").hidden = false;
+  el("schoolSelect").hidden = !state.isAdmin;
+  el("mainTabs").hidden = false;
+  el("panelStudent").hidden = true;
+
+  const tab = ["today", "progress", "syllabus"].includes(raw) ? raw : "today";
+  el("tabToday").setAttribute("aria-selected", String(tab === "today"));
+  el("tabProgress").setAttribute("aria-selected", String(tab === "progress"));
+  el("tabSyllabus").setAttribute("aria-selected", String(tab === "syllabus"));
+  el("panelToday").hidden = tab !== "today";
+  el("panelProgress").hidden = tab !== "progress";
+  el("panelSyllabus").hidden = tab !== "syllabus";
+
+  if (tab === "syllabus") renderSyllabus();
+  syncSavebarVisibility();
+
+  if (tab === "progress" && state.listScroll != null) {
+    const y = state.listScroll;
+    state.listScroll = null;
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  }
+}
+
+window.addEventListener("hashchange", route);
+
+el("tabToday").addEventListener("click", () => {
+  location.hash = "today";
+});
+el("tabProgress").addEventListener("click", () => {
+  location.hash = "progress";
+});
 el("tabSyllabus").addEventListener("click", () => {
-  selectTab("syllabus");
-  renderSyllabus();
+  location.hash = "syllabus";
 });
 
 el("signOutButton").addEventListener("click", async () => {

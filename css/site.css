@@ -706,77 +706,7 @@ body.portal-landing.portal-light::before {
   white-space: nowrap;
 }
 
-.attend-btn {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1.5px solid var(--border);
-  background: var(--cream);
-  color: transparent;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.attend-btn[aria-pressed="true"] {
-  background: var(--success);
-  border-color: var(--success);
-  color: var(--fixed-light);
-}
-
-.attend-btn:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 2px;
-}
-
-.attend-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-/* Attendance: calendar + session layout */
-.attendance-layout {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 20px;
-  align-items: start;
-}
-
-.attendance-main {
-  min-width: 0;
-}
-
-.cal-card {
-  min-width: 0;
-  padding: 16px;
-  position: sticky;
-  top: 16px;
-}
-
-.cal-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.cal-head__title {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.cal-title {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 1.02rem;
-}
-
-.cal-subtitle {
-  font-size: 0.74rem;
-  color: var(--text-muted);
-}
-
+/* Shared round icon button, used by the feedback month-picker calendar (js/utils.js) */
 .icon-btn {
   width: 30px;
   height: 30px;
@@ -795,154 +725,6 @@ body.portal-landing.portal-light::before {
 .icon-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.cal-dow,
-.cal-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
-}
-
-.cal-dow span {
-  text-align: center;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  padding-bottom: 4px;
-}
-
-.cal-day {
-  position: relative;
-  aspect-ratio: 1;
-  min-width: 0;
-  min-height: 0;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: none;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-  font-size: 0.78rem;
-  font-family: var(--font-body);
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-
-.cal-day:hover:not(:disabled) {
-  background: var(--cream);
-  border-color: var(--border);
-}
-
-.cal-day.is-other {
-  color: var(--text-muted);
-}
-
-.cal-day:disabled {
-  color: var(--border);
-  cursor: default;
-}
-
-.cal-day.is-today {
-  border-color: var(--gold-dark);
-}
-
-.cal-day[aria-pressed="true"] {
-  background: var(--crimson);
-  border-color: var(--crimson);
-  color: var(--fixed-light);
-  font-weight: 700;
-}
-
-.cal-day__mark {
-  min-height: 11px;
-  font-size: 0.62rem;
-  font-weight: 700;
-  color: var(--success);
-}
-
-.cal-day[aria-pressed="true"] .cal-day__mark {
-  color: var(--fixed-light);
-}
-
-.cal-day.is-draft .cal-day__mark:empty::after {
-  content: "";
-  display: block;
-  width: 5px;
-  height: 5px;
-  margin: 2px auto 0;
-  border-radius: 50%;
-  background: var(--gold-dark);
-}
-
-.cal-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  margin-top: 12px;
-  font-size: 0.76rem;
-  color: var(--text-muted);
-}
-
-.cal-legend__mark {
-  color: var(--success);
-  margin-right: 4px;
-}
-
-.cal-legend__dot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--gold-dark);
-  margin-right: 5px;
-}
-
-.session-head {
-  margin-bottom: 12px;
-}
-
-.session-date {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 1.3rem;
-  margin: 0 0 4px;
-}
-
-.status-line {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-.status-line--dirty {
-  color: var(--gold-dark);
-  font-weight: 600;
-}
-
-.savebar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 0 0;
-  flex-wrap: wrap;
-}
-
-.savebar__actions {
-  display: flex;
-  gap: 8px;
-}
-
-@media (max-width: 720px) {
-  .attendance-layout {
-    grid-template-columns: 1fr;
-  }
-  .cal-card {
-    position: static;
-  }
 }
 
 /* Filter toolbar */
@@ -967,73 +749,6 @@ body.portal-landing.portal-light::before {
 .toolbar input[type="search"] {
   flex: 1;
   min-width: 160px;
-}
-
-/* Student picker */
-.picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 24px;
-}
-
-.picker__item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid var(--border);
-  background: var(--white);
-  border-radius: 999px;
-  padding: 6px 16px 6px 6px;
-  text-align: left;
-  font-family: var(--font-body);
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  color: var(--text);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  animation: fadeInUp 0.35s ease both;
-}
-
-.picker__item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(40, 1, 19, 0.1);
-  border-color: var(--gold);
-}
-
-.picker__item-text {
-  min-width: 0;
-}
-
-.picker__item small {
-  display: block;
-  font-weight: 400;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.picker__item .avatar-circle {
-  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-  color: var(--fixed-dark);
-}
-
-.picker__item[aria-pressed="true"] {
-  border-color: var(--crimson);
-  background: rgba(123, 24, 67, 0.06);
-}
-
-.picker__item[aria-pressed="true"] .avatar-circle {
-  background: linear-gradient(135deg, var(--crimson), var(--fixed-dark));
-  color: var(--fixed-light);
-}
-
-.picker__item:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 2px;
-}
-
-.picker__due {
-  color: var(--crimson);
 }
 
 /* Thin progress tracks, reused across coach + student views */
@@ -1064,12 +779,6 @@ body.portal-landing.portal-light::before {
   gap: 12px;
   margin-bottom: 16px;
   flex-wrap: wrap;
-}
-
-.checklist-head__name {
-  font-weight: 700;
-  font-family: var(--font-heading);
-  font-size: 1.1rem;
 }
 
 .checklist-head__pct {
@@ -1269,27 +978,6 @@ body.portal-landing.portal-light::before {
   color: var(--success);
 }
 
-/* Deep-link from a Progress-tab checklist row into the Syllabus tab */
-.syllabus-jump {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--cream);
-  cursor: pointer;
-  font-size: 0.85rem;
-  line-height: 1;
-  margin-top: 1px;
-}
-
-.syllabus-jump--inline {
-  width: 22px;
-  height: 22px;
-  margin: 0 0 0 6px;
-  vertical-align: middle;
-}
-
 /* Syllabus tab: reference "book" content per item */
 .syllabus-item {
   border-bottom: 1px solid var(--border);
@@ -1367,21 +1055,6 @@ body.portal-landing.portal-light::before {
   color: var(--text);
 }
 
-.syllabus-item.is-target {
-  animation: syllabus-flash 2s ease-out;
-  border-radius: 8px;
-}
-
-@keyframes syllabus-flash {
-  0%,
-  30% {
-    background: rgba(189, 158, 110, 0.22);
-  }
-  100% {
-    background: transparent;
-  }
-}
-
 /* Notes / feedback pane */
 .notes {
   background: var(--white);
@@ -1410,15 +1083,6 @@ body.portal-landing.portal-light::before {
   gap: 10px;
   margin-top: 8px;
   flex-wrap: wrap;
-}
-
-.notes__row input[type="month"] {
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--white);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
 }
 
 .notes__hint {

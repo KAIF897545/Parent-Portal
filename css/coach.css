@@ -1,0 +1,1270 @@
+/* Coach dashboard: cream / maroon / gold, mirroring the approved concept.
+   Everything is scoped under body.coach-page so login, admin and student
+   pages are untouched. Loaded after site.css. */
+
+body.portal-landing.portal-light.coach-page {
+  --maroon: #6e1433;
+  --maroon-deep: #4b0a22;
+  --maroon-tint: #f6e7ea;
+  --gold: #b8913a;
+  --gold-soft: #f3e6c4;
+  --gold-ink: #7a5a12;
+  --cream: #fbf6ec;
+  --card: #fffdf8;
+  --ink: #2b1a1f;
+  --muted: #7a6a6e;
+  --line: #e8dccb;
+  --green: #2f7a4f;
+  --green-tint: #e5f2e9;
+
+  /* Re-point the shared site tokens so any legacy component inherits the palette */
+  --white: var(--card);
+  --near-black: var(--ink);
+  --text: var(--ink);
+  --text-muted: var(--muted);
+  --border: var(--line);
+  --crimson: var(--maroon);
+  --crimson-dark: var(--maroon-deep);
+  --gold-dark: var(--gold-ink);
+  --success: var(--green);
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  background: var(--cream);
+  color: var(--ink);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.coach-page [hidden] {
+  display: none !important;
+}
+
+.coach-page button,
+.coach-page select,
+.coach-page input,
+.coach-page textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.coach-page :focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.coach-page .page {
+  max-width: 720px;
+  padding: calc(env(safe-area-inset-top, 0px) + 20px) 18px 48px;
+}
+
+.coach-page.has-savebar .page {
+  padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+}
+
+.coach-page .serif {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  color: var(--maroon-deep);
+}
+
+/* Header */
+.coach-page header.site {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.coach-page .crest {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px var(--gold);
+  overflow: hidden;
+}
+
+.coach-page .crest img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  padding: 4px;
+}
+
+.coach-page .who {
+  flex: 1;
+  min-width: 0;
+}
+
+.coach-page .who h1 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 700;
+  font-size: 1.35rem;
+  margin: 0;
+  color: var(--maroon-deep);
+  line-height: 1.2;
+}
+
+.coach-page .who p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.coach-page .signout {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 14px;
+  color: var(--maroon);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.coach-page .signout:hover {
+  background: var(--maroon-tint);
+}
+
+.coach-page .school-select {
+  margin-top: 12px;
+  width: 100%;
+}
+
+/* Segmented tabs (main + student page) */
+.coach-page .seg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0;
+  background: #f1e6d6;
+  border-radius: 12px;
+  padding: 4px;
+  margin: 0;
+}
+
+.coach-page .seg button {
+  border: 0;
+  background: none;
+  padding: 10px 6px;
+  border-radius: 9px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: none;
+}
+
+.coach-page .seg button[aria-selected="true"] {
+  background: var(--card);
+  color: var(--maroon);
+  box-shadow: 0 1px 2px rgba(75, 10, 34, 0.12);
+}
+
+.coach-page .seg .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  margin: 0;
+}
+
+.coach-page nav.main {
+  margin: 22px 0 18px;
+}
+
+.coach-page #status {
+  margin: 12px 0 0;
+}
+
+.coach-page #status:empty {
+  display: none;
+}
+
+.coach-page .when.none {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Date switcher */
+.coach-page .date-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.coach-page .arrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-size: 1.3rem;
+  color: var(--maroon);
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.coach-page .arrow:hover:not(:disabled) {
+  background: var(--maroon-tint);
+  color: var(--maroon);
+  border-color: var(--line);
+}
+
+.coach-page .arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.coach-page .date-main {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  position: relative;
+}
+
+.coach-page .date-main h2 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.coach-page .date-main label {
+  cursor: pointer;
+  display: block;
+  position: relative;
+}
+
+.coach-page .date-main input[type="date"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.coach-page .status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.coach-page .status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.coach-page .status.todo {
+  background: var(--gold-soft);
+  color: var(--gold-ink);
+}
+
+.coach-page .status.saved {
+  background: var(--green-tint);
+  color: var(--green);
+}
+
+.coach-page .status.edited {
+  background: var(--maroon-tint);
+  color: var(--maroon);
+}
+
+.coach-page .today-link {
+  display: block;
+  margin: 6px auto 0;
+  background: none;
+  border: 0;
+  color: var(--maroon);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* Controls */
+.coach-page .controls {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0 12px;
+}
+
+.coach-page select,
+.coach-page .field {
+  height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  padding: 0 12px;
+  font-weight: 500;
+}
+
+.coach-page .field::placeholder,
+.coach-page textarea::placeholder {
+  color: #a39398;
+}
+
+.coach-page .controls select {
+  flex: 1;
+  min-width: 0;
+}
+
+.coach-page .controls .field {
+  flex: 2;
+  min-width: 0;
+}
+
+.coach-page .all-btn {
+  flex: 1;
+  height: 46px;
+  border-radius: 12px;
+  border: 1.5px solid var(--maroon);
+  background: var(--card);
+  color: var(--maroon);
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 0 12px;
+}
+
+.coach-page .all-btn:hover {
+  background: var(--maroon-tint);
+}
+
+/* Lists */
+.coach-page ul.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.coach-page ul.list > li + li {
+  border-top: 1px solid var(--line);
+}
+
+.coach-page .row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: none;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.coach-page .row:hover {
+  background: #fbf3e6;
+}
+
+.coach-page .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--maroon-tint);
+  color: var(--maroon);
+  font-weight: 700;
+  font-size: 0.78rem;
+  display: grid;
+  place-items: center;
+}
+
+.coach-page .info {
+  flex: 1;
+  min-width: 0;
+}
+
+.coach-page .name {
+  font-weight: 600;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.coach-page .meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.coach-page .meta--marked {
+  color: var(--green);
+}
+
+.coach-page .empty {
+  padding: 28px;
+  text-align: center;
+  color: var(--muted);
+  list-style: none;
+}
+
+.coach-page .tick {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid #cdbfae;
+  display: grid;
+  place-items: center;
+  color: transparent;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.coach-page .tick svg {
+  width: 16px;
+  height: 16px;
+}
+
+.coach-page .row[aria-pressed="true"] {
+  background: var(--green-tint);
+}
+
+.coach-page .row[aria-pressed="true"] .avatar {
+  background: #fff;
+  color: var(--green);
+}
+
+.coach-page .row[aria-pressed="true"] .tick {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.coach-page .mini-bar {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  margin-top: 6px;
+  overflow: hidden;
+  max-width: 220px;
+}
+
+.coach-page .mini-bar span {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+}
+
+.coach-page .badge {
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.coach-page .badge.due {
+  background: var(--gold-soft);
+  color: var(--gold-ink);
+}
+
+.coach-page .badge.done {
+  background: var(--green-tint);
+  color: var(--green);
+}
+
+.coach-page .chev {
+  color: #b9a9ac;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.coach-page .section-head h2 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.coach-page .section-head p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.coach-page .att-history {
+  margin-top: 28px;
+}
+
+.coach-page .att-history h3 {
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+}
+
+/* Attendance save bar */
+.coach-page .savebar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--maroon-deep);
+  color: var(--cream);
+  box-shadow: 0 -4px 18px rgba(75, 10, 34, 0.18);
+}
+
+.coach-page .savebar-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.coach-page .count {
+  flex: 1;
+  min-width: 0;
+}
+
+.coach-page .count strong {
+  font-size: 1.15rem;
+}
+
+.coach-page .bar {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.18);
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.coach-page .bar span {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+  width: 0;
+  transition: width 0.2s;
+}
+
+.coach-page .save {
+  height: 48px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--gold);
+  color: var(--maroon-deep);
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.coach-page .save:disabled {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(251, 246, 236, 0.6);
+  cursor: default;
+}
+
+.coach-page .discard {
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid rgba(251, 246, 236, 0.35);
+  border-radius: 12px;
+  background: none;
+  color: var(--cream);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Student page */
+.coach-page .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: calc(-1 * (env(safe-area-inset-top, 0px) + 20px)) -18px 16px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 18px 10px;
+  background: rgba(251, 246, 236, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coach-page .back {
+  height: 42px;
+  padding: 0 14px 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--maroon);
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.coach-page .back:hover {
+  background: var(--maroon-tint);
+}
+
+.coach-page .topbar .spacer {
+  flex: 1;
+}
+
+.coach-page .pos {
+  font-size: 0.85rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.coach-page .topbar .arrow {
+  width: 42px;
+  height: 42px;
+}
+
+.coach-page .s-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.coach-page .s-head .avatar {
+  width: 54px;
+  height: 54px;
+  font-size: 1rem;
+}
+
+.coach-page .s-head h2 {
+  font-size: 1.5rem;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.coach-page .s-head p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.coach-page .s-tabs {
+  margin: 18px 0;
+}
+
+.coach-page .group-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.coach-page .group-row select {
+  flex: 1;
+  min-width: 0;
+  max-width: 260px;
+}
+
+/* Module picker */
+.coach-page .mods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.coach-page .mod {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coach-page .mod small {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.coach-page .mod strong {
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.coach-page .mod .mini-bar {
+  max-width: none;
+  margin-top: 6px;
+}
+
+.coach-page .mod[aria-selected="true"] {
+  background: var(--maroon);
+  border-color: var(--maroon);
+  color: var(--cream);
+}
+
+.coach-page .mod[aria-selected="true"] small {
+  color: rgba(251, 246, 236, 0.8);
+}
+
+.coach-page .mod[aria-selected="true"] .mini-bar {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.coach-page .now {
+  color: var(--gold-ink);
+}
+
+.coach-page .mod[aria-selected="true"] .now {
+  color: var(--gold-soft);
+}
+
+/* Units + criteria */
+.coach-page .unit {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin: 12px 0 0;
+  overflow: hidden;
+}
+
+.coach-page .unit-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.coach-page .unit-head h3 {
+  margin: 0;
+  font-size: 1.02rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.coach-page .unit-head .num {
+  color: var(--muted);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.coach-page .unit-head .frac {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.coach-page .unit-head .frac.full {
+  color: var(--green);
+}
+
+.coach-page .unit-head .caret {
+  color: #b9a9ac;
+  transition: transform 0.2s;
+  font-size: 1.3rem;
+}
+
+.coach-page .unit-head[aria-expanded="true"] .caret {
+  transform: rotate(90deg);
+}
+
+.coach-page .unit ul.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.coach-page .unit ul.items > li + li {
+  border-top: 1px solid var(--line);
+}
+
+.coach-page .item {
+  display: flex;
+  align-items: stretch;
+}
+
+.coach-page .item .row {
+  align-items: flex-start;
+  padding: 12px 14px;
+}
+
+.coach-page .item .row .tick {
+  margin-top: 1px;
+}
+
+.coach-page .crit {
+  font-weight: 500;
+  display: block;
+}
+
+.coach-page .pass {
+  font-size: 0.82rem;
+  color: var(--muted);
+  display: block;
+  margin-top: 2px;
+}
+
+.coach-page .when {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--green);
+  display: block;
+  margin-top: 4px;
+}
+
+.coach-page .tip-btn {
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: none;
+  padding: 0 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--maroon);
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: 0;
+  margin: 0;
+}
+
+.coach-page .tip-btn:hover,
+.coach-page .tip-btn[aria-expanded="true"] {
+  background: var(--maroon-tint);
+}
+
+.coach-page .tip {
+  padding: 10px 16px 12px 56px;
+  font-size: 0.88rem;
+  background: #fbf3e6;
+  color: var(--ink);
+  border-top: 1px dashed var(--line);
+  white-space: pre-wrap;
+}
+
+.coach-page .checkpoint {
+  margin: 0;
+  padding: 14px 16px;
+  border: 0;
+  border-top: 1px dashed #d9c58f;
+  border-radius: 0;
+  background: var(--gold-soft);
+}
+
+.coach-page .checkpoint.is-passed {
+  background: var(--green-tint);
+  border-top: 1px solid var(--line);
+}
+
+.coach-page .checkpoint__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 4px;
+}
+
+.coach-page .checkpoint__title {
+  font-weight: 700;
+  color: var(--gold-ink);
+  font-size: 0.95rem;
+}
+
+.coach-page .checkpoint.is-passed .checkpoint__title {
+  color: var(--green);
+}
+
+.coach-page .checkpoint .tip-btn {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px 12px;
+  background: var(--card);
+}
+
+.coach-page .checkpoint .tip {
+  padding: 10px 12px;
+  margin: 8px 0;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+}
+
+.coach-page .checkpoint p {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+
+.coach-page .checkpoint__form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.coach-page .checkpoint__form .field {
+  flex: 1;
+  min-width: 180px;
+  background: #fff;
+}
+
+.coach-page .checkpoint__done {
+  font-size: 0.85rem;
+  color: var(--green);
+  font-weight: 600;
+}
+
+.coach-page .autosaved {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 14px 0 0;
+  text-align: center;
+}
+
+/* Feedback + notes */
+.coach-page .card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: none;
+}
+
+.coach-page .month-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.coach-page .month-row h3 {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.coach-page .vis-note {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.coach-page .vis-note--left {
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.coach-page .f-label {
+  display: block;
+  font-weight: 700;
+  margin: 16px 0 6px;
+  font-size: 0.95rem;
+}
+
+.coach-page .f-label.first {
+  margin-top: 0;
+}
+
+.coach-page .f-label span {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.coach-page textarea {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.coach-page .card .field {
+  width: 100%;
+  background: #fff;
+}
+
+.coach-page .stars {
+  display: flex;
+  gap: 4px;
+}
+
+.coach-page .star {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  font-size: 1.8rem;
+  line-height: 1;
+  color: #dccfbd;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 0;
+}
+
+.coach-page .star.on {
+  color: var(--gold);
+}
+
+.coach-page .f-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.coach-page .btn-primary {
+  height: 48px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--maroon);
+  color: var(--cream);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.coach-page .btn-primary:hover {
+  background: var(--maroon-deep);
+}
+
+.coach-page .btn-primary.sm {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+}
+
+.coach-page .btn-primary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.coach-page .btn-ghost {
+  height: 48px;
+  padding: 0 18px;
+  border: 1.5px solid var(--maroon);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--maroon);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.coach-page .f-status {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.coach-page .f-status.ok {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.coach-page ul.notes {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+.coach-page ul.notes > li {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 8px;
+}
+
+.coach-page .notes .by {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.coach-page .notes .body {
+  white-space: pre-wrap;
+}
+
+.coach-page .entry-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+}
+
+.coach-page .entry-tags .hl {
+  color: var(--gold-ink);
+}
+
+.coach-page .entry-tags .tg {
+  color: var(--maroon);
+}
+
+.coach-page .entry-stars {
+  color: var(--gold);
+  letter-spacing: 2px;
+  margin-left: 6px;
+}
+
+.coach-page .entry-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.coach-page .act {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--maroon);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.coach-page .act:hover {
+  background: var(--maroon-tint);
+}
+
+.coach-page .act--danger {
+  color: #a3262a;
+}
+
+.coach-page .act--danger:hover {
+  background: #fbe9e9;
+}
+
+.coach-page .toast {
+  position: fixed;
+  left: 50%;
+  bottom: 96px;
+  transform: translate(-50%, 20px);
+  background: var(--ink);
+  color: var(--cream);
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 60;
+  max-width: calc(100vw - 36px);
+}
+
+.coach-page .toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* Syllabus tab (unchanged structure, concept palette) */
+.coach-page .module-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 6px;
+  margin: 14px 0 4px;
+}
+
+.coach-page .module-tab {
+  border-radius: 12px;
+  padding: 9px 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.coach-page .module-tab[aria-selected="true"] {
+  background: var(--maroon);
+  border-color: var(--maroon);
+  color: var(--cream);
+}
+
+.coach-page .unit__head {
+  padding: 14px 16px;
+}
+
+.coach-page .unit__name {
+  font-family: "Fraunces", Georgia, serif;
+  color: var(--maroon-deep);
+}
+
+.coach-page .unit__body {
+  padding: 4px 16px 14px;
+}
+
+@media (max-width: 480px) {
+  .coach-page .who p {
+    font-size: 0.82rem;
+  }
+
+  .coach-page #panelToday .controls {
+    flex-direction: column;
+  }
+
+  .coach-page .date-main h2 {
+    font-size: 1.2rem;
+  }
+
+  .coach-page .badge {
+    font-size: 0.7rem;
+    padding: 3px 7px;
+  }
+
+  .coach-page .pos {
+    display: none;
+  }
+
+  .coach-page .mods {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .coach-page .s-head h2 {
+    font-size: 1.3rem;
+  }
+
+  .coach-page .seg button {
+    font-size: 0.9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coach-page * {
+    transition: none !important;
+  }
+}
