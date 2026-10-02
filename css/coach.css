@@ -942,6 +942,10 @@ body.portal-landing.portal-light.coach-page {
   font-weight: 600;
 }
 
+.coach-page .checkpoint__done .act {
+  margin-top: 8px;
+}
+
 .coach-page .autosaved {
   font-size: 0.82rem;
   color: var(--muted);

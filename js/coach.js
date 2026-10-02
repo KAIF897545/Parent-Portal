@@ -836,7 +836,8 @@ function renderUnit(student, unit) {
         ${
           cpMark
             ? `<div class="checkpoint__done">Passed ${formatDate(cpMark.on)} · ${escapeHtml(cpMark.coachName)}<br>
-                Evidence: ${escapeHtml(cpMark.evidence)}</div>`
+                Evidence: ${escapeHtml(cpMark.evidence)}
+                <div><button type="button" class="act" data-undocp="${cp.id}">Undo pass</button></div></div>`
             : `<div class="checkpoint__form">
                 <input type="text" class="field" data-ev="${cp.id}" placeholder="Evidence: what you observed">
                 <button type="button" class="btn-primary sm" data-passcp="${cp.id}">Mark passed</button>
@@ -894,7 +895,28 @@ el("pane-checklist").addEventListener("click", async (e) => {
   if (tickRow) {
     const itemId = tickRow.getAttribute("data-tick-row");
     const ticks = state.rosterTicks.get(student.id);
-    if (ticks && ticks.has(itemId)) return; // ticks are insert-only; already marked
+    if (ticks && ticks.has(itemId)) {
+      // Tapping a ticked row unmarks it. .select() so we can tell a real
+      // delete from RLS silently matching zero rows (policy not applied).
+      tickRow.disabled = true;
+      const { data: removed, error: delError } = await supabase
+        .from("item_ticks")
+        .delete()
+        .eq("student_id", student.id)
+        .eq("item_id", itemId)
+        .select("id");
+      tickRow.disabled = false;
+      if (delError || !removed || !removed.length) {
+        setStatus("Couldn't unmark that item. Try again.", "error");
+        return;
+      }
+      ticks.delete(itemId);
+      state.autosaveNote = "Unmarked. Saved just now.";
+      renderStudentHead(student);
+      renderChecklistPane(student);
+      toast("Unmarked");
+      return;
+    }
     const { error } = await supabase
       .from("item_ticks")
       .insert({ student_id: student.id, item_id: itemId, marked_by: state.coach.id });
@@ -907,6 +929,28 @@ el("pane-checklist").addEventListener("click", async (e) => {
     state.autosaveNote = "Saved just now.";
     renderStudentHead(student);
     renderChecklistPane(student);
+    return;
+  }
+
+  const undoCp = e.target.closest("[data-undocp]");
+  if (undoCp) {
+    const itemId = undoCp.getAttribute("data-undocp");
+    if (!window.confirm("Remove this checkpoint pass and its evidence?")) return;
+    undoCp.disabled = true;
+    const { data: removed, error: delError } = await supabase
+      .from("checkpoint_passes")
+      .delete()
+      .eq("student_id", student.id)
+      .eq("item_id", itemId)
+      .select("id");
+    undoCp.disabled = false;
+    if (delError || !removed || !removed.length) {
+      setStatus("Couldn't undo that checkpoint. Try again.", "error");
+      return;
+    }
+    state.rosterCps.get(student.id)?.delete(itemId);
+    renderChecklistPane(student);
+    toast("Checkpoint pass removed");
     return;
   }
 
