@@ -94,6 +94,43 @@ body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--in
 #splash p{font:500 clamp(1.3rem,5vw,1.8rem) var(--hand);color:var(--lead);margin:0;opacity:0;animation:sfade .5s .9s ease forwards}
 @keyframes sdraw{to{stroke-dashoffset:0}}@keyframes sfade{to{opacity:1}}
 @media (prefers-reduced-motion:reduce){#splash path{animation:none;stroke-dashoffset:0}#splash p{animation:none;opacity:1}#splash{transition:none}}
+/* ---------- phone layout ---------- */
+html,body{overscroll-behavior:none}
+@media (max-width:760px){
+ html,body{height:100dvh}
+ body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
+ #cap{font-size:1.3rem}#who{font-size:.9rem}
+ #home{display:none}
+ #menu{padding:10px 10px calc(14px + env(safe-area-inset-bottom,0px))}
+ #menu .seg button,#menu .go,#menu .resume,#endb button,#menu input,#promo button{min-height:44px}
+ #menu .resume{width:100%;font-size:1.1rem}
+ #menu .seg button{padding:6px 14px}
+ #menu .go{width:100%;font-size:1.2rem;padding:10px 18px}
+ #menu .link{padding:12px 0}
+ #menu input{font-size:16px}
+ #menu .row button{min-width:84px}
+ #openL li button{min-height:40px;padding:4px 14px}
+}
+@media (max-width:760px) and (orientation:portrait){
+ :root{--ctl:62px;--dock:238px}
+ #scene{inset:0 0 auto 0;height:calc(100% - var(--dock) - var(--ctl) - env(safe-area-inset-bottom,0px))}
+ #hud{pointer-events:none}
+ #topv{left:0;right:0;top:auto;bottom:calc(var(--ctl) + env(safe-area-inset-bottom,0px));width:auto;height:var(--dock);padding:8px 12px 6px;border-radius:14px 14px 0 0;border-width:2px 0 0;box-shadow:none;display:grid;grid-template-columns:min(50vw,210px) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);column-gap:12px;row-gap:4px;align-content:start}
+ #topv header{grid-column:1/-1;font-size:1.05rem;margin:0}
+ #mini{grid-column:1;grid-row:2/5;align-self:start}
+ #clocks{grid-column:2;grid-row:2;flex-direction:column;gap:4px;margin:0}
+ .ck{padding:2px 8px;font-size:1rem}.ck b{font-size:1.35rem}
+ #lost{grid-column:2;grid-row:3;margin:2px 0 0;font-size:.95rem}
+ .lr{grid-template-columns:3.6em 1fr auto;min-height:20px;font-size:.9rem}.li img{width:15px;height:15px}
+ #mvl{grid-column:2;grid-row:4;margin:2px 0 0;max-height:none;min-height:0;font-size:1.05rem;line-height:22px}
+ #ctl{left:0;right:0;bottom:0;max-width:none;flex-wrap:nowrap;gap:6px;align-items:flex-start;height:calc(var(--ctl) + env(safe-area-inset-bottom,0px));padding:8px 10px 0;background:var(--card);border-top:2px solid var(--ink)}
+ #ctl button{flex:1 1 0;min-width:0;min-height:46px;padding:0 3px;font-size:.82rem;white-space:nowrap}
+ #snd[aria-pressed="false"],#mus[aria-pressed="false"]{opacity:.55;text-decoration:line-through}
+ #endb{top:auto;bottom:calc(var(--dock) + var(--ctl) + env(safe-area-inset-bottom,0px) + 10px)}
+}
+@media (max-height:500px) and (min-width:600px){
+ #ctl button{min-height:34px}
+}
 </style></head><body>
 <div id="splash" role="status" aria-label="Pencil Chess is loading"><h1>Pencil Chess</h1><svg viewBox="0 0 380 18" aria-hidden="true" preserveAspectRatio="none"><path d="M4 11 C60 2, 120 16, 190 8 S320 4, 376 10"/></svg><p>made by kaif</p></div>
 <script>(function(){var s=document.getElementById("splash"),t0=Date.now(),gone=false;function done(){if(gone)return;gone=true;s.classList.add("out");setTimeout(function(){s.remove()},600)}s.addEventListener("click",done);addEventListener("load",function(){setTimeout(done,Math.max(0,1900-(Date.now()-t0)))})})();</script>
