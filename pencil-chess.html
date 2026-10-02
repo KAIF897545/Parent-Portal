@@ -94,6 +94,11 @@ body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--in
 #splash p{font:500 clamp(1.3rem,5vw,1.8rem) var(--hand);color:var(--lead);margin:0;opacity:0;animation:sfade .5s .9s ease forwards}
 @keyframes sdraw{to{stroke-dashoffset:0}}@keyframes sfade{to{opacity:1}}
 @media (prefers-reduced-motion:reduce){#splash path{animation:none;stroke-dashoffset:0}#splash p{animation:none;opacity:1}#splash{transition:none}}
+#zoomc{position:absolute;left:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:3}
+#zoomc button{width:44px;height:44px;padding:0;font:700 1.4rem var(--ui);color:var(--ink);background:var(--card);border:2px solid var(--ink);border-radius:8px 4px 9px 5px/5px 9px 4px 8px;cursor:pointer;box-shadow:1px 2px 0 #1b1b1d22;touch-action:manipulation}
+#zoomc #zReset{font-size:.85rem}
+#zoomc button:hover{background:var(--hi)}
+#endb .row{flex-wrap:wrap}
 /* ---------- phone layout ---------- */
 .mtabs{display:none}
 html,body{overscroll-behavior:none}
@@ -121,6 +126,7 @@ html,body{overscroll-behavior:none}
 }
 @media (max-width:760px) and (orientation:portrait){
  :root{--ctl:62px;--dock:238px}
+ #zoomc{left:8px;top:calc((100% - var(--dock) - var(--ctl) - env(safe-area-inset-bottom,0px))/2)}
  #scene{inset:0 0 auto 0;height:calc(100% - var(--dock) - var(--ctl) - env(safe-area-inset-bottom,0px))}
  #hud{pointer-events:none}
  #topv{left:0;right:0;top:auto;bottom:calc(var(--ctl) + env(safe-area-inset-bottom,0px));width:auto;height:var(--dock);padding:8px 12px 6px;border-radius:14px 14px 0 0;border-width:2px 0 0;box-shadow:none;display:grid;grid-template-columns:min(50vw,210px) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);column-gap:12px;row-gap:4px;align-content:start}
@@ -138,6 +144,7 @@ html,body{overscroll-behavior:none}
 }
 @media (max-height:500px) and (min-width:600px){
  #ctl button{min-height:34px}
+ #zoomc button{width:36px;height:36px;font-size:1.1rem}
 }
 </style></head><body>
 <div id="splash" role="status" aria-label="Pencil Chess is loading"><h1>Pencil Chess</h1><svg viewBox="0 0 380 18" aria-hidden="true" preserveAspectRatio="none"><path d="M4 11 C60 2, 120 16, 190 8 S320 4, 376 10"/></svg><p>made by kaif</p></div>
@@ -153,10 +160,11 @@ html,body{overscroll-behavior:none}
  <div id="lost"><div class="lr"><span>white lost</span><span id="lostW" class="li"></span><b id="advW"></b></div><div class="lr"><span>black lost</span><span id="lostB" class="li"></span><b id="advB"></b></div></div>
  <ol id="mvl" aria-label="Moves played"></ol></div>
 <div id="promo" class="card" hidden>the pawn becomes…<div></div></div>
+<div id="zoomc" role="group" aria-label="Zoom the board"><button type="button" id="zIn" aria-label="Zoom in">+</button><button type="button" id="zReset" aria-label="Reset zoom">1.0x</button><button type="button" id="zOut" aria-label="Zoom out">&minus;</button></div>
 <div id="ctl">
  <a id="home" href="portals.html">Club site</a><button id="menuB">Menu</button><button id="resign" hidden>Resign</button><button id="vw" title="V" aria-pressed="false">Full view</button><button id="snd" aria-pressed="true">Sound on</button><button id="mus" aria-pressed="true">Music on</button>
 </div>
-<div id="endb" class="card" hidden><p id="endT"></p><div class="row"><button id="again" class="go">Play again</button><button id="toMenu">Menu</button></div></div>
+<div id="endb" class="card" hidden><p id="endT"></p><div class="row"><button id="again" class="go">Play again</button><button id="toMenu">Menu</button><button id="pgn">Copy PGN</button></div></div>
 <div id="menu" role="dialog" aria-modal="true" aria-labelledby="mt" data-tab="cpu">
  <div class="sheet card ruled">
  <h1 id="mt">Pencil Chess</h1>
@@ -421,7 +429,7 @@ const viewSide=()=>GM.mode=='local'?S.t:GM.side;
 const HGT={p:1.18,n:1.55,b:1.5,r:1.38,q:1.5,k:1.62};
 function buildActors(){actors=[];for(let i=0;i<64;i++){const x=S.b[i];if(x)actors.push({id:uid++,pc:x,sq:i,x:sqX(i),z:sqZ(i),y:0,rot:0,ph:Math.random()*6.28,pv:(i&7)%2})}}
 const actorAt=i=>actors.find(a=>a.sq==i&&!a.dead);
-function resetBoard(){S={b:[...'rnbqkbnr',...Array(8).fill('p'),...Array(32).fill(''),...Array(8).fill('P'),...'RNBQKBNR'],t:'w',c:'KQkq',ep:-1};
+function resetBoard(){RES='*';S={b:[...'rnbqkbnr',...Array(8).fill('p'),...Array(32).fill(''),...Array(8).fill('P'),...'RNBQKBNR'],t:'w',c:'KQkq',ep:-1};
  H=[];evals=[0];sel=-1;lastM=null;over=false;busy=false;fx=[];possess=null;buildActors();camOver(true);kc=viewSide()=='w'?60:4;hideCard();$('promo').hidden=true;$('endb').hidden=true;hud()}
 function newGame(){resetBoard();whoLine();turnCaption();ai()}
 function turnCaption(){if(over)return;const c=S.t=='w'?'white':'black';
@@ -486,7 +494,7 @@ function ckTick(){if(!CK.on)return;ckDraw();if(over||CK.fired||!S||!ckStarted()|
  const side=S.t,grace=online()&&side!==GM.side?-3000:0;
  if(ckLeft(side)<=grace){CK.fired=true;timeUp(side)}}
 function timeUp(side){if(over)return;over=true;sel=-1;if(online())sendFlag(side);ckShowFlag(side)}
-function ckShowFlag(side){over=true;const t=resultLine(side=='w'?'b':'w','timeout');
+function ckShowFlag(side){over=true;RES=side=='w'?'0-1':'1-0';const t=resultLine(side=='w'?'b':'w','timeout');
  caption(t);sfx(side==GM.side&&GM.mode!='local'?'draw':'mate');camOver();hud();showEnd(t);ckDraw()}
 async function sendFlag(side){if(!lastG||!DB)return;try{await DB.doc('games/'+GM.gid).update({status:'over',resigned:side+'t',result:side=='w'?'0-1':'1-0',updated:Date.now()})}catch(e){}}
 function narrate(s0,m,victim,mover){const x=s0.b[m.f],u=x.toLowerCase(),c=mover=='w'?'white':'black',oc=mover=='w'?'black':'white';
@@ -498,10 +506,23 @@ function narrate(s0,m,victim,mover){const x=s0.b[m.f],u=x.toLowerCase(),c=mover=
  const tg=gen({...S,t:mover}).filter(y=>y.f==m.t&&S.b[y.t]&&'nbrq'.includes(S.b[y.t].toLowerCase())).sort((a,b)=>V[S.b[b.t].toLowerCase()]-V[S.b[a.t].toLowerCase()])[0];
  if(tg)return caption(`${who} ${PN[u]} goes for ${them} ${PN[S.b[tg.t].toLowerCase()]}!`);
  caption(`the ${PN[u]} heads to ${sqn(m.t)}…`)}
+let RES='*';
+function wrapPgn(s){const out=[];let line='';for(const w of s.split(' ')){if((line+' '+w).trim().length>80){out.push(line);line=w}else line=line?line+' '+w:w}if(line)out.push(line);return out.join('\n')}
+function pgnText(){const d=new Date(),pad=n=>String(n).padStart(2,'0'),lv=['','easy','medium','hard'][GM.lvl];
+ const comp='Computer ('+lv+')',me='Player';
+ const wN=GM.mode=='cpu'?(GM.side=='w'?me:comp):GM.mode=='local'?'Player 1':(GM.side=='w'?me:(GM.opp||'Friend'));
+ const bN=GM.mode=='cpu'?(GM.side=='b'?me:comp):GM.mode=='local'?'Player 2':(GM.side=='b'?me:(GM.opp||'Friend'));
+ const tc=CK.on?(CK.inc?(CK.base/1000)+'+'+(CK.inc/1000):String(CK.base/1000)):'-';
+ const hd=[['Event','Pencil Chess game'],['Site','Maldives Chess Club'],['Date',d.getFullYear()+'.'+pad(d.getMonth()+1)+'.'+pad(d.getDate())],['Round','-'],['White',wN],['Black',bN],['Result',RES],['TimeControl',tc]];
+ let mt='';for(let i=0;i<H.length;i++){if(i%2==0)mt+=(i/2+1)+'. ';mt+=H[i].n+' '}
+ return hd.map(([k,v])=>'['+k+' "'+v+'"]').join('\n')+'\n\n'+wrapPgn((mt+RES).trim())+'\n'}
+async function copyPgn(){const t=pgnText();let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){}
+ if(!ok){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0;top:0';document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(e){}ta.remove()}
+ const b=$('pgn');sfx('tap');if(ok){b.textContent='Copied!';setTimeout(()=>{b.textContent='Copy PGN'},2000)}else prompt('Copy the game PGN:',t)}
 function resultLine(win,how){if(!win)return how;const nm=win=='w'?'White':'Black';let t=`${nm} won by ${how}`;if(GM.mode!='local')t+=win==GM.side?' \u2014 you win!':' \u2014 you lost';return t}
 function endGame(){const ck=inChk(S);sfx(ck?'mate':'draw');let t;
- if(ck){const win=S.t=='w'?'b':'w';t=resultLine(win,'checkmate');caption(t);addWord('CHECKMATE!',null,1.6)}
- else{t=onlyKings()?'Draw \u2014 only the kings are left':'Draw by stalemate';caption(t)}
+ if(ck){const win=S.t=='w'?'b':'w';RES=win=='w'?'1-0':'0-1';t=resultLine(win,'checkmate');caption(t);addWord('CHECKMATE!',null,1.6)}
+ else{RES='1/2-1/2';t=onlyKings()?'Draw \u2014 only the kings are left':'Draw by stalemate';caption(t)}
  camOver();hud();showEnd(t)}
 function showEnd(t){$('endT').textContent=t;$('again').textContent=online()?'New game':'Play again';$('endb').hidden=false;$('resign').hidden=true}
 function ai(){if(!cpu()||menuOpen||over||human())return;busy=true;hud();
@@ -541,7 +562,7 @@ function menuInit(){
  $('back').onclick=()=>{sfx('tap');closeMenu()};
  $('menuB').onclick=()=>openMenu();$('toMenu').onclick=()=>{sfx('tap');openMenu()};
  $('again').onclick=()=>{sfx('pick');if(online())openMenu();else if(cpu())startCpu();else startLocal()};
- $('resign').onclick=resign;
+ $('resign').onclick=resign;$('pgn').onclick=copyPgn;
  $('create').onclick=createGame;$('join').onclick=()=>joinGame($('jc').value);
  $('jc').addEventListener('keydown',e=>{if(e.key=='Enter')joinGame($('jc').value)});
  $('copy').onclick=copyInvite;$('cancel').onclick=cancelGame;
@@ -626,7 +647,7 @@ function syncMoves(g){if(busy||!online())return;const ms=g.moves||[];
  if(ms.length<H.length){enterOnline(GM.gid,GM.side,g);return}
  if(ms.length>H.length){const m=dec(S,ms[H.length]);if(!m){enterOnline(GM.gid,GM.side,g);return}doMove(m,{remote:true,sp:ms[H.length].s});return}
  if(g.resigned&&!over){over=true;showResign(g.resigned)}}
-function showResign(side){if(side.length==2){ckShowFlag(side[0]);return}const t=resultLine(side=='w'?'b':'w','resignation');caption(t);sfx(GM.mode!='local'&&side==GM.side?'draw':'mate');camOver();hud();showEnd(t)}
+function showResign(side){if(side.length==2){ckShowFlag(side[0]);return}RES=side=='w'?'0-1':'1-0';const t=resultLine(side=='w'?'b':'w','resignation');caption(t);sfx(GM.mode!='local'&&side==GM.side?'draw':'mate');camOver();hud();showEnd(t)}
 async function sendMove(m,sp,tries=0){if(!lastG)return;const moves=H.map(h=>enc(h.m,h.sp)).concat([enc(m,sp)]),n=mk(S,m),done=!legal(n).length||n.b.every(x=>!x||x.toLowerCase()=='k');
  const result=done?(inChk(n)?(S.t=='w'?'1-0':'0-1'):'1/2'):null;
  try{await DB.doc('games/'+GM.gid).update({moves,updated:Date.now(),status:done?'over':'playing',result})}
@@ -771,7 +792,7 @@ function stepCam(dt){if(menuOpen&&camMode=='over'&&!RM)orbit+=dt*.07;if(camMode=
 let MT=[],CAS={},TUFT,FLAG,DECOR=[];
 let PAPERC='#efede7',HAND='cursive';
 function resize(){document.documentElement.style.setProperty('--app-h',innerHeight+'px');const cs=getComputedStyle(document.body);PAPERC=cs.backgroundColor;HAND=cs.getPropertyValue('--hand');DPR=Math.min(2,devicePixelRatio||1);const r=cv.getBoundingClientRect();W=cv.width=Math.round(r.width*DPR);Hh=cv.height=Math.round(r.height*DPR);
- PORT=W<Hh*.9;CY=PORT?Hh*.4:Hh/2;F=Math.min(Hh*1.05,W*(PORT?.78:.82));const mc=$('mini');mc.width=mc.clientWidth*DPR;mc.height=mc.clientHeight*DPR;hud()}
+ PORT=W<Hh*.9;CY=PORT?Hh*.4:Hh/2;FB=Math.min(Hh*1.05,W*(PORT?.78:.82));F=FB*zoomK;const mc=$('mini');mc.width=mc.clientWidth*DPR;mc.height=mc.clientHeight*DPR;hud()}
 function draw(now){const t=now/1000;ctx.setTransform(1,0,0,1,0,0);
  const sk=now-shakeT<300&&!RM?(1-(now-shakeT)/300)*5*DPR:0;if(sk)ctx.translate((Math.random()-.5)*sk,(Math.random()-.5)*sk);
  const paper=PAPERC;ctx.fillStyle=paper;ctx.fillRect(-20,-20,W+40,Hh+40);
@@ -885,13 +906,18 @@ function drawMini(){const c=$('mini'),q=c.getContext('2d'),w=c.width;if(!w)retur
 function showCard(){}
 function hideCard(){}
 /* =================== input =================== */
+let zoomK=1,FB=600;
+function setZoom(z){zoomK=Math.max(.7,Math.min(2.6,z));F=FB*zoomK;$('zReset').textContent=zoomK.toFixed(1)+'x'}
+$('zIn').onclick=()=>setZoom(zoomK*1.25);$('zOut').onclick=()=>setZoom(zoomK/1.25);$('zReset').onclick=()=>setZoom(1);
+const ptrs=new Map();let pinch=null;
+const pinchDist=()=>{const a=[...ptrs.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)};
 let pd=null;
-cv.addEventListener('pointerdown',e=>{pd={x:e.clientX,y:e.clientY,drag:false,id:e.pointerId};cv.setPointerCapture(e.pointerId)});
-cv.addEventListener('pointermove',e=>{if(!pd){hoverCheck(e);return}const dx=e.clientX-pd.x,dy=e.clientY-pd.y;if(!pd.drag&&Math.hypot(dx,dy)>6)pd.drag=true;
+cv.addEventListener('pointerdown',e=>{ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});try{cv.setPointerCapture(e.pointerId)}catch(_){}if(ptrs.size>=2){pd=null;pinch={d0:pinchDist(),z0:zoomK};return}pd={x:e.clientX,y:e.clientY,drag:false,id:e.pointerId}});
+cv.addEventListener('pointermove',e=>{if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pinch&&ptrs.size>=2){if(pinch.d0>0)setZoom(pinch.z0*pinchDist()/pinch.d0);return}if(!pd){hoverCheck(e);return}const dx=e.clientX-pd.x,dy=e.clientY-pd.y;if(!pd.drag&&Math.hypot(dx,dy)>6)pd.drag=true;
  if(pd.drag){if(camMode=='pov'){lookYaw-=dx*.006;lookPitch=Math.max(-.4,Math.min(.6,lookPitch+dy*.004))}else orbit-=dx*.006;pd.x=e.clientX;pd.y=e.clientY}});
-cv.addEventListener('pointerup',e=>{const p=pd;pd=null;if(!p||p.drag)return;click(e)});
-cv.addEventListener('pointercancel',()=>pd=null);
-cv.addEventListener('wheel',e=>{e.preventDefault();if(camMode=='over')orbitR=Math.max(4.5,Math.min(12,orbitR+e.deltaY*.005))},{passive:false});
+cv.addEventListener('pointerup',e=>{ptrs.delete(e.pointerId);if(pinch){if(ptrs.size<2)pinch=null;pd=null;return}const p=pd;pd=null;if(!p||p.drag)return;click(e)});
+cv.addEventListener('pointercancel',e=>{ptrs.delete(e.pointerId);pinch=null;pd=null});
+cv.addEventListener('wheel',e=>{e.preventDefault();setZoom(zoomK*Math.exp(-e.deltaY*.0015))},{passive:false});
 function pickAt(e){const r=cv.getBoundingClientRect(),X=(e.clientX-r.left)*DPR,Y=(e.clientY-r.top)*DPR;
  for(const p of pickRects)if(X>=p.x&&X<=p.x+p.w&&Y>=p.y&&Y<=p.y+p.h)return{sq:p.a.sq};
  const g2=unproject(X,Y);if(g2&&g2[0]>=0&&g2[0]<8&&g2[1]>=0&&g2[1]<8)return{sq:Math.floor(g2[1])*8+Math.floor(g2[0])};return null}
