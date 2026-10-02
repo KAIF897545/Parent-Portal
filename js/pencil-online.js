@@ -198,7 +198,19 @@ function makeDb(token, me, myName) {
     },
   });
 
-  return { doc, collection };
+  // Live "who has this game open" signal (Supabase realtime presence). A player
+  // who is merely thinking stays connected and therefore present; closing or
+  // backgrounding the tab drops them. Calls cb(ids) with the seat ids present.
+  const presence = (code, cb) => {
+    const ch = supabase.channel(`pc-pres-${code}`, { config: { presence: { key: me } } });
+    ch.on("presence", { event: "sync" }, () => cb(Object.keys(ch.presenceState())));
+    ch.subscribe((status) => {
+      if (status === "SUBSCRIBED") ch.track({ at: Date.now() });
+    });
+    return () => supabase.removeChannel(ch);
+  };
+
+  return { doc, collection, presence };
 }
 
 export async function connect() {

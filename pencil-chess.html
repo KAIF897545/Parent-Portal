@@ -166,7 +166,7 @@ html,body{overscroll-behavior:none}
 <div id="promo" class="card" hidden>the pawn becomes…<div></div></div>
 <div id="zoomc" role="group" aria-label="Zoom the board"><button type="button" id="zIn" aria-label="Zoom in">+</button><button type="button" id="zReset" aria-label="Reset zoom">1.0x</button><button type="button" id="zOut" aria-label="Zoom out">&minus;</button></div>
 <div id="ctl">
- <a id="home" href="portals.html">Club site</a><button id="menuB">Menu</button><button id="resign" hidden>Resign</button><button id="vw" title="V" aria-pressed="false">Full view</button><button id="snd" aria-pressed="true">Sound on</button><button id="mus" aria-pressed="true">Music on</button>
+ <a id="home" href="portals.html">Club site</a><button id="menuB">Menu</button><button id="resign" hidden>Resign</button><button id="claim" hidden>Claim win</button><button id="vw" title="V" aria-pressed="false">Full view</button><button id="snd" aria-pressed="true">Sound on</button><button id="mus" aria-pressed="true">Music on</button>
 </div>
 <div id="endb" class="card" hidden><p id="endT"></p><div class="row"><button id="again" class="go">Play again</button><button id="toMenu">Menu</button><button id="pgn">Copy PGN</button></div></div>
 <div id="menu" role="dialog" aria-modal="true" aria-labelledby="mt" data-tab="cpu">
@@ -555,8 +555,25 @@ function whoLine(){const sd=GM.side=='w'?'white':'black';let t='';
  if(GM.mode=='cpu')t=`you (${sd}) vs the computer, ${['','easy','medium','hard'][GM.lvl]}`;
  else if(GM.mode=='local')t='two players on this device';
  else t=`you (${sd}) vs ${GM.opp||'your friend'}`;
- $('who').textContent=t}
-function leaveOnline(){if(gUnsub){gUnsub();gUnsub=null}lastG=null}
+ WHO=t;$('who').textContent=t}
+/* Is the opponent still connected? Presence, not inactivity: someone thinking with the game open is never "away". */
+let PR=null,WHO='';
+function startPresence(oppId){stopPresence();if(!DB||!DB.presence||!oppId)return;
+ PR={opp:oppId,known:false,present:false,lostAt:Date.now(),un:null,timer:null};
+ try{PR.un=DB.presence(GM.gid,ids=>{if(!PR)return;PR.known=true;if(ids.includes(oppId)){PR.present=true;PR.lostAt=0}else if(PR.present||!PR.lostAt){PR.present=false;PR.lostAt=Date.now()}presRender()})}catch(e){PR=null;return}
+ PR.timer=setInterval(presRender,1000)}
+function stopPresence(){if(PR){clearInterval(PR.timer);try{PR.un&&PR.un()}catch(e){}PR=null}$('who')&&($('who').textContent=WHO);const b=$('claim');if(b)b.hidden=true}
+function presRender(){const b=$('claim');if(!PR||over||!online()||!GM.started){if(b)b.hidden=true;return}
+ const away=PR.known&&!PR.present?Math.floor((Date.now()-PR.lostAt)/1000):0,nm=GM.opp||'your friend';
+ let note='';if(away>=15){const m=Math.floor(away/60),s=String(away%60).padStart(2,'0');note=' \u2014 '+nm+' seems to be away ('+m+':'+s+')'}
+ $('who').textContent=WHO+note;
+ b.hidden=!(away>=180&&S.t!==GM.side&&!busy)}
+async function claimWin(){if(!PR||over||!online()||!lastG)return;const opp=GM.side=='w'?'b':'w';
+ if(!confirm((GM.opp||'Your friend')+' has been disconnected for a while. Claim the win?'))return;over=true;sel=-1;sfx('tap');
+ try{await DB.doc('games/'+GM.gid).update({status:'over',resigned:opp+'a',result:opp=='w'?'0-1':'1-0',updated:Date.now()})}catch(e){}
+ showResign(opp+'a')}
+addEventListener('pagehide',()=>{try{stopPresence()}catch(e){}});
+function leaveOnline(){stopPresence();if(gUnsub){gUnsub();gUnsub=null}lastG=null}
 function startCpu(){leaveOnline();GM={mode:'cpu',side:pickSide(PREF.side),lvl:+PREF.lvl,gid:null,opp:'',started:true};menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();ckSetup(PREF.tc);whoLine();turnCaption();ai()}
 function startLocal(){leaveOnline();GM={mode:'local',side:'w',lvl:2,gid:null,opp:'',started:true};menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();ckSetup(PREF.tc);whoLine();turnCaption()}
 function menuTab(t){$('menu').dataset.tab=t;for(const b of document.querySelectorAll('.mtabs button'))b.setAttribute('aria-selected',String(b.dataset.t==t))}
@@ -567,7 +584,7 @@ function menuInit(){
  $('back').onclick=()=>{sfx('tap');closeMenu()};
  $('menuB').onclick=()=>openMenu();$('toMenu').onclick=()=>{sfx('tap');openMenu()};
  $('again').onclick=()=>{sfx('pick');if(online())openMenu();else if(cpu())startCpu();else startLocal()};
- $('resign').onclick=resign;$('pgn').onclick=copyPgn;
+ $('resign').onclick=resign;$('claim').onclick=claimWin;$('pgn').onclick=copyPgn;
  $('create').onclick=createGame;$('join').onclick=()=>joinGame($('jc').value);
  $('jc').addEventListener('keydown',e=>{if(e.key=='Enter')joinGame($('jc').value)});
  $('copy').onclick=copyInvite;$('cancel').onclick=cancelGame;
@@ -644,7 +661,7 @@ async function enterOnline(code,seat,g){hideWaiting();GM={mode:'online',side:sea
  const ou=seat=='w'?g.bu:g.wu,ps=await names([ou]);GM.opp=(ps[ou]||{}).name||'your friend';
  menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();ckSetup(g.tc||'0');
  for(const v of g.moves||[]){const m=dec(S,v);if(!m)break;H.push({s:S,m,n:san(S,m),mover:S.t,sp:v.s|0});S=mk(S,m);lastM=m;evals.push(0)}
- buildActors();over=!legal(S).length||onlyKings();CK.start=performance.now();camOver(true);hud();whoLine();
+ buildActors();over=!legal(S).length||onlyKings();CK.start=performance.now();camOver(true);hud();whoLine();startPresence(seat=='w'?g.b:g.w);
  if(g.resigned){over=true;showResign(g.resigned);return}
  if(over){endGame();return}
  if(!(g.moves||[]).length){sfx('promote');caption(`${GM.opp} is here! you're ${seat=='w'?'white — your move':'black — white moves first'}`)}else turnCaption()}
@@ -652,7 +669,7 @@ function syncMoves(g){if(busy||!online())return;const ms=g.moves||[];
  if(ms.length<H.length){enterOnline(GM.gid,GM.side,g);return}
  if(ms.length>H.length){const m=dec(S,ms[H.length]);if(!m){enterOnline(GM.gid,GM.side,g);return}doMove(m,{remote:true,sp:ms[H.length].s});return}
  if(g.resigned&&!over){over=true;showResign(g.resigned)}}
-function showResign(side){if(side.length==2){ckShowFlag(side[0]);return}RES=side=='w'?'0-1':'1-0';const t=resultLine(side=='w'?'b':'w','resignation');caption(t);sfx(GM.mode!='local'&&side==GM.side?'draw':'mate');camOver();hud();showEnd(t)}
+function showResign(side){if(side.length==2){if(side[1]=='a'){RES=side[0]=='w'?'0-1':'1-0';const t=resultLine(side[0]=='w'?'b':'w','abandonment');caption(t);sfx(side[0]==GM.side?'draw':'mate');camOver();hud();showEnd(t)}else ckShowFlag(side[0]);return}RES=side=='w'?'0-1':'1-0';const t=resultLine(side=='w'?'b':'w','resignation');caption(t);sfx(GM.mode!='local'&&side==GM.side?'draw':'mate');camOver();hud();showEnd(t)}
 async function sendMove(m,sp,tries=0){if(!lastG)return;const moves=H.map(h=>enc(h.m,h.sp)).concat([enc(m,sp)]),n=mk(S,m),done=!legal(n).length||n.b.every(x=>!x||x.toLowerCase()=='k');
  const result=done?(inChk(n)?(S.t=='w'?'1-0':'0-1'):'1/2'):null;
  try{await DB.doc('games/'+GM.gid).update({moves,updated:Date.now(),status:done?'over':'playing',result})}
@@ -897,7 +914,7 @@ function overlay(a,t,now){const u=a.pc.toLowerCase(),w=isW(a.pc),s=Math.min(W,Hh
  else if(u=='k'){ctx.lineWidth=8;P(null,()=>{ctx.moveTo(W/s*.3,10);ctx.lineTo(W/s*.25,-240)});ctx.lineWidth=5;P('#dedcd5',()=>ctx.arc(W/s*.25,-262,28,0,7))}
  ctx.restore()}
 /* =================== HUD =================== */
-function ctlSync(){const live=!!S&&GM.started&&!over&&!menuOpen;$('resign').hidden=!live;$('menuB').hidden=live;$('home').hidden=live}
+function ctlSync(){const live=!!S&&GM.started&&!over&&!menuOpen;$('resign').hidden=!live;$('menuB').hidden=live;$('home').hidden=live;if(!live)$('claim').hidden=true}
 function hud(){ctlSync();if(!S)return;const bw=material(S.b,true),bb=material(S.b,false),hp=v=>Math.max(0,Math.min(5,Math.ceil(5*v/39)));
  $('turn').textContent=over?'game over':(S.t=='w'?'white':'black')+' to move';
  const START={p:8,n:2,b:2,r:2,q:1};
