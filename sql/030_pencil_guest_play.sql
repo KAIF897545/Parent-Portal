@@ -43,7 +43,7 @@ begin
     raise exception 'Game data too large.';
   end if;
   if p_data->>'host' is distinct from me
-     or not (p_data->>'w' = me or p_data->>'b' = me) then
+     or not (coalesce(p_data->>'w' = me, false) or coalesce(p_data->>'b' = me, false)) then
     raise exception 'You must be the host and hold a seat.';
   end if;
 
@@ -89,7 +89,7 @@ begin
     return false;
   end if;
 
-  playing := me = r.data->>'w' or me = r.data->>'b';
+  playing := coalesce(me = r.data->>'w', false) or coalesce(me = r.data->>'b', false);
 
   for k in select jsonb_object_keys(p_patch) loop
     if k <> all (allowed) then
@@ -103,7 +103,8 @@ begin
   merged := r.data || (p_patch - 'status');
 
   if not playing then
-    if r.status <> 'waiting' or not (merged->>'w' = me or merged->>'b' = me) then
+    if r.status <> 'waiting'
+       or not (coalesce(merged->>'w' = me, false) or coalesce(merged->>'b' = me, false)) then
       raise exception 'You are not in this game.';
     end if;
   end if;
