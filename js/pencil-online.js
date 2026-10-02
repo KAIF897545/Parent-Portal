@@ -3,21 +3,41 @@
 // pencil-chess.html was written against a tiny document-database interface
 // (doc().get/set/update/delete/onSnapshot, collection().where().limit()
 // .onSnapshot, USER.id/can/profiles). This adapter provides exactly that on
-// top of the public.pencil_games table (see sql/029_pencil_chess.sql), so the
-// game code itself stays untouched.
+// top of the public.pencil_games table (see sql/030_pencil_guest_play.sql), so
+// the game code itself stays untouched.
 //
-// Nobody has to sign in to play online. A signed-in portal user plays under
-// their first name; everyone else gets an anonymous guest session held by a
-// separate Supabase client (its own storage key), so a guest never touches or
-// replaces the portal's sign-in. Needs "Allow anonymous sign-ins" switched on
-// in Supabase Authentication settings.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
-import { supabase as portalClient } from "./supabase.js";
+// Nobody signs up or signs in. Each browser keeps a random secret token in
+// localStorage; the game's "seat id" is the SHA-256 hash of that token, so what
+// is stored and visible to other players never reveals the secret. Reading is
+// plain table reads (plus realtime); every change goes through the pencil_*
+// database functions, which check the token against the seat.
+import { supabase } from "./supabase.js";
 
 const TABLE = "pencil_games";
+const TOKEN_KEY = "pc-secret";
 const nameCache = {};
-let supabase = portalClient; // the client that owns the player's identity
+
+function secretToken() {
+  try {
+    let t = localStorage.getItem(TOKEN_KEY);
+    if (!t || t.length < 16) {
+      const a = new Uint8Array(24);
+      crypto.getRandomValues(a);
+      t = Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("");
+      localStorage.setItem(TOKEN_KEY, t);
+    }
+    return t;
+  } catch (e) {
+    const a = new Uint8Array(24);
+    crypto.getRandomValues(a);
+    return Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("");
+  }
+}
+
+async function sha256Hex(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 function guestName() {
   try {
@@ -32,19 +52,6 @@ function guestName() {
   }
 }
 
-async function firstName(uid) {
-  try {
-    const [{ data: s }, { data: c }] = await Promise.all([
-      portalClient.from("students").select("full_name").eq("id", uid).maybeSingle(),
-      portalClient.from("coaches").select("name").eq("id", uid).maybeSingle(),
-    ]);
-    const full = (s && s.full_name) || (c && c.name) || "";
-    return full.trim().split(/\s+/)[0] || "A player";
-  } catch (e) {
-    return "A player";
-  }
-}
-
 const rowData = (row) => {
   const d = { ...row.data, status: row.status };
   if (d.names) Object.assign(nameCache, d.names);
@@ -52,7 +59,7 @@ const rowData = (row) => {
 };
 const snap = (row) => ({ exists: !!row, data: () => (row ? rowData(row) : undefined) });
 
-function makeDb(uid, myName) {
+function makeDb(token, me, myName) {
   const doc = (path) => {
     const code = path.split("/")[1];
     const fetchRow = async () => {
@@ -67,40 +74,38 @@ function makeDb(uid, myName) {
       },
 
       async set(obj) {
-        const data = { ...obj, names: { ...(obj.names || {}), [uid]: myName } };
+        const data = { ...obj, names: { ...(obj.names || {}), [me]: myName } };
         delete data.status;
-        const { error } = await supabase.from(TABLE).insert({ code, status: obj.status || "waiting", data });
+        const { error } = await supabase.rpc("pencil_create", { p_code: code, p_token: token, p_data: data });
         if (error) throw error;
       },
 
-      // Read-merge-write guarded by the row's version counter, retried if the
+      // Read, merge, write guarded by the row's version counter; retried if the
       // other player's write lands in between.
       async update(patch) {
         for (let attempt = 0; attempt < 4; attempt++) {
           const row = await fetchRow();
           if (!row) throw Object.assign(new Error("not found"), { code: "not_found" });
-          const merged = { ...row.data, ...patch, names: { ...(row.data.names || {}), [uid]: myName } };
-          delete merged.status;
-          const status = patch.status || row.status;
-          const { data: upd, error } = await supabase
-            .from(TABLE)
-            .update({ status, data: merged })
-            .eq("code", code)
-            .eq("ver", row.ver)
-            .select("ver");
+          const body = { ...patch, names: { ...(row.data.names || {}), [me]: myName } };
+          const { data: ok, error } = await supabase.rpc("pencil_patch", {
+            p_code: code,
+            p_token: token,
+            p_patch: body,
+            p_ver: row.ver,
+          });
           if (error) throw error;
-          if (upd && upd.length) return;
+          if (ok) return;
         }
         throw Object.assign(new Error("conflict"), { code: "conflict" });
       },
 
       async delete() {
-        const { error } = await supabase.from(TABLE).delete().eq("code", code);
+        const { error } = await supabase.rpc("pencil_delete", { p_code: code, p_token: token });
         if (error) throw error;
       },
 
-      // The database trigger refuses a second player taking an occupied seat,
-      // so no separate lock is needed.
+      // The database refuses a second player taking an occupied seat, so no
+      // separate lock is needed.
       async acquire() {
         return { acquired: true };
       },
@@ -197,40 +202,20 @@ function makeDb(uid, myName) {
 }
 
 export async function connect() {
-  const { data } = await portalClient.auth.getSession();
-  let user = data && data.session && data.session.user;
-  let name;
-
-  if (user) {
-    supabase = portalClient;
-    name = await firstName(user.id);
-  } else {
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: true, autoRefreshToken: true, storageKey: "pencil-chess-guest" },
-    });
-    const { data: g } = await supabase.auth.getSession();
-    user = g && g.session && g.session.user;
-    if (!user) {
-      const { data: a, error } = await supabase.auth.signInAnonymously();
-      if (error || !a || !a.user) {
-        return {
-          db: null,
-          user: null,
-          why: "Online play isn't switched on yet. You can still play the computer, or a friend on this device.",
-        };
-      }
-      user = a.user;
-    }
-    name = guestName();
+  if (!window.crypto || !crypto.subtle) {
+    return { db: null, user: null, why: "Online play needs a secure (https) connection." };
   }
-
-  nameCache[user.id] = name;
+  const token = secretToken();
+  const me = await sha256Hex(token);
+  const name = guestName();
+  nameCache[me] = name;
   return {
-    db: makeDb(user.id, name),
+    db: makeDb(token, me, name),
     user: {
-      id: async () => user.id,
+      id: async () => me,
       can: async () => true,
-      profiles: async (ids) => Object.fromEntries(ids.filter((i) => nameCache[i]).map((i) => [i, { name: nameCache[i] }])),
+      profiles: async (ids) =>
+        Object.fromEntries(ids.filter((i) => nameCache[i]).map((i) => [i, { name: nameCache[i] }])),
     },
     why: "",
   };
