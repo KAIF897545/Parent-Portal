@@ -4,18 +4,39 @@
 // (doc().get/set/update/delete/onSnapshot, collection().where().limit()
 // .onSnapshot, USER.id/can/profiles). This adapter provides exactly that on
 // top of the public.pencil_games table (see sql/029_pencil_chess.sql), so the
-// game code itself stays untouched. Online play needs a signed-in portal
-// account; playing the computer or a friend on one device does not.
-import { supabase } from "./supabase.js";
+// game code itself stays untouched.
+//
+// Nobody has to sign in to play online. A signed-in portal user plays under
+// their first name; everyone else gets an anonymous guest session held by a
+// separate Supabase client (its own storage key), so a guest never touches or
+// replaces the portal's sign-in. Needs "Allow anonymous sign-ins" switched on
+// in Supabase Authentication settings.
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+import { supabase as portalClient } from "./supabase.js";
 
 const TABLE = "pencil_games";
 const nameCache = {};
+let supabase = portalClient; // the client that owns the player's identity
+
+function guestName() {
+  try {
+    let n = localStorage.getItem("pc-guest-name");
+    if (!n) {
+      n = `Guest ${10 + Math.floor(Math.random() * 90)}`;
+      localStorage.setItem("pc-guest-name", n);
+    }
+    return n;
+  } catch (e) {
+    return "Guest";
+  }
+}
 
 async function firstName(uid) {
   try {
     const [{ data: s }, { data: c }] = await Promise.all([
-      supabase.from("students").select("full_name").eq("id", uid).maybeSingle(),
-      supabase.from("coaches").select("name").eq("id", uid).maybeSingle(),
+      portalClient.from("students").select("full_name").eq("id", uid).maybeSingle(),
+      portalClient.from("coaches").select("name").eq("id", uid).maybeSingle(),
     ]);
     const full = (s && s.full_name) || (c && c.name) || "";
     return full.trim().split(/\s+/)[0] || "A player";
@@ -176,16 +197,33 @@ function makeDb(uid, myName) {
 }
 
 export async function connect() {
-  const { data } = await supabase.auth.getSession();
-  const user = data && data.session && data.session.user;
-  if (!user) {
-    return {
-      db: null,
-      user: null,
-      why: "Sign in to the portal to play online. Playing the computer works without signing in.",
-    };
+  const { data } = await portalClient.auth.getSession();
+  let user = data && data.session && data.session.user;
+  let name;
+
+  if (user) {
+    supabase = portalClient;
+    name = await firstName(user.id);
+  } else {
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, storageKey: "pencil-chess-guest" },
+    });
+    const { data: g } = await supabase.auth.getSession();
+    user = g && g.session && g.session.user;
+    if (!user) {
+      const { data: a, error } = await supabase.auth.signInAnonymously();
+      if (error || !a || !a.user) {
+        return {
+          db: null,
+          user: null,
+          why: "Online play isn't switched on yet. You can still play the computer, or a friend on this device.",
+        };
+      }
+      user = a.user;
+    }
+    name = guestName();
   }
-  const name = await firstName(user.id);
+
   nameCache[user.id] = name;
   return {
     db: makeDb(user.id, name),
