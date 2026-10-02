@@ -125,12 +125,15 @@ html,body{overscroll-behavior:none}
  #openL li button{min-height:40px;padding:4px 14px}
 }
 @media (max-width:760px) and (orientation:portrait){
- :root{--ctl:62px;--dock:238px}
- #zoomc{left:auto;right:8px;top:auto;bottom:calc(var(--dock) + var(--ctl) + 8px);transform:none;flex-direction:row}
- #zoomc button{width:42px;height:42px}
- #scene{inset:0 0 auto 0;height:calc(100% - var(--dock) - var(--ctl))}
- #hud{pointer-events:none}
- #topv{left:0;right:0;top:auto;bottom:var(--ctl);width:auto;height:var(--dock);padding:8px 12px 6px;border-radius:14px 14px 0 0;border-width:2px 0 0;box-shadow:none;display:grid;grid-template-columns:min(50vw,210px) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);column-gap:12px;row-gap:4px;align-content:start}
+ :root{--ctl:62px;--hudh:84px;--dock:clamp(180px,calc(var(--app-h,780px)*.3),238px)}
+ #zoomc{left:auto;right:8px;top:auto;bottom:calc(var(--dock) + var(--ctl) + 8px);transform:none}
+ #zoomc:not(.zoomed),#zoomc #zIn,#zoomc #zOut{display:none}
+ #zoomc #zReset{width:56px;height:36px}
+ #scene{inset:var(--hudh) 0 auto 0;height:calc(100% - var(--hudh) - var(--dock) - var(--ctl))}
+ #hud{left:0;top:0;width:100%;height:var(--hudh);padding:6px 10px 0;background:var(--paper);overflow:hidden;z-index:2}
+ #cap{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:1.15rem;margin:0;padding:0 4px;background:none;box-shadow:none}
+ #who{margin:2px 0 0;padding:0 4px;background:none}
+ #topv{left:0;right:0;top:auto;bottom:var(--ctl);width:auto;height:var(--dock);padding:8px 12px 6px;border-radius:14px 14px 0 0;border-width:2px 0 0;box-shadow:none;display:grid;grid-template-columns:min(calc(var(--dock) - 46px),50vw) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);column-gap:12px;row-gap:4px;align-content:start}
  #topv header{grid-column:1/-1;font-size:1.05rem;margin:0}
  #mini{grid-column:1;grid-row:2/5;align-self:start}
  #clocks{grid-column:2;grid-row:2;flex-direction:column;gap:4px;margin:0}
@@ -793,7 +796,7 @@ function stepCam(dt){if(menuOpen&&camMode=='over'&&!RM)orbit+=dt*.07;if(camMode=
 let MT=[],CAS={},TUFT,FLAG,DECOR=[];
 let PAPERC='#efede7',HAND='cursive';
 function resize(){document.documentElement.style.setProperty('--app-h',innerHeight+'px');const cs=getComputedStyle(document.body);PAPERC=cs.backgroundColor;HAND=cs.getPropertyValue('--hand');DPR=Math.min(2,devicePixelRatio||1);const r=cv.getBoundingClientRect();W=cv.width=Math.round(r.width*DPR);Hh=cv.height=Math.round(r.height*DPR);
- PORT=W<Hh*1.25;CY=PORT?Hh*.5:Hh/2;FB=Math.min(Hh*1.05,W*(PORT?.78:.82));F=FB*zoomK;const mc=$('mini');mc.width=mc.clientWidth*DPR;mc.height=mc.clientHeight*DPR;hud()}
+ PORT=W<Hh*.9||matchMedia('(max-width:760px) and (orientation:portrait)').matches;CY=PORT?Hh*.5:Hh/2;FB=PORT?Math.min(W*.9,Hh*.92):Math.min(Hh*1.05,W*.82);F=FB*zoomK;const mc=$('mini');mc.width=mc.clientWidth*DPR;mc.height=mc.clientHeight*DPR;hud()}
 function draw(now){const t=now/1000;ctx.setTransform(1,0,0,1,0,0);
  const sk=now-shakeT<300&&!RM?(1-(now-shakeT)/300)*5*DPR:0;if(sk)ctx.translate((Math.random()-.5)*sk,(Math.random()-.5)*sk);
  const paper=PAPERC;ctx.fillStyle=paper;ctx.fillRect(-20,-20,W+40,Hh+40);
@@ -908,7 +911,7 @@ function showCard(){}
 function hideCard(){}
 /* =================== input =================== */
 let zoomK=1,FB=600;
-function setZoom(z){zoomK=Math.max(.7,Math.min(2.6,z));F=FB*zoomK;$('zReset').textContent=zoomK.toFixed(1)+'x'}
+function setZoom(z){zoomK=Math.max(.7,Math.min(2.6,z));F=FB*zoomK;$('zReset').textContent=zoomK.toFixed(1)+'x';$('zoomc').classList.toggle('zoomed',Math.abs(zoomK-1)>.02)}
 $('zIn').onclick=()=>setZoom(zoomK*1.25);$('zOut').onclick=()=>setZoom(zoomK/1.25);$('zReset').onclick=()=>setZoom(1);
 const ptrs=new Map();let pinch=null;
 const pinchDist=()=>{const a=[...ptrs.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)};
