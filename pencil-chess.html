@@ -84,7 +84,17 @@ body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--in
  #ctl{left:10px;bottom:12px;max-width:calc(100% - 196px)}#ctl button,#ctl select{font-size:.9rem;padding:2px 8px}
 }
 @media (max-height:500px) and (min-width:600px){#topv{width:clamp(150px,20vw,190px);padding:4px 5px}#mvl{max-height:48px;font-size:.9rem;line-height:17px}.lr{min-height:16px;font-size:.8rem}.li img{width:13px;height:13px}#cap{font-size:1.15rem}#who{font-size:.85rem}#menu h1{font-size:2.2rem}.sheet{padding:12px 18px}#endb{bottom:56px}}
+#splash{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:20px;text-align:center;cursor:pointer;background:var(--paper) repeating-linear-gradient(#0000 0 27px,var(--rule) 27px 28px);transition:opacity .5s ease}
+#splash.out{opacity:0;pointer-events:none}
+#splash h1{font:700 clamp(2.8rem,13vw,5.4rem)/1 var(--hand);margin:0;transform:rotate(-1.5deg)}
+#splash svg{width:min(78vw,380px);height:18px;margin:-2px 0 6px;overflow:visible}
+#splash path{fill:none;stroke:var(--ink);stroke-width:4;stroke-linecap:round;stroke-dasharray:420;stroke-dashoffset:420;animation:sdraw .9s .25s ease forwards}
+#splash p{font:500 clamp(1.3rem,5vw,1.8rem) var(--hand);color:var(--lead);margin:0;opacity:0;animation:sfade .5s .9s ease forwards}
+@keyframes sdraw{to{stroke-dashoffset:0}}@keyframes sfade{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){#splash path{animation:none;stroke-dashoffset:0}#splash p{animation:none;opacity:1}#splash{transition:none}}
 </style></head><body>
+<div id="splash" role="status" aria-label="Pencil Chess is loading"><h1>Pencil Chess</h1><svg viewBox="0 0 380 18" aria-hidden="true" preserveAspectRatio="none"><path d="M4 11 C60 2, 120 16, 190 8 S320 4, 376 10"/></svg><p>made by kaif</p></div>
+<script>(function(){var s=document.getElementById("splash"),t0=Date.now(),gone=false;function done(){if(gone)return;gone=true;s.classList.add("out");setTimeout(function(){s.remove()},600)}s.addEventListener("click",done);addEventListener("load",function(){setTimeout(done,Math.max(0,1900-(Date.now()-t0)))})})();</script>
 <div id="stage">
 <canvas id="scene" aria-label="The chess battlefield. Use the top view board to play with the keyboard."></canvas>
 <div id="hud">
