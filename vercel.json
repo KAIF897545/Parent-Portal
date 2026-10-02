@@ -8,6 +8,10 @@
       "headers": [{ "key": "Content-Type", "value": "application/manifest+json" }]
     },
     {
+      "source": "/sitemap.xsl",
+      "headers": [{ "key": "Content-Type", "value": "text/xsl; charset=utf-8" }]
+    },
+    {
       "source": "/sw.js",
       "headers": [
         { "key": "Content-Type", "value": "application/javascript" },
