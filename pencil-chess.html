@@ -95,13 +95,21 @@ body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--in
 @keyframes sdraw{to{stroke-dashoffset:0}}@keyframes sfade{to{opacity:1}}
 @media (prefers-reduced-motion:reduce){#splash path{animation:none;stroke-dashoffset:0}#splash p{animation:none;opacity:1}#splash{transition:none}}
 /* ---------- phone layout ---------- */
+.mtabs{display:none}
 html,body{overscroll-behavior:none}
 @media (max-width:760px){
- html,body{height:100dvh}
+ html,body{height:var(--app-h,100dvh)}
+ .mtabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:2px 0 12px}
+ #menu .mtabs button{min-height:46px;font-size:1.1rem}
+ #menu .mtabs button[aria-selected="true"]{background:var(--ink);color:var(--card)}
+ #menu[data-tab="cpu"] #secFr,#menu[data-tab="fr"] #secCpu{display:none}
+ #menu{background:var(--paper)}
+ .sheet{transform:none;margin:0 auto auto;min-height:calc(100% - 4px);padding:14px 14px 18px}
+ #menu h1{margin-bottom:10px}
  body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
  #cap{font-size:1.3rem}#who{font-size:.9rem}
  #home{display:none}
- #menu{padding:10px 10px calc(14px + env(safe-area-inset-bottom,0px))}
+ #menu{padding:8px 8px calc(24px + env(safe-area-inset-bottom,0px))}
  #menu .seg button,#menu .go,#menu .resume,#endb button,#menu input,#promo button{min-height:44px}
  #menu .resume{width:100%;font-size:1.1rem}
  #menu .seg button{padding:6px 14px}
@@ -149,12 +157,13 @@ html,body{overscroll-behavior:none}
  <a id="home" href="portals.html">Club site</a><button id="menuB">Menu</button><button id="resign" hidden>Resign</button><button id="vw" title="V" aria-pressed="false">Full view</button><button id="snd" aria-pressed="true">Sound on</button><button id="mus" aria-pressed="true">Music on</button>
 </div>
 <div id="endb" class="card" hidden><p id="endT"></p><div class="row"><button id="again" class="go">Play again</button><button id="toMenu">Menu</button></div></div>
-<div id="menu" role="dialog" aria-modal="true" aria-labelledby="mt">
+<div id="menu" role="dialog" aria-modal="true" aria-labelledby="mt" data-tab="cpu">
  <div class="sheet card ruled">
  <h1 id="mt">Pencil Chess</h1>
  <button id="back" class="resume" hidden>Back to your game</button>
+ <div class="mtabs" role="tablist" aria-label="Game type"><button type="button" role="tab" data-t="cpu" aria-selected="true">Computer</button><button type="button" role="tab" data-t="fr" aria-selected="false">Friend online</button></div>
  <div class="cols">
-  <section aria-labelledby="h-cpu"><h2 id="h-cpu">Play the computer</h2>
+  <section id="secCpu" aria-labelledby="h-cpu"><h2 id="h-cpu">Play the computer</h2>
    <div class="opt"><span id="l-side">Your side</span><div class="seg" data-k="side" role="group" aria-labelledby="l-side"><button data-v="w">White</button><button data-v="b">Black</button><button data-v="r">Random</button></div></div>
    <div class="opt"><span id="l-lvl">Strength</span><div class="seg" data-k="lvl" role="group" aria-labelledby="l-lvl"><button data-v="1">Easy</button><button data-v="2">Medium</button><button data-v="3">Hard</button></div></div>
    <div class="opt"><span id="l-view">Camera</span><div class="seg" data-k="view" role="group" aria-labelledby="l-view"><button data-v="piece">Piece view</button><button data-v="full">Full view</button></div></div>
@@ -162,7 +171,7 @@ html,body{overscroll-behavior:none}
    <button class="go" id="startCpu">Start game</button>
    <button class="link" id="startLocal">or two players on this device</button>
   </section>
-  <section aria-labelledby="h-fr"><h2 id="h-fr">Play a friend</h2>
+  <section id="secFr" aria-labelledby="h-fr"><h2 id="h-fr">Play a friend</h2>
    <p class="note">Each of you plays on your own screen. Create a game, then send your friend the invite.</p>
    <div id="fNew">
     <div class="opt"><span id="l-fside">Your side</span><div class="seg" data-k="fside" role="group" aria-labelledby="l-fside"><button data-v="w">White</button><button data-v="b">Black</button><button data-v="r">Random</button></div></div>
@@ -525,7 +534,9 @@ function whoLine(){const sd=GM.side=='w'?'white':'black';let t='';
 function leaveOnline(){if(gUnsub){gUnsub();gUnsub=null}lastG=null}
 function startCpu(){leaveOnline();GM={mode:'cpu',side:pickSide(PREF.side),lvl:+PREF.lvl,gid:null,opp:'',started:true};menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();ckSetup(PREF.tc);whoLine();turnCaption();ai()}
 function startLocal(){leaveOnline();GM={mode:'local',side:'w',lvl:2,gid:null,opp:'',started:true};menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();ckSetup(PREF.tc);whoLine();turnCaption()}
+function menuTab(t){$('menu').dataset.tab=t;for(const b of document.querySelectorAll('.mtabs button'))b.setAttribute('aria-selected',String(b.dataset.t==t))}
 function menuInit(){
+ for(const b of document.querySelectorAll('.mtabs button'))b.onclick=()=>{sfx('tap');menuTab(b.dataset.t)};
  for(const g of document.querySelectorAll('#menu .seg'))for(const b of g.children)b.onclick=()=>{PREF[g.dataset.k]=b.dataset.v;savePref();segSync();sfx('tap');if(g.dataset.k=='view')setView(b.dataset.v)};
  $('startCpu').onclick=()=>{sfx('pick');startCpu()};$('startLocal').onclick=()=>{sfx('pick');startLocal()};
  $('back').onclick=()=>{sfx('tap');closeMenu()};
@@ -567,7 +578,7 @@ async function renderLobby(snap){const now=Date.now(),rows=snap.docs.map(d=>d.da
   const yours=g.w?'black':'white',mins=Math.max(1,Math.round((now-g.created)/6e4));
   sp.textContent=`${(ps[g.hostu]||{}).name||'Someone'}'s game, you'd be ${yours} (${mins} min ago)`;b.textContent='Join';b.disabled=canWrite===false;b.onclick=()=>joinGame(g.code);
   li.append(sp,b);ul.appendChild(li)}}
-function showWaiting(code){waitCode=code;$('fNew').hidden=true;$('fJoin').hidden=true;$('fOpen').hidden=true;$('fWait').hidden=false;$('code').textContent=code;
+function showWaiting(code){menuTab('fr');waitCode=code;$('fNew').hidden=true;$('fJoin').hidden=true;$('fOpen').hidden=true;$('fWait').hidden=false;$('code').textContent=code;
  $('inv').value=`Play chess with me on Pencil Chess: ${INVITE_URL} (open "Play a friend" and enter code ${code})`;$('waitMsg').textContent='Waiting for your friend to join…'}
 function hideWaiting(){waitCode=null;$('fNew').hidden=false;$('fJoin').hidden=false;$('fOpen').hidden=false;$('fWait').hidden=true}
 function dbErr(e,what){const c=e&&e.code;fmsg(c=='invalid_argument'?`Couldn't ${what}: you don't have permission to play online here. Try signing in again.`:c=='quota_exceeded'?`Couldn't ${what}: the game storage is full.`:`Couldn't ${what}. Check your connection and try again.`)}
@@ -753,7 +764,7 @@ function stepCam(dt){if(menuOpen&&camMode=='over'&&!RM)orbit+=dt*.07;if(camMode=
 /* =================== rendering =================== */
 let MT=[],CAS={},TUFT,FLAG,DECOR=[];
 let PAPERC='#efede7',HAND='cursive';
-function resize(){const cs=getComputedStyle(document.body);PAPERC=cs.backgroundColor;HAND=cs.getPropertyValue('--hand');DPR=Math.min(2,devicePixelRatio||1);const r=cv.getBoundingClientRect();W=cv.width=Math.round(r.width*DPR);Hh=cv.height=Math.round(r.height*DPR);
+function resize(){document.documentElement.style.setProperty('--app-h',innerHeight+'px');const cs=getComputedStyle(document.body);PAPERC=cs.backgroundColor;HAND=cs.getPropertyValue('--hand');DPR=Math.min(2,devicePixelRatio||1);const r=cv.getBoundingClientRect();W=cv.width=Math.round(r.width*DPR);Hh=cv.height=Math.round(r.height*DPR);
  PORT=W<Hh*.9;CY=PORT?Hh*.4:Hh/2;F=Math.min(Hh*1.05,W*(PORT?.78:.82));const mc=$('mini');mc.width=mc.clientWidth*DPR;mc.height=mc.clientHeight*DPR;hud()}
 function draw(now){const t=now/1000;ctx.setTransform(1,0,0,1,0,0);
  const sk=now-shakeT<300&&!RM?(1-(now-shakeT)/300)*5*DPR:0;if(sk)ctx.translate((Math.random()-.5)*sk,(Math.random()-.5)*sk);
@@ -895,7 +906,7 @@ $('vw').onclick=()=>setView(full()?'piece':'full');
 $('snd').onclick=()=>{setAudio('sfx',!AU.on.sfx);sfx('tap')};$('mus').onclick=()=>setAudio('mus',!AU.on.mus);
 for(const id of['menuB','vw','resign'])$(id).addEventListener('click',()=>sfx('tap'));
 
-addEventListener('resize',resize);
+addEventListener('resize',resize);if(window.visualViewport)visualViewport.addEventListener('resize',resize);
 /* =================== boot =================== */
 function boot(){audBtns();anaSync();$('vw').textContent=full()?'Piece view':'Full view';$('vw').setAttribute('aria-pressed',String(full()));buildSprites();MT=[mountainsImg(11),mountainsImg(29),mountainsImg(47)];CAS={b:castleImg(false),w:castleImg(true)};TUFT=tuftImg();FLAG=flagImg();
  let s=3;const r=()=>(s=(s*16807)%2147483647)/2147483647;
