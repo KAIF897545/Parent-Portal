@@ -84,6 +84,8 @@ body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--in
  #ctl{left:10px;bottom:12px;max-width:calc(100% - 196px)}#ctl button,#ctl select{font-size:.9rem;padding:2px 8px}
 }
 @media (max-height:500px) and (min-width:600px){#topv{width:clamp(150px,20vw,190px);padding:4px 5px}#mvl{max-height:48px;font-size:.9rem;line-height:17px}.lr{min-height:16px;font-size:.8rem}.li img{width:13px;height:13px}#cap{font-size:1.15rem}#who{font-size:.85rem}#menu h1{font-size:2.2rem}.sheet{padding:12px 18px}#endb{bottom:56px}}
+#clocks{display:flex;gap:6px;margin:0 0 4px}#clocks[hidden]{display:none}
+.ck{flex:1;display:flex;justify-content:space-between;align-items:baseline;border:1.5px solid var(--ink);border-radius:5px 3px 6px 4px/4px 6px 3px 5px;padding:0 7px;font:500 .9rem var(--hand);background:var(--card)}.ck b{font:700 1.2rem var(--hand);font-variant-numeric:tabular-nums}.ck.on{background:var(--hi)}.ck.low b{color:var(--blun)}
 #splash{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:20px;text-align:center;cursor:pointer;background:var(--paper) repeating-linear-gradient(#0000 0 27px,var(--rule) 27px 28px);transition:opacity .5s ease}
 #splash.out{opacity:0;pointer-events:none}
 #splash h1{font:700 clamp(2.8rem,13vw,5.4rem)/1 var(--hand);margin:0;transform:rotate(-1.5deg)}
@@ -101,6 +103,7 @@ body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--in
  <div id="cap" aria-hidden="true"></div><div id="who"></div>
 </div>
 <div id="topv" class="card"><header><span>top view</span><span id="turn"></span></header>
+ <div id="clocks" hidden><span id="ckB" class="ck"><i>black</i><b>0:00</b></span><span id="ckW" class="ck"><i>white</i><b>0:00</b></span></div>
  <canvas id="mini" tabindex="0" aria-label="Top view of the board. Arrow keys move the cursor, Enter picks a piece or a square."></canvas>
  <div id="lost"><div class="lr"><span>white lost</span><span id="lostW" class="li"></span><b id="advW"></b></div><div class="lr"><span>black lost</span><span id="lostB" class="li"></span><b id="advB"></b></div></div>
  <ol id="mvl" aria-label="Moves played"></ol></div>
@@ -118,6 +121,7 @@ body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--in
    <div class="opt"><span id="l-side">Your side</span><div class="seg" data-k="side" role="group" aria-labelledby="l-side"><button data-v="w">White</button><button data-v="b">Black</button><button data-v="r">Random</button></div></div>
    <div class="opt"><span id="l-lvl">Strength</span><div class="seg" data-k="lvl" role="group" aria-labelledby="l-lvl"><button data-v="1">Easy</button><button data-v="2">Medium</button><button data-v="3">Hard</button></div></div>
    <div class="opt"><span id="l-view">Camera</span><div class="seg" data-k="view" role="group" aria-labelledby="l-view"><button data-v="piece">Piece view</button><button data-v="full">Full view</button></div></div>
+   <div class="opt"><span id="l-tc">Clock (minutes + seconds per move)</span><div class="seg" data-k="tc" role="group" aria-labelledby="l-tc"><button data-v="0">None</button><button data-v="b">Blitz 3+2</button><button data-v="r">Rapid 10+0</button></div></div>
    <button class="go" id="startCpu">Start game</button>
    <button class="link" id="startLocal">or two players on this device</button>
   </section>
@@ -125,6 +129,7 @@ body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--in
    <p class="note">Each of you plays on your own screen. Create a game, then send your friend the invite.</p>
    <div id="fNew">
     <div class="opt"><span id="l-fside">Your side</span><div class="seg" data-k="fside" role="group" aria-labelledby="l-fside"><button data-v="w">White</button><button data-v="b">Black</button><button data-v="r">Random</button></div></div>
+    <div class="opt"><span id="l-ftc">Clock (minutes + seconds per move)</span><div class="seg" data-k="ftc" role="group" aria-labelledby="l-ftc"><button data-v="0">None</button><button data-v="b">Blitz 3+2</button><button data-v="r">Rapid 10+0</button></div></div>
     <button class="go" id="create">Create game</button>
    </div>
    <div id="fWait" hidden>
@@ -398,13 +403,13 @@ function promo(ms){const p=$('promo'),d=p.querySelector('div');d.innerHTML='';
  for(const m of ms){const b=document.createElement('button'),im=new Image();im.src=SPR[(isW(m.pr)?'w':'b')+m.pr.toLowerCase()+'0'][0].toDataURL();im.alt=PN[m.pr.toLowerCase()];b.appendChild(im);b.setAttribute('aria-label',PN[m.pr.toLowerCase()]);b.onclick=()=>{p.hidden=true;doMove(m)};d.appendChild(b)}
  p.hidden=false;d.firstChild.focus()}
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
-async function doMove(m,opt){busy=true;if(online()&&!(opt&&opt.remote))sendMove(m);const s0=S,name=san(s0,m),mover=s0.t,ply=H.length;sel=-1;
+async function doMove(m,opt){busy=true;const sp=opt&&opt.remote?(opt.sp|0):ckSpent();CK.pend=CK.on?{mover:S.t,sp}:null;if(CK.on)CK.start=performance.now();if(online()&&!(opt&&opt.remote))sendMove(m,sp);const s0=S,name=san(s0,m),mover=s0.t,ply=H.length;sel=-1;
  const moved=actorAt(m.f),capSq=m.ep?m.t+(mover=='w'?8:-8):m.t,victim=s0.b[capSq]?actorAt(capSq):null;
  S=mk(s0,m);lastM=m;hud(true);
  await animateMove(moved,m,victim);
  if(m.pr){moved.pc=m.pr;sfx('promote')}
  if(victim&&possess==victim){possess=null;camOver()}
- H.push({s:s0,m,n:name,mover});evals.push(0);
+ H.push({s:s0,m,n:name,mover,sp});CK.pend=null;evals.push(0);ckDraw();
  const L2=legal(S);over=!L2.length||onlyKings();
  hud();narrate(s0,m,victim,mover);busy=false;
  if(over){endGame();if(online()&&lastG)syncMoves(lastG);return}
@@ -413,6 +418,33 @@ async function doMove(m,opt){busy=true;if(online()&&!(opt&&opt.remote))sendMove(
  if(online()&&lastG)syncMoves(lastG);
  ai()}
 function onlyKings(){return S.b.every(x=>!x||x.toLowerCase()=='k')}
+/* =================== chess clock =================== */
+/* Clocks start with the first move. Each move records how long its mover took (sp, ms); remaining time is derived from those plus the running clock, so both players' screens agree without sharing a wall clock. */
+const TC={b:{base:180,inc:2},r:{base:600,inc:0}};
+let CK={on:false,base:0,inc:0,start:0,pausedAt:0,fired:false,pend:null};
+const ckNow=()=>CK.pausedAt||performance.now();
+const ckStarted=()=>H.length>0||!!CK.pend;
+function ckSetup(tc){const c=TC[tc];CK={on:!!c,base:c?c.base*1000:0,inc:c?c.inc*1000:0,start:0,pausedAt:0,fired:false,pend:null};ckDraw()}
+function ckSpent(){return CK.on&&ckStarted()?Math.max(0,Math.round(ckNow()-CK.start)):0}
+function ckLeft(side){if(!CK.on)return 0;let l=CK.base;
+ for(let i=0;i<H.length;i++){if(H[i].mover!==side)continue;l-=(H[i].sp||0);if(i)l+=CK.inc}
+ if(CK.pend&&CK.pend.mover===side){l-=CK.pend.sp;if(H.length)l+=CK.inc}
+ if(!over&&S&&S.t===side&&ckStarted()&&CK.start)l-=Math.max(0,ckNow()-CK.start);
+ return l}
+const ckFmt=ms=>{const s=Math.ceil(Math.max(0,ms)/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+function ckDraw(){const box=$('clocks');if(!box)return;box.hidden=!CK.on;if(!CK.on||!S)return;
+ for(const side of['w','b']){const e=$(side=='w'?'ckW':'ckB'),l=ckLeft(side);e.querySelector('b').textContent=ckFmt(l);
+  e.classList.toggle('on',!over&&S.t===side);e.classList.toggle('low',l<10000)}}
+function ckTick(){if(!CK.on)return;ckDraw();if(over||CK.fired||!S||!ckStarted()||(menuOpen&&!online()))return;
+ const side=S.t,grace=online()&&side!==GM.side?-3000:0;
+ if(ckLeft(side)<=grace){CK.fired=true;timeUp(side)}}
+function timeUp(side){if(over)return;over=true;sel=-1;if(online())sendFlag(side);ckShowFlag(side)}
+function ckShowFlag(side){over=true;const win=side=='w'?'black':'white';let t;
+ if(GM.mode=='local')t=`time's up â€” ${win} wins on time`;
+ else if(side==GM.side)t=GM.mode=='cpu'?'out of time â€” the computer wins':`out of time â€” ${GM.opp||'your friend'} wins`;
+ else t=GM.mode=='cpu'?'the computer ran out of time â€” you win!':`${GM.opp||'your friend'} ran out of time â€” you win!`;
+ caption(t);sfx(side==GM.side&&GM.mode!='local'?'draw':'mate');camOver();hud();showEnd(t);ckDraw()}
+async function sendFlag(side){if(!lastG||!DB)return;try{await DB.doc('games/'+GM.gid).update({status:'over',resigned:side+'t',result:side=='w'?'0-1':'1-0',updated:Date.now()})}catch(e){}}
 function narrate(s0,m,victim,mover){const x=s0.b[m.f],u=x.toLowerCase(),c=mover=='w'?'white':'black',oc=mover=='w'?'black':'white';
  const solo=GM.mode!='local',who=solo?(mover==youSide()?'your':`${c}'s`):`${c}'s`,them=solo?(mover==youSide()?`${oc}'s`:'your'):`${oc}'s`;
  if(m.cs)return caption(`the ${c} king tucks in behind the rook`);
@@ -429,7 +461,7 @@ function endGame(){const ck=inChk(S);sfx(ck?'mate':'draw');let t;
 function showEnd(t){$('endT').textContent=t;$('again').textContent=online()?'New game':'Play again';$('endb').hidden=false;$('resign').hidden=true}
 function ai(){if(!cpu()||menuOpen||over||human())return;busy=true;hud();
  setTimeout(()=>{caption(`${S.t=='w'?'white':'black'} is thinking…`)},H.length?1300:0);
- setTimeout(()=>{const d=GM.lvl,info=rootScores(S,d);let best=info.R[0];
+ setTimeout(()=>{if(over){busy=false;return}const d=GM.lvl,info=rootScores(S,d);let best=info.R[0];
   if(d==1){const pool=info.R.filter(r=>r.v>=info.R[0].v-140);best=pool[Math.random()*pool.length|0]}
   else{const pool=info.R.filter(r=>r.v>=info.R[0].v-(d==2?12:0));best=pool[Math.random()*pool.length|0]}
   busy=false;doMove(best.m,info)},H.length?1400:300)}
@@ -440,22 +472,22 @@ function undo(){if(busy||online()||menuOpen)return;$('endb').hidden=true;let n=c
 
 /* =================== setup screen =================== */
 const INVITE_URL=new URL('pencil-chess.html',location.href).href;
-let PREF={side:'w',lvl:'2',view:viewPref,fside:'r'};try{Object.assign(PREF,JSON.parse(localStorage.getItem('pc-setup')||'{}'))}catch(e){}
+let PREF={side:'w',lvl:'2',view:viewPref,fside:'r',tc:'0',ftc:'0'};try{Object.assign(PREF,JSON.parse(localStorage.getItem('pc-setup')||'{}'))}catch(e){}
 PREF.view=viewPref;
 const savePref=()=>{try{localStorage.setItem('pc-setup',JSON.stringify(PREF))}catch(e){}};
 const pickSide=v=>v=='r'?(Math.random()<.5?'w':'b'):v;
 const gameLive=()=>!!S&&GM.started&&!over;
 function segSync(){for(const g of document.querySelectorAll('#menu .seg'))for(const b of g.children)b.setAttribute('aria-pressed',String(PREF[g.dataset.k]==b.dataset.v))}
-function openMenu(){menuOpen=true;$('menu').hidden=false;$('endb').hidden=true;$('back').hidden=!gameLive();$('back').textContent='Back to your game';$('back').onclick=()=>{sfx('tap');closeMenu()};segSync();watchLobby();setTimeout(()=>($('back').hidden?$('startCpu'):$('back')).focus(),30)}
-function closeMenu(){menuOpen=false;$('menu').hidden=true;unwatchLobby();if(gameLive()){camOver();turnCaption();ai()}}
+function openMenu(){menuOpen=true;if(CK.on&&!online()&&!CK.pausedAt)CK.pausedAt=performance.now();$('menu').hidden=false;$('endb').hidden=true;$('back').hidden=!gameLive();$('back').textContent='Back to your game';$('back').onclick=()=>{sfx('tap');closeMenu()};segSync();watchLobby();setTimeout(()=>($('back').hidden?$('startCpu'):$('back')).focus(),30)}
+function closeMenu(){menuOpen=false;if(CK.pausedAt){CK.start+=performance.now()-CK.pausedAt;CK.pausedAt=0}$('menu').hidden=true;unwatchLobby();if(gameLive()){camOver();turnCaption();ai()}}
 function whoLine(){const sd=GM.side=='w'?'white':'black';let t='';
  if(GM.mode=='cpu')t=`you (${sd}) vs the computer, ${['','easy','medium','hard'][GM.lvl]}`;
  else if(GM.mode=='local')t='two players on this device';
  else t=`you (${sd}) vs ${GM.opp||'your friend'}`;
  $('who').textContent=t;$('resign').hidden=!online()||over}
 function leaveOnline(){if(gUnsub){gUnsub();gUnsub=null}lastG=null}
-function startCpu(){leaveOnline();GM={mode:'cpu',side:pickSide(PREF.side),lvl:+PREF.lvl,gid:null,opp:'',started:true};menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();whoLine();turnCaption();ai()}
-function startLocal(){leaveOnline();GM={mode:'local',side:'w',lvl:2,gid:null,opp:'',started:true};menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();whoLine();turnCaption()}
+function startCpu(){leaveOnline();GM={mode:'cpu',side:pickSide(PREF.side),lvl:+PREF.lvl,gid:null,opp:'',started:true};menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();ckSetup(PREF.tc);whoLine();turnCaption();ai()}
+function startLocal(){leaveOnline();GM={mode:'local',side:'w',lvl:2,gid:null,opp:'',started:true};menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();ckSetup(PREF.tc);whoLine();turnCaption()}
 function menuInit(){
  for(const g of document.querySelectorAll('#menu .seg'))for(const b of g.children)b.onclick=()=>{PREF[g.dataset.k]=b.dataset.v;savePref();segSync();sfx('tap');if(g.dataset.k=='view')setView(b.dataset.v)};
  $('startCpu').onclick=()=>{sfx('pick');startCpu()};$('startLocal').onclick=()=>{sfx('pick');startLocal()};
@@ -471,7 +503,7 @@ function menuInit(){
 let DB=null,USER=null,ME=null,MYUID=null,canWrite=null,gUnsub=null,lUnsub=null,lastG=null,waitCode=null;
 const CODE_CH='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const genCode=()=>Array.from({length:5},()=>CODE_CH[Math.random()*CODE_CH.length|0]).join('');
-const enc=m=>({f:m.f,t:m.t,p:m.pr||''});
+const enc=(m,s)=>({f:m.f,t:m.t,p:m.pr||'',s:s|0});
 function dec(s0,v){return legal(s0).find(m=>m.f==v.f&&m.t==v.t&&(m.pr||'')==(v.p||''))||null}
 const fmsg=t=>{$('fMsg').textContent=t};
 async function names(ids){ids=[...new Set(ids.filter(Boolean))];if(!USER||!ids.length)return{};try{return await USER.profiles(ids)}catch(e){return{}}}
@@ -504,7 +536,7 @@ function hideWaiting(){waitCode=null;$('fNew').hidden=false;$('fJoin').hidden=fa
 function dbErr(e,what){const c=e&&e.code;fmsg(c=='invalid_argument'?`Couldn't ${what}: you don't have permission to play online here. Try signing in again.`:c=='quota_exceeded'?`Couldn't ${what}: the game storage is full.`:`Couldn't ${what}. Check your connection and try again.`)}
 async function createGame(){if(!DB)return;fmsg('');$('create').disabled=true;sfx('pick');
  try{const side=pickSide(PREF.fside);let code,ref;for(let k=0;k<4;k++){code=genCode();ref=DB.doc('games/'+code);if(!(await ref.get()).exists)break}
-  const now=Date.now();await ref.set({code,status:'waiting',host:ME,hostu:MYUID,w:side=='w'?ME:null,b:side=='b'?ME:null,wu:side=='w'?MYUID:null,bu:side=='b'?MYUID:null,moves:[],created:now,updated:now,result:null,resigned:null});
+  const now=Date.now();await ref.set({code,status:'waiting',host:ME,hostu:MYUID,w:side=='w'?ME:null,b:side=='b'?ME:null,wu:side=='w'?MYUID:null,bu:side=='b'?MYUID:null,moves:[],tc:PREF.ftc,created:now,updated:now,result:null,resigned:null});
   try{localStorage.setItem('pc-game',code)}catch(e){}showWaiting(code);subscribeGame(code)}
  catch(e){dbErr(e,'create the game')}finally{$('create').disabled=canWrite===false}}
 async function cancelGame(){const code=waitCode;hideWaiting();leaveOnline();sfx('tap');try{localStorage.removeItem('pc-game')}catch(e){}
@@ -531,21 +563,21 @@ async function onGame(code,sn){
  syncMoves(g)}
 async function enterOnline(code,seat,g){hideWaiting();GM={mode:'online',side:seat,lvl:GM.lvl||2,gid:code,opp:'',started:true};
  const ou=seat=='w'?g.bu:g.wu,ps=await names([ou]);GM.opp=(ps[ou]||{}).name||'your friend';
- menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();
- for(const v of g.moves||[]){const m=dec(S,v);if(!m)break;H.push({s:S,m,n:san(S,m),mover:S.t});S=mk(S,m);lastM=m;evals.push(0)}
- buildActors();over=!legal(S).length||onlyKings();camOver(true);hud();whoLine();
+ menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();ckSetup(g.tc||'0');
+ for(const v of g.moves||[]){const m=dec(S,v);if(!m)break;H.push({s:S,m,n:san(S,m),mover:S.t,sp:v.s|0});S=mk(S,m);lastM=m;evals.push(0)}
+ buildActors();over=!legal(S).length||onlyKings();CK.start=performance.now();camOver(true);hud();whoLine();
  if(g.resigned){over=true;showResign(g.resigned);return}
  if(over){endGame();return}
  if(!(g.moves||[]).length){sfx('promote');caption(`${GM.opp} is here! you're ${seat=='w'?'white — your move':'black — white moves first'}`)}else turnCaption()}
 function syncMoves(g){if(busy||!online())return;const ms=g.moves||[];
  if(ms.length<H.length){enterOnline(GM.gid,GM.side,g);return}
- if(ms.length>H.length){const m=dec(S,ms[H.length]);if(!m){enterOnline(GM.gid,GM.side,g);return}doMove(m,{remote:true});return}
+ if(ms.length>H.length){const m=dec(S,ms[H.length]);if(!m){enterOnline(GM.gid,GM.side,g);return}doMove(m,{remote:true,sp:ms[H.length].s});return}
  if(g.resigned&&!over){over=true;showResign(g.resigned)}}
-function showResign(side){const mine=side==GM.side;caption(mine?'you resigned':`${GM.opp} resigned — you win!`);sfx(mine?'draw':'mate');camOver();hud();showEnd(mine?'you resigned':`${GM.opp} resigned — you win!`)}
-async function sendMove(m,tries=0){if(!lastG)return;const moves=H.map(h=>enc(h.m)).concat([enc(m)]),n=mk(S,m),done=!legal(n).length||n.b.every(x=>!x||x.toLowerCase()=='k');
+function showResign(side){if(side.length==2){ckShowFlag(side[0]);return}const mine=side==GM.side;caption(mine?'you resigned':`${GM.opp} resigned — you win!`);sfx(mine?'draw':'mate');camOver();hud();showEnd(mine?'you resigned':`${GM.opp} resigned — you win!`)}
+async function sendMove(m,sp,tries=0){if(!lastG)return;const moves=H.map(h=>enc(h.m,h.sp)).concat([enc(m,sp)]),n=mk(S,m),done=!legal(n).length||n.b.every(x=>!x||x.toLowerCase()=='k');
  const result=done?(inChk(n)?(S.t=='w'?'1-0':'0-1'):'1/2'):null;
  try{await DB.doc('games/'+GM.gid).update({moves,updated:Date.now(),status:done?'over':'playing',result})}
- catch(e){if(tries<2)setTimeout(()=>sendMove(m,tries+1),1200*(tries+1));else caption(e&&e.code=='invalid_argument'?"your move couldn't be sent — you don't have permission to play online here":"your move couldn't be sent — check your connection")}}
+ catch(e){if(tries<2)setTimeout(()=>sendMove(m,sp,tries+1),1200*(tries+1));else caption(e&&e.code=='invalid_argument'?"your move couldn't be sent — you don't have permission to play online here":"your move couldn't be sent — check your connection")}}
 async function resign(){if(!online()||over||!lastG)return;if(!confirm('Resign this game?'))return;over=true;sfx('tap');
  try{await DB.doc('games/'+GM.gid).update({status:'over',resigned:GM.side,result:GM.side=='w'?'0-1':'1-0',updated:Date.now()})}catch(e){}
  showResign(GM.side)}
@@ -832,7 +864,7 @@ function boot(){audBtns();anaSync();$('vw').textContent=full()?'Piece view':'Ful
  let s=3;const r=()=>(s=(s*16807)%2147483647)/2147483647;
  for(let k=0;k<70;k++){const x=-6+r()*20,z=-4+r()*16;if(x>-.3&&x<8.3&&z>-.3&&z<8.3)continue;DECOR.push({img:TUFT,x,z,h:.28})}
  for(const[x,z]of[[-1,-.8],[9,-.8],[-1,8.8],[9,8.8],[-2.5,3],[10.5,5]])DECOR.push({img:FLAG,x,z,h:1.9});
- resize();resetBoard();menuInit();let last=performance.now();
+ resize();resetBoard();menuInit();setInterval(ckTick,250);let last=performance.now();
  const loop=now=>{const dt=Math.min(.05,(now-last)/1000);last=now;stepActors(now);stepCam(dt);pickRects=[];draw(now);requestAnimationFrame(loop)};requestAnimationFrame(loop)}
 (document.fonts&&document.fonts.ready?Promise.race([document.fonts.ready,wait(1500)]):Promise.resolve()).then(boot);
 </script></body></html>
