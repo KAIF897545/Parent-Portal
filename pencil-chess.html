@@ -103,7 +103,7 @@ body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--in
 .mtabs{display:none}
 html,body{overscroll-behavior:none}
 @media (max-width:760px){
- html,body{height:var(--app-h,100dvh)}
+ html{height:var(--app-h,100dvh);overflow:hidden}body{height:100%}
  .mtabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:2px 0 12px}
  #menu .mtabs button{min-height:46px;font-size:1.1rem}
  #menu .mtabs button[aria-selected="true"]{background:var(--ink);color:var(--card)}
@@ -114,7 +114,7 @@ html,body{overscroll-behavior:none}
  body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
  #cap{font-size:1.3rem}#who{font-size:.9rem}
  #home{display:none}
- #menu{padding:8px 8px calc(24px + env(safe-area-inset-bottom,0px))}
+ #menu{padding:8px 8px 24px}
  #menu .seg button,#menu .go,#menu .resume,#endb button,#menu input,#promo button{min-height:44px}
  #menu .resume{width:100%;font-size:1.1rem}
  #menu .seg button{padding:6px 14px}
@@ -126,10 +126,11 @@ html,body{overscroll-behavior:none}
 }
 @media (max-width:760px) and (orientation:portrait){
  :root{--ctl:62px;--dock:238px}
- #zoomc{left:8px;top:calc((100% - var(--dock) - var(--ctl) - env(safe-area-inset-bottom,0px))/2)}
- #scene{inset:0 0 auto 0;height:calc(100% - var(--dock) - var(--ctl) - env(safe-area-inset-bottom,0px))}
+ #zoomc{left:auto;right:8px;top:auto;bottom:calc(var(--dock) + var(--ctl) + 8px);transform:none;flex-direction:row}
+ #zoomc button{width:42px;height:42px}
+ #scene{inset:0 0 auto 0;height:calc(100% - var(--dock) - var(--ctl))}
  #hud{pointer-events:none}
- #topv{left:0;right:0;top:auto;bottom:calc(var(--ctl) + env(safe-area-inset-bottom,0px));width:auto;height:var(--dock);padding:8px 12px 6px;border-radius:14px 14px 0 0;border-width:2px 0 0;box-shadow:none;display:grid;grid-template-columns:min(50vw,210px) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);column-gap:12px;row-gap:4px;align-content:start}
+ #topv{left:0;right:0;top:auto;bottom:var(--ctl);width:auto;height:var(--dock);padding:8px 12px 6px;border-radius:14px 14px 0 0;border-width:2px 0 0;box-shadow:none;display:grid;grid-template-columns:min(50vw,210px) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);column-gap:12px;row-gap:4px;align-content:start}
  #topv header{grid-column:1/-1;font-size:1.05rem;margin:0}
  #mini{grid-column:1;grid-row:2/5;align-self:start}
  #clocks{grid-column:2;grid-row:2;flex-direction:column;gap:4px;margin:0}
@@ -137,10 +138,10 @@ html,body{overscroll-behavior:none}
  #lost{grid-column:2;grid-row:3;margin:2px 0 0;font-size:.95rem}
  .lr{grid-template-columns:3.6em 1fr auto;min-height:20px;font-size:.9rem}.li img{width:15px;height:15px}
  #mvl{grid-column:2;grid-row:4;margin:2px 0 0;max-height:none;min-height:0;font-size:1.05rem;line-height:22px}
- #ctl{left:0;right:0;bottom:0;max-width:none;flex-wrap:nowrap;gap:6px;align-items:flex-start;height:calc(var(--ctl) + env(safe-area-inset-bottom,0px));padding:8px 10px 0;background:var(--card);border-top:2px solid var(--ink)}
+ #ctl{left:0;right:0;bottom:0;max-width:none;flex-wrap:nowrap;gap:6px;align-items:flex-start;height:var(--ctl);padding:8px 10px 0;background:var(--card);border-top:2px solid var(--ink)}
  #ctl button{flex:1 1 0;min-width:0;min-height:46px;padding:0 3px;font-size:.82rem;white-space:nowrap}
  #snd[aria-pressed="false"],#mus[aria-pressed="false"]{opacity:.55;text-decoration:line-through}
- #endb{top:auto;bottom:calc(var(--dock) + var(--ctl) + env(safe-area-inset-bottom,0px) + 10px)}
+ #endb{top:auto;bottom:calc(var(--dock) + var(--ctl) + 10px)}
 }
 @media (max-height:500px) and (min-width:600px){
  #ctl button{min-height:34px}
@@ -782,7 +783,7 @@ function stepActors(now){for(const a of actors){if(!a.anim)continue;const A=a.an
 /* =================== camera control =================== */
 function lookAtT(px,py,pz,tx,ty,tz){ct.x=px;ct.y=py;ct.z=pz;ct.yaw=Math.atan2(tx-px,-(tz-pz));ct.pitch=Math.atan2(-(ty-py),Math.hypot(tx-px,tz-pz))}
 function camOver(snap){camMode='over';possess=null;const b=viewSide()=='b';orbit=b?Math.PI:0;placeOver();if(snap)Object.assign(cam,ct)}
-function placeOver(){const cx=4,cz=4;if(full()){const r=PORT?orbitR-1.2:orbitR+.4;lookAtT(cx+Math.sin(orbit)*r,r*(PORT?1.45:.82),cz+Math.cos(orbit)*r,cx,.2,cz+Math.cos(orbit)*.2);return}{const r=PORT?orbitR+.3:orbitR;lookAtT(cx+Math.sin(orbit)*r,PORT?4.6:1.95+orbitR*.06,cz+Math.cos(orbit)*r,cx,.35,cz-Math.cos(orbit)*(PORT?.2:.6))}}
+function placeOver(){const cx=4,cz=4;if(full()){const r=PORT?orbitR-4.9:orbitR+.4;lookAtT(cx+Math.sin(orbit)*r,r*(PORT?3.6:.82),cz+Math.cos(orbit)*r,cx,.2,cz+Math.cos(orbit)*.2);return}{const r=PORT?orbitR+.3:orbitR;lookAtT(cx+Math.sin(orbit)*r,PORT?4.6:1.95+orbitR*.06,cz+Math.cos(orbit)*r,cx,.35,cz-Math.cos(orbit)*(PORT?.2:.6))}}
 function camPov(){camMode='pov';const w=isW(possess.pc);lookYaw=w?0:Math.PI;lookPitch=.1}
 function placePov(){const a=possess,h=HGT[a.pc.toLowerCase()]*.86;ct.x=a.x-Math.sin(lookYaw)*.3;ct.z=a.z+Math.cos(lookYaw)*.3;ct.y=h+a.y;ct.yaw=lookYaw;ct.pitch=lookPitch}
 function stepCam(dt){if(menuOpen&&camMode=='over'&&!RM)orbit+=dt*.07;if(camMode=='pov'&&possess&&!possess.dead)placePov();else if(camMode=='pov'){camOver()}else placeOver();
@@ -792,7 +793,7 @@ function stepCam(dt){if(menuOpen&&camMode=='over'&&!RM)orbit+=dt*.07;if(camMode=
 let MT=[],CAS={},TUFT,FLAG,DECOR=[];
 let PAPERC='#efede7',HAND='cursive';
 function resize(){document.documentElement.style.setProperty('--app-h',innerHeight+'px');const cs=getComputedStyle(document.body);PAPERC=cs.backgroundColor;HAND=cs.getPropertyValue('--hand');DPR=Math.min(2,devicePixelRatio||1);const r=cv.getBoundingClientRect();W=cv.width=Math.round(r.width*DPR);Hh=cv.height=Math.round(r.height*DPR);
- PORT=W<Hh*.9;CY=PORT?Hh*.4:Hh/2;FB=Math.min(Hh*1.05,W*(PORT?.78:.82));F=FB*zoomK;const mc=$('mini');mc.width=mc.clientWidth*DPR;mc.height=mc.clientHeight*DPR;hud()}
+ PORT=W<Hh*1.25;CY=PORT?Hh*.5:Hh/2;FB=Math.min(Hh*1.05,W*(PORT?.78:.82));F=FB*zoomK;const mc=$('mini');mc.width=mc.clientWidth*DPR;mc.height=mc.clientHeight*DPR;hud()}
 function draw(now){const t=now/1000;ctx.setTransform(1,0,0,1,0,0);
  const sk=now-shakeT<300&&!RM?(1-(now-shakeT)/300)*5*DPR:0;if(sk)ctx.translate((Math.random()-.5)*sk,(Math.random()-.5)*sk);
  const paper=PAPERC;ctx.fillStyle=paper;ctx.fillRect(-20,-20,W+40,Hh+40);
