@@ -48,7 +48,11 @@ begin
   end if;
 
   -- Housekeeping, and a cap so one browser can't flood the lobby.
-  delete from public.pencil_games where created_at < now() - interval '2 days';
+  -- Housekeeping: finished/old games after 2 days, and waiting games whose
+  -- invite code has expired (5 minutes).
+  delete from public.pencil_games
+   where created_at < now() - interval '2 days'
+      or (status = 'waiting' and created_at < now() - interval '5 minutes');
   if (select count(*) from public.pencil_games where data->>'host' = me and status = 'waiting') >= 3 then
     raise exception 'You already have open games. Cancel one first.';
   end if;
@@ -106,6 +110,9 @@ begin
     if r.status <> 'waiting'
        or not (coalesce(merged->>'w' = me, false) or coalesce(merged->>'b' = me, false)) then
       raise exception 'You are not in this game.';
+    end if;
+    if r.created_at < now() - interval '5 minutes' then
+      raise exception 'This game code has expired.';
     end if;
   end if;
 

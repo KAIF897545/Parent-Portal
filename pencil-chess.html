@@ -182,6 +182,7 @@ html,body{overscroll-behavior:none}
     <p class="note">Game code</p><div id="code" class="code"></div>
     <div class="row"><input id="inv" readonly aria-label="Invite to send"><button id="copy">Copy invite</button></div>
     <p class="note" id="waitMsg">Waiting for your friend to join…</p>
+    <p class="note" id="waitLeft"></p>
     <button class="link" id="cancel">Cancel this game</button>
    </div>
    <div id="fJoin"><label for="jc">Got a code from a friend?</label><div class="row"><input id="jc" maxlength="5" autocomplete="off" spellcheck="false" placeholder="e.g. K7Q4M"><button id="join">Join</button></div></div>
@@ -456,9 +457,9 @@ async function doMove(m,opt){busy=true;const sp=opt&&opt.remote?(opt.sp|0):ckSpe
  if(m.pr){moved.pc=m.pr;sfx('promote')}
  if(victim&&possess==victim){possess=null;camOver()}
  H.push({s:s0,m,n:name,mover,sp});CK.pend=null;evals.push(0);ckDraw();
- const L2=legal(S);over=!L2.length||onlyKings();
- hud();narrate(s0,m,victim,mover);busy=false;
- if(over){endGame();if(online()&&lastG)syncMoves(lastG);return}
+ const L2=legal(S),early=over;over=over||!L2.length||onlyKings();
+ hud();if(!early)narrate(s0,m,victim,mover);busy=false;
+ if(over){if(!early)endGame();if(online()&&lastG)syncMoves(lastG);return}
  if(GM.mode=='local')camOver();
  setTimeout(()=>{if(!busy&&!over&&human()&&sel<0&&performance.now()-capT>1500)turnCaption()},2200);
  if(online()&&lastG)syncMoves(lastG);
@@ -485,10 +486,7 @@ function ckTick(){if(!CK.on)return;ckDraw();if(over||CK.fired||!S||!ckStarted()|
  const side=S.t,grace=online()&&side!==GM.side?-3000:0;
  if(ckLeft(side)<=grace){CK.fired=true;timeUp(side)}}
 function timeUp(side){if(over)return;over=true;sel=-1;if(online())sendFlag(side);ckShowFlag(side)}
-function ckShowFlag(side){over=true;const win=side=='w'?'black':'white';let t;
- if(GM.mode=='local')t=`time's up â€” ${win} wins on time`;
- else if(side==GM.side)t=GM.mode=='cpu'?'out of time â€” the computer wins':`out of time â€” ${GM.opp||'your friend'} wins`;
- else t=GM.mode=='cpu'?'the computer ran out of time â€” you win!':`${GM.opp||'your friend'} ran out of time â€” you win!`;
+function ckShowFlag(side){over=true;const t=resultLine(side=='w'?'b':'w','timeout');
  caption(t);sfx(side==GM.side&&GM.mode!='local'?'draw':'mate');camOver();hud();showEnd(t);ckDraw()}
 async function sendFlag(side){if(!lastG||!DB)return;try{await DB.doc('games/'+GM.gid).update({status:'over',resigned:side+'t',result:side=='w'?'0-1':'1-0',updated:Date.now()})}catch(e){}}
 function narrate(s0,m,victim,mover){const x=s0.b[m.f],u=x.toLowerCase(),c=mover=='w'?'white':'black',oc=mover=='w'?'black':'white';
@@ -500,9 +498,10 @@ function narrate(s0,m,victim,mover){const x=s0.b[m.f],u=x.toLowerCase(),c=mover=
  const tg=gen({...S,t:mover}).filter(y=>y.f==m.t&&S.b[y.t]&&'nbrq'.includes(S.b[y.t].toLowerCase())).sort((a,b)=>V[S.b[b.t].toLowerCase()]-V[S.b[a.t].toLowerCase()])[0];
  if(tg)return caption(`${who} ${PN[u]} goes for ${them} ${PN[S.b[tg.t].toLowerCase()]}!`);
  caption(`the ${PN[u]} heads to ${sqn(m.t)}…`)}
+function resultLine(win,how){if(!win)return how;const nm=win=='w'?'White':'Black';let t=`${nm} won by ${how}`;if(GM.mode!='local')t+=win==GM.side?' \u2014 you win!':' \u2014 you lost';return t}
 function endGame(){const ck=inChk(S);sfx(ck?'mate':'draw');let t;
- if(ck){const wc=S.t=='w'?'black':'white',youWon=GM.mode!='local'&&wc[0]==GM.side;caption(`checkmate! ${wc} wins`);addWord('CHECKMATE!',null,1.6);t=GM.mode=='local'?`checkmate — ${wc} wins`:youWon?'checkmate — you win!':`checkmate — ${online()?GM.opp||'your friend':'the computer'} wins`}
- else{t=onlyKings()?`only the kings are left — it's a draw`:`stalemate — it's a draw`;caption(t)}
+ if(ck){const win=S.t=='w'?'b':'w';t=resultLine(win,'checkmate');caption(t);addWord('CHECKMATE!',null,1.6)}
+ else{t=onlyKings()?'Draw \u2014 only the kings are left':'Draw by stalemate';caption(t)}
  camOver();hud();showEnd(t)}
 function showEnd(t){$('endT').textContent=t;$('again').textContent=online()?'New game':'Play again';$('endb').hidden=false;$('resign').hidden=true}
 function ai(){if(!cpu()||menuOpen||over||human())return;busy=true;hud();
@@ -530,7 +529,7 @@ function whoLine(){const sd=GM.side=='w'?'white':'black';let t='';
  if(GM.mode=='cpu')t=`you (${sd}) vs the computer, ${['','easy','medium','hard'][GM.lvl]}`;
  else if(GM.mode=='local')t='two players on this device';
  else t=`you (${sd}) vs ${GM.opp||'your friend'}`;
- $('who').textContent=t;$('resign').hidden=!online()||over}
+ $('who').textContent=t}
 function leaveOnline(){if(gUnsub){gUnsub();gUnsub=null}lastG=null}
 function startCpu(){leaveOnline();GM={mode:'cpu',side:pickSide(PREF.side),lvl:+PREF.lvl,gid:null,opp:'',started:true};menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();ckSetup(PREF.tc);whoLine();turnCaption();ai()}
 function startLocal(){leaveOnline();GM={mode:'local',side:'w',lvl:2,gid:null,opp:'',started:true};menuOpen=false;$('menu').hidden=true;unwatchLobby();resetBoard();ckSetup(PREF.tc);whoLine();turnCaption()}
@@ -549,7 +548,7 @@ function menuInit(){
  segSync();$('menu').hidden=false;menuOpen=true;caption('');initOnline()}
 /* =================== online play (shared game documents) =================== */
 let DB=null,USER=null,ME=null,MYUID=null,canWrite=null,gUnsub=null,lUnsub=null,lastG=null,waitCode=null;
-const CODE_CH='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const CODE_TTL=300000;let waitTimer=null;const CODE_CH='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const genCode=()=>Array.from({length:5},()=>CODE_CH[Math.random()*CODE_CH.length|0]).join('');
 const enc=(m,s)=>({f:m.f,t:m.t,p:m.pr||'',s:s|0});
 function dec(s0,v){return legal(s0).find(m=>m.f==v.f&&m.t==v.t&&(m.pr||'')==(v.p||''))||null}
@@ -566,26 +565,31 @@ async function initOnline(){
  if(menuOpen)watchLobby();
  let code=null;try{code=localStorage.getItem('pc-game')}catch(e){}
  if(code){try{const sn=await DB.doc('games/'+code).get();if(sn.exists){const g=sn.data();const mine=g.w===ME||g.b===ME;
-   if(mine&&g.status=='waiting'){showWaiting(code);subscribeGame(code)}
+   if(mine&&g.status=='waiting'){if(Date.now()-(g.created||0)>CODE_TTL){try{localStorage.removeItem('pc-game')}catch(e){}DB.doc('games/'+code).delete().catch(()=>{})}else{showWaiting(code,g.created);subscribeGame(code)}}
    else if(mine&&g.status=='playing'){const ps=await names([g.w===ME?g.bu:g.wu]);const nm=(ps[g.w===ME?g.bu:g.wu]||{}).name;
     const b=$('back');b.hidden=false;b.textContent=`Continue your game with ${nm||'your friend'}`;b.onclick=()=>{sfx('pick');subscribeGame(code)}}}}catch(e){}}}
 function watchLobby(){if(!DB||lUnsub)return;try{lUnsub=DB.collection('games').where('status','==','waiting').limit(40).onSnapshot(renderLobby,()=>{lUnsub=null;$('openL').innerHTML='<li class="note">Couldn\u2019t load open games.</li>'})}catch(e){}}
 function unwatchLobby(){if(lUnsub){lUnsub();lUnsub=null}}
-async function renderLobby(snap){const now=Date.now(),rows=snap.docs.map(d=>d.data()).filter(g=>g&&g.host!==ME&&now-(g.created||0)<36e5).sort((a,b)=>b.created-a.created);
+async function renderLobby(snap){const now=Date.now(),rows=snap.docs.map(d=>d.data()).filter(g=>g&&g.host!==ME&&now-(g.created||0)<CODE_TTL).sort((a,b)=>b.created-a.created);
  const ul=$('openL');if(!rows.length){ul.innerHTML='<li class="note">No open games right now. Create one and invite a friend.</li>';return}
  const ps=await names(rows.map(g=>g.hostu));ul.innerHTML='';
  for(const g of rows){const li=document.createElement('li'),sp=document.createElement('span'),b=document.createElement('button');
   const yours=g.w?'black':'white',mins=Math.max(1,Math.round((now-g.created)/6e4));
   sp.textContent=`${(ps[g.hostu]||{}).name||'Someone'}'s game, you'd be ${yours} (${mins} min ago)`;b.textContent='Join';b.disabled=canWrite===false;b.onclick=()=>joinGame(g.code);
   li.append(sp,b);ul.appendChild(li)}}
-function showWaiting(code){menuTab('fr');waitCode=code;$('fNew').hidden=true;$('fJoin').hidden=true;$('fOpen').hidden=true;$('fWait').hidden=false;$('code').textContent=code;
+function showWaiting(code,created){menuTab('fr');waitCode=code;startWaitTimer(created);$('fNew').hidden=true;$('fJoin').hidden=true;$('fOpen').hidden=true;$('fWait').hidden=false;$('code').textContent=code;
  $('inv').value=`Play chess with me on Pencil Chess: ${INVITE_URL} (open "Play a friend" and enter code ${code})`;$('waitMsg').textContent='Waiting for your friend to join…'}
-function hideWaiting(){waitCode=null;$('fNew').hidden=false;$('fJoin').hidden=false;$('fOpen').hidden=false;$('fWait').hidden=true}
+function startWaitTimer(created){clearInterval(waitTimer);const t0=created||Date.now();
+ const tick=()=>{const left=CODE_TTL-(Date.now()-t0);if(left<=0){clearInterval(waitTimer);expireWait();return}
+  const s=Math.ceil(left/1000);$('waitLeft').textContent=`Code expires in ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')} if nobody joins.`};
+ tick();waitTimer=setInterval(tick,1000)}
+async function expireWait(){if(!waitCode)return;await cancelGame();fmsg('Your game code expired because nobody joined in 5 minutes. Create a new one.')}
+function hideWaiting(){clearInterval(waitTimer);waitCode=null;$('fNew').hidden=false;$('fJoin').hidden=false;$('fOpen').hidden=false;$('fWait').hidden=true}
 function dbErr(e,what){const c=e&&e.code;fmsg(c=='invalid_argument'?`Couldn't ${what}: you don't have permission to play online here. Try signing in again.`:c=='quota_exceeded'?`Couldn't ${what}: the game storage is full.`:`Couldn't ${what}. Check your connection and try again.`)}
 async function createGame(){if(!DB)return;fmsg('');$('create').disabled=true;sfx('pick');
  try{const side=pickSide(PREF.fside);let code,ref;for(let k=0;k<4;k++){code=genCode();ref=DB.doc('games/'+code);if(!(await ref.get()).exists)break}
   const now=Date.now();await ref.set({code,status:'waiting',host:ME,hostu:MYUID,w:side=='w'?ME:null,b:side=='b'?ME:null,wu:side=='w'?MYUID:null,bu:side=='b'?MYUID:null,moves:[],tc:PREF.ftc,created:now,updated:now,result:null,resigned:null});
-  try{localStorage.setItem('pc-game',code)}catch(e){}showWaiting(code);subscribeGame(code)}
+  try{localStorage.setItem('pc-game',code)}catch(e){}showWaiting(code,now);subscribeGame(code)}
  catch(e){dbErr(e,'create the game')}finally{$('create').disabled=canWrite===false}}
 async function cancelGame(){const code=waitCode;hideWaiting();leaveOnline();sfx('tap');try{localStorage.removeItem('pc-game')}catch(e){}
  if(code&&DB){try{await DB.doc('games/'+code).delete()}catch(e){}}}
@@ -597,6 +601,7 @@ async function joinGame(raw){if(!DB)return;const code=(raw||'').toUpperCase().re
  try{const ref=DB.doc('games/'+code);let sn=await ref.get();if(!sn.exists){fmsg(`There's no game with the code ${code}.`);return}
   let g=sn.data();if(g.w===ME||g.b===ME){try{localStorage.setItem('pc-game',code)}catch(e){}subscribeGame(code);return}
   if(g.status!='waiting'){fmsg('That game has already started.');return}
+  if(Date.now()-(g.created||0)>CODE_TTL){fmsg('That game code has expired. Ask your friend for a new one.');return}
   const lease=await ref.acquire({holder:ME,ttlMs:5000});if(!lease.acquired){fmsg('Someone else is joining that game right now.');return}
   sn=await ref.get();g=sn.data();const seat=!g.w?'w':!g.b?'b':null;if(!seat||g.status!='waiting'){fmsg('That game is already full.');return}
   await ref.update({[seat]:ME,[seat+'u']:MYUID,status:'playing',updated:Date.now()});
@@ -606,7 +611,7 @@ function subscribeGame(code){leaveOnline();gUnsub=DB.doc('games/'+code).onSnapsh
 async function onGame(code,sn){
  if(!sn.exists){if(waitCode==code){hideWaiting();fmsg('That game was cancelled.')}else if(GM.gid==code&&!over){caption('this game was removed')}return}
  const g=sn.data();lastG=g;const seat=g.w===ME?'w':g.b===ME?'b':null;if(!seat)return;
- if(g.status=='waiting'){if(waitCode!=code)showWaiting(code);return}
+ if(g.status=='waiting'){if(waitCode!=code)showWaiting(code,g.created);return}
  if(GM.gid!==code||GM.mode!='online'){await enterOnline(code,seat,g);return}
  syncMoves(g)}
 async function enterOnline(code,seat,g){hideWaiting();GM={mode:'online',side:seat,lvl:GM.lvl||2,gid:code,opp:'',started:true};
@@ -621,14 +626,15 @@ function syncMoves(g){if(busy||!online())return;const ms=g.moves||[];
  if(ms.length<H.length){enterOnline(GM.gid,GM.side,g);return}
  if(ms.length>H.length){const m=dec(S,ms[H.length]);if(!m){enterOnline(GM.gid,GM.side,g);return}doMove(m,{remote:true,sp:ms[H.length].s});return}
  if(g.resigned&&!over){over=true;showResign(g.resigned)}}
-function showResign(side){if(side.length==2){ckShowFlag(side[0]);return}const mine=side==GM.side;caption(mine?'you resigned':`${GM.opp} resigned — you win!`);sfx(mine?'draw':'mate');camOver();hud();showEnd(mine?'you resigned':`${GM.opp} resigned — you win!`)}
+function showResign(side){if(side.length==2){ckShowFlag(side[0]);return}const t=resultLine(side=='w'?'b':'w','resignation');caption(t);sfx(GM.mode!='local'&&side==GM.side?'draw':'mate');camOver();hud();showEnd(t)}
 async function sendMove(m,sp,tries=0){if(!lastG)return;const moves=H.map(h=>enc(h.m,h.sp)).concat([enc(m,sp)]),n=mk(S,m),done=!legal(n).length||n.b.every(x=>!x||x.toLowerCase()=='k');
  const result=done?(inChk(n)?(S.t=='w'?'1-0':'0-1'):'1/2'):null;
  try{await DB.doc('games/'+GM.gid).update({moves,updated:Date.now(),status:done?'over':'playing',result})}
  catch(e){if(tries<2)setTimeout(()=>sendMove(m,sp,tries+1),1200*(tries+1));else caption(e&&e.code=='invalid_argument'?"your move couldn't be sent — you don't have permission to play online here":"your move couldn't be sent — check your connection")}}
-async function resign(){if(!online()||over||!lastG)return;if(!confirm('Resign this game?'))return;over=true;sfx('tap');
- try{await DB.doc('games/'+GM.gid).update({status:'over',resigned:GM.side,result:GM.side=='w'?'0-1':'1-0',updated:Date.now()})}catch(e){}
- showResign(GM.side)}
+async function resign(){if(over||!gameLive())return;const side=GM.mode=='local'?S.t:GM.side;
+ if(!confirm(GM.mode=='local'?`${side=='w'?'White':'Black'}, resign this game?`:'Resign this game?'))return;over=true;sel=-1;sfx('tap');
+ if(online()&&lastG){try{await DB.doc('games/'+GM.gid).update({status:'over',resigned:side,result:side=='w'?'0-1':'1-0',updated:Date.now()})}catch(e){}}
+ showResign(side)}
 /* =================== sound & music (all synthesized, nothing downloaded) =================== */
 const AU={c:null,on:{sfx:true,mus:true}};
 try{const v=JSON.parse(localStorage.getItem('pc-audio')||'null');if(v)AU.on=v}catch(e){}
@@ -835,7 +841,8 @@ function overlay(a,t,now){const u=a.pc.toLowerCase(),w=isW(a.pc),s=Math.min(W,Hh
  else if(u=='k'){ctx.lineWidth=8;P(null,()=>{ctx.moveTo(W/s*.3,10);ctx.lineTo(W/s*.25,-240)});ctx.lineWidth=5;P('#dedcd5',()=>ctx.arc(W/s*.25,-262,28,0,7))}
  ctx.restore()}
 /* =================== HUD =================== */
-function hud(){if(!S)return;const bw=material(S.b,true),bb=material(S.b,false),hp=v=>Math.max(0,Math.min(5,Math.ceil(5*v/39)));
+function ctlSync(){const live=!!S&&GM.started&&!over&&!menuOpen;$('resign').hidden=!live;$('menuB').hidden=live;$('home').hidden=live}
+function hud(){ctlSync();if(!S)return;const bw=material(S.b,true),bb=material(S.b,false),hp=v=>Math.max(0,Math.min(5,Math.ceil(5*v/39)));
  $('turn').textContent=over?'game over':(S.t=='w'?'white':'black')+' to move';
  const START={p:8,n:2,b:2,r:2,q:1};
  for(const w of[true,false]){const have=u=>S.b.filter(x=>x==(w?u.toUpperCase():u)).length;let l='';
