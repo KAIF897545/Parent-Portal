@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /login.html
+Disallow: /coach.html
+Disallow: /admin.html
+Disallow: /portal.html
+Disallow: /first-login.html
+Disallow: /reset-password.html
+Disallow: /api/
+
+Sitemap: https://students.maldiveschessclub.com/sitemap.xml
