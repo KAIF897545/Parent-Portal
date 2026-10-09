@@ -1,4 +1,7 @@
 {
+  "redirects": [
+    { "source": "/pencil-chess.html", "destination": "https://maldiveschessclub.com/sketch-chess", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/", "destination": "/portals.html" }
   ],
