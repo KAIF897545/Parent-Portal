@@ -1,24 +1,33 @@
 :root {
-  --crimson: #5c032b;
-  --crimson-dark: #40021e;
-  --near-black: #280113;
-  --cream: #ececda;
+  /* The main site's scheme: warm paper and ink, one maroon, gold, and the green of the board. */
+  --crimson: #771540;
+  --crimson-dark: #5a0f30;
+  --near-black: #231118;
+  --cream: #f6f2e9;
   --gold: #bd9e6e;
-  --gold-dark: #8c6d3f;
-  --white: #ffffff;
-  --border: rgba(40, 1, 19, 0.14);
+  --gold-dark: #8a6a35;
+  --white: #fffdf8;
+  --border: #e3dbca;
   --text: var(--near-black);
-  --text-muted: rgba(40, 1, 19, 0.62);
-  --success: #2f6b3a;
+  --text-muted: #6b5760;
+  --success: #2e8b63;
   --radius: 10px;
-  --shadow: 0 8px 24px rgba(40, 1, 19, 0.12);
-  --font-heading: "Fraunces", Georgia, serif;
-  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --shadow: 0 8px 24px rgba(35, 17, 24, 0.1);
+  --font-heading: "DM Serif Display", Georgia, serif;
+  --font-body: "Figtree", "Helvetica Neue", system-ui, sans-serif;
   /* Fixed regardless of theme -- for text/gradients on a saturated crimson
      surface (--fixed-light) or a pale gold/mint surface (--fixed-dark),
      where the surface color barely changes between light and dark theme. */
-  --fixed-light: #ececda;
-  --fixed-dark: #280113;
+  --fixed-light: #f3efe4;
+  --fixed-dark: #231118;
+  --green: #2e8b63;
+  --green-dark: #1f6b4a;
+  --green-tint: #e4f1ea;
+}
+
+/* The heading font has one weight; never fake a bolder one. */
+html {
+  font-synthesis: none;
 }
 
 * {
@@ -85,7 +94,7 @@ a {
   border-radius: 50%;
   background: #fff;
   padding: 7px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(236, 236, 218, 0.14);
+  box-shadow: 0 8px 20px rgba(35, 17, 24, 0.12), 0 0 0 1px rgba(138, 106, 53, 0.35);
 }
 
 .brand__logo img {
@@ -420,43 +429,18 @@ body.portal-landing .btn--secondary:hover {
   padding: 40px 0;
 }
 
-/* Portal landing page — themed to match maldiveschessclub.com's dark palette.
-   Overriding the shared custom properties here (instead of writing new rules)
-   re-themes every component on this page for free: cards, borders, text. */
+/* The app pages (sign in, first login, reset, student, coach, admin) share the main site's light scheme.
+   Everything reads the custom properties above, so only the page itself is set here. */
 body.portal-landing {
-  --cream: #280113;
-  --white: rgba(236, 236, 218, 0.06);
-  --near-black: #ececda;
-  --text: var(--near-black);
-  --text-muted: rgba(236, 236, 218, 0.74);
-  --border: rgba(236, 236, 218, 0.2);
-  --crimson: #7b1843;
-  --crimson-dark: #a84571;
-  --mint: #3ecf8e;
-  --mint-dark: #29a86e;
-  --success: var(--mint);
-  --shadow: 0 20px 44px rgba(0, 0, 0, 0.55);
+  --mint: #2e8b63;
+  --mint-dark: #1f6b4a;
   position: relative;
-  background:
-    radial-gradient(ellipse 800px 480px at 50% -10%, rgba(123, 24, 67, 0.3), transparent 60%),
-    radial-gradient(ellipse 620px 520px at 100% 100%, rgba(92, 3, 43, 0.16), transparent 65%),
-    repeating-linear-gradient(45deg, rgba(236, 236, 218, 0.025) 0px, rgba(236, 236, 218, 0.025) 1px, transparent 1px, transparent 26px),
-    repeating-linear-gradient(-45deg, rgba(236, 236, 218, 0.025) 0px, rgba(236, 236, 218, 0.025) 1px, transparent 1px, transparent 26px),
-    var(--cream);
+  background: var(--cream);
   overflow-x: hidden;
 }
 
 body.portal-landing::before {
-  content: "♞";
-  position: fixed;
-  top: -80px;
-  right: -60px;
-  font-size: 32rem;
-  line-height: 1;
-  font-family: var(--font-heading);
-  color: rgba(236, 236, 218, 0.03);
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 body.portal-landing .page {
@@ -469,32 +453,9 @@ body.portal-landing .brand__sub {
   font-weight: 600;
 }
 
-/* Student/parent dashboard (portal.html): a light "paper" theme instead
-   of the dark portal-landing default, matching a reference design the
-   user shared. Same re-theme-via-variables trick as portal-landing
-   itself, layered on top of it -- scoped to just this page via the
-   extra class, so login/coach/admin keep the dark theme untouched. The
-   watermark glyph and the dark-tuned radial glow + diagonal hairline
-   background are specifically designed for a dark surface, so both are
-   swapped out here rather than left showing through a light one. */
 body.portal-landing.portal-light {
-  --cream: #f2eee3;
-  --white: #fbf9f2;
-  --near-black: #2a0e18;
-  --text: var(--near-black);
-  --text-muted: rgba(40, 1, 19, 0.58);
-  --border: #e2dacb;
-  --crimson: #6e1239;
-  --crimson-dark: #4f0c28;
-  --success: #2f6b3a;
-  --shadow: 0 10px 28px rgba(40, 1, 19, 0.08);
   background: var(--cream);
 }
-
-body.portal-landing.portal-light::before {
-  display: none;
-}
-
 
 @media (max-width: 480px) {
   body.portal-landing::before {
@@ -2173,4 +2134,37 @@ body.is-printing .print-footer {
 
 @page {
   margin: 14mm 12mm;
+}
+
+/* ── The board's green on the app pages: focus, the chosen tab, finished steps and progress ── */
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+  border-color: var(--green);
+}
+
+.tab[aria-selected="true"] {
+  border-bottom-color: var(--green);
+}
+
+.btn:focus-visible,
+.tab:focus-visible {
+  outline-color: var(--green);
+}
+
+.p-step--done .p-step__node {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.p-segment--done {
+  background: var(--green);
+}
+
+.p-topic--done .p-topic__status,
+.p-skill__pill.is-done {
+  color: var(--green-dark);
 }

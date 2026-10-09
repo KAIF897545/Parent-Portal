@@ -3,19 +3,19 @@
    pages are untouched. Loaded after site.css. */
 
 body.portal-landing.portal-light.coach-page {
-  --maroon: #6e1433;
-  --maroon-deep: #4b0a22;
-  --maroon-tint: #f6e7ea;
-  --gold: #b8913a;
-  --gold-soft: #f3e6c4;
-  --gold-ink: #7a5a12;
-  --cream: #fbf6ec;
+  --maroon: #771540;
+  --maroon-deep: #5a0f30;
+  --maroon-tint: #f2e4e8;
+  --gold: #bd9e6e;
+  --gold-soft: #f3ead7;
+  --gold-ink: #8a6a35;
+  --cream: #f6f2e9;
   --card: #fffdf8;
-  --ink: #2b1a1f;
-  --muted: #7a6a6e;
-  --line: #e8dccb;
-  --green: #2f7a4f;
-  --green-tint: #e5f2e9;
+  --ink: #231118;
+  --muted: #6b5760;
+  --line: #e3dbca;
+  --green: #2e8b63;
+  --green-tint: #e4f1ea;
 
   /* Re-point the shared site tokens so any legacy component inherits the palette */
   --white: var(--card);
@@ -48,7 +48,7 @@ body.portal-landing.portal-light.coach-page {
 }
 
 .coach-page :focus-visible {
-  outline: 3px solid var(--gold);
+  outline: 3px solid var(--green);
   outline-offset: 2px;
   border-radius: 8px;
 }
@@ -63,8 +63,8 @@ body.portal-landing.portal-light.coach-page {
 }
 
 .coach-page .serif {
-  font-family: "Fraunces", Georgia, serif;
-  font-weight: 600;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-weight: 400;
   color: var(--maroon-deep);
 }
 
@@ -99,7 +99,7 @@ body.portal-landing.portal-light.coach-page {
 }
 
 .coach-page .who h1 {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "DM Serif Display", Georgia, serif;
   font-weight: 700;
   font-size: 1.35rem;
   margin: 0;
@@ -1224,7 +1224,7 @@ body.portal-landing.portal-light.coach-page {
 }
 
 .coach-page .unit__name {
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "DM Serif Display", Georgia, serif;
   color: var(--maroon-deep);
 }
 
