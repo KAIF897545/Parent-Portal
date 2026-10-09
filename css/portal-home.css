@@ -494,3 +494,24 @@ body.contact-page{background:var(--beige)}
 /* the about page's sections keep the page margins (their own padding shorthand had dropped them) */
 .subhero,.subsection,.subfoot{padding-left:clamp(16px,3.2vw,56px); padding-right:clamp(16px,3.2vw,56px)}
 .badge:has(img){background:#fff; border:1px solid var(--line)}
+
+/* ======================================================================
+   Calmer home page: fewer things moving at once.
+   The statement and the developer cards are plain sections now; only the launch story keeps its scroll
+   reveal, and it is shorter and shows its title and button sooner.
+   ====================================================================== */
+.sheet{height:auto; margin-top:0; border-radius:28px 28px 0 0; box-shadow:0 -30px 60px -30px rgba(10,0,2,.55)}
+.sheet-pin{position:static; height:auto; padding:clamp(72px,9vw,128px) clamp(20px,5vw,64px) clamp(56px,7vw,96px)}
+.sheet .w,.sheet .w.lit{color:var(--ink)}
+.rest{margin-top:0; border-radius:0; box-shadow:none; padding-top:0}
+.rest .inside{margin-top:0}
+
+.story{height:150vh; margin-top:clamp(32px,4vw,64px)}
+@media (max-width:760px){.story{height:140vh}}
+
+.devs{padding-top:clamp(56px,6vw,96px)}
+.dgrid{grid-template-columns:minmax(0,1fr)}
+.rail{display:none}
+.dcard{position:static; top:auto; margin-bottom:clamp(16px,2vw,24px); min-height:0; transform:none !important; filter:none !important; will-change:auto}
+.dcard:last-child{margin-bottom:0}
+.dcard--quote{grid-template-columns:minmax(0,1fr)}

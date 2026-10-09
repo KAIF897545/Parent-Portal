@@ -379,7 +379,7 @@ function onStory() {
   sImg.style.transform = `scale(${lerp(1.18, 1, e)})`;
   sKick.style.opacity = String(1 - clamp01(p / 0.35));
   sKick.style.transform = `translateY(${-clamp01(p / 0.35) * 30}px)`;
-  const c = clamp01((p - 0.55) / 0.35);
+  const c = clamp01((p - 0.4) / 0.3);
   sScrim.style.opacity = String(c);
   sCopy.style.opacity = String(c);
   sCopy.style.transform = `translateY(${(1 - c) * 24}px)`;
