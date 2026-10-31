@@ -508,6 +508,13 @@ body.portal-landing.portal-light.coach-page {
   font-size: 0.92rem;
 }
 
+/* Attendance search */
+.coach-page .att-search {
+  display: block;
+  width: 100%;
+  margin: 0 0 12px;
+}
+
 /* Add a student (Progress tab) */
 .coach-page .add-student-toggle {
   display: block;

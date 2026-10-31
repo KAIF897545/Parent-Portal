@@ -336,6 +336,19 @@ function filteredAttendanceStudents() {
   return group ? state.students.filter((s) => s.group_id === group) : state.students;
 }
 
+// The search only narrows what is on screen while ticking. The present count,
+// the status line and the save bar keep counting the whole group, so searching
+// for one child never makes the day look like it has fewer students.
+function attSearchQuery() {
+  return el("attSearch").value.trim().toLowerCase();
+}
+
+function visibleAttendanceStudents() {
+  const q = attSearchQuery();
+  const roster = filteredAttendanceStudents();
+  return q ? roster.filter((s) => `${s.full_name} ${s.student_code}`.toLowerCase().includes(q)) : roster;
+}
+
 async function initAttendanceTab() {
   const t = todayKey();
   state.attSelectedDate = t;
@@ -416,8 +429,11 @@ function renderSession() {
   }
   el("saveAttendance").textContent = hasSaved && isDirty ? "Save changes" : "Save attendance";
 
-  el("attendanceList").innerHTML = rosterStudents.length
-    ? rosterStudents
+  const visible = visibleAttendanceStudents();
+  const searching = attSearchQuery() !== "";
+
+  el("attendanceList").innerHTML = visible.length
+    ? visible
         .map((s, i) => {
           const on = draftSet.has(s.id);
           const was = savedIds.has(s.id);
@@ -441,11 +457,23 @@ function renderSession() {
         })
         .join("")
     : `<li class="empty">${
-        state.students.length ? "No students in this group." : "No active students at this school yet."
+        searching
+          ? "No students match that search."
+          : state.students.length
+            ? "No students in this group."
+            : "No active students at this school yet."
       }</li>`;
 
-  const allPresent = rosterStudents.length > 0 && presentCount === rosterStudents.length;
-  el("markAllPresent").textContent = allPresent ? "Clear all" : "Mark everyone present";
+  // While searching, the button acts on just the students on screen.
+  const allPresent = visible.length > 0 && visible.every((s) => draftSet.has(s.id));
+  el("markAllPresent").textContent = searching
+    ? allPresent
+      ? "Clear these"
+      : "Mark these present"
+    : allPresent
+      ? "Clear all"
+      : "Mark everyone present";
+  el("markAllPresent").disabled = visible.length === 0;
   el("markAllPresent").setAttribute("aria-pressed", String(allPresent));
 
   el("attCountText").textContent = `${presentCount} of ${rosterStudents.length}`;
@@ -514,15 +542,16 @@ el("attendanceList").addEventListener("click", (e) => {
 el("markAllPresent").addEventListener("click", () => {
   const dateKey = state.attSelectedDate;
   const draft = new Set(attDraftFor(dateKey));
-  const rosterStudents = filteredAttendanceStudents();
-  const allPresent = rosterStudents.length > 0 && rosterStudents.every((s) => draft.has(s.id));
-  if (allPresent) rosterStudents.forEach((s) => draft.delete(s.id));
-  else rosterStudents.forEach((s) => draft.add(s.id));
+  const shown = visibleAttendanceStudents();
+  const allPresent = shown.length > 0 && shown.every((s) => draft.has(s.id));
+  if (allPresent) shown.forEach((s) => draft.delete(s.id));
+  else shown.forEach((s) => draft.add(s.id));
   state.attDrafts.set(dateKey, draft);
   renderSession();
 });
 
 el("attGroupFilter").addEventListener("change", renderSession);
+el("attSearch").addEventListener("input", renderSession);
 
 el("discardAttendance").addEventListener("click", () => {
   state.attDrafts.delete(state.attSelectedDate);
