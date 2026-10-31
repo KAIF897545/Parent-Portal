@@ -75,6 +75,27 @@
       <h2 class="serif">Mark progress</h2>
       <p>You can open any student at this school. Filters only narrow the list.</p>
     </div>
+
+    <button type="button" class="all-btn add-student-toggle" id="addStudentToggle" aria-expanded="false" aria-controls="addStudentForm">+ Add a student</button>
+    <form class="card add-student" id="addStudentForm" autocomplete="off" hidden>
+      <label class="f-label first" for="newStudentName">Full name</label>
+      <input class="field" id="newStudentName" type="text" maxlength="120" placeholder="Student's full name" required />
+
+      <label class="f-label" for="newStudentGroup">Group <span>(optional)</span></label>
+      <select id="newStudentGroup"><option value="">No group</option></select>
+
+      <label class="f-label" for="newStudentModule">Starting module</label>
+      <select id="newStudentModule"></select>
+
+      <p class="vis-note vis-note--left">No email or phone number needed. They'll be on the class list straight away for attendance and progress. An admin can give them a sign-in later.</p>
+
+      <div class="f-actions">
+        <button type="submit" class="btn-primary" id="addStudentSubmit">Add student</button>
+        <button type="button" class="btn-ghost" id="addStudentCancel">Cancel</button>
+        <span class="f-status" id="addStudentStatus" role="status" aria-live="polite"></span>
+      </div>
+    </form>
+
     <div class="controls">
       <select id="groupFilter" aria-label="Filter by group"><option value="">All groups</option></select>
       <input class="field" id="searchFilter" type="search" placeholder="Search name or student ID" aria-label="Search students" />
